@@ -1,0 +1,189 @@
+- main [ref=e2]:
+  - img "GHOULBOX" [ref=e4]
+  - paragraph [ref=e5]: Dungeon synth for the FM-1 · play it here, in your browser
+  - navigation [ref=e6]:
+    - link "Install on your FM-1" [ref=e7] [cursor=pointer]:
+      - /url: ../installer/
+    - link "Support on Ko-fi" [ref=e8] [cursor=pointer]:
+      - /url: https://ko-fi.com/ghoulbox
+    - link "Merch" [ref=e9] [cursor=pointer]:
+      - /url: https://ghoulbox-shop.fourthwall.com/
+    - link "User guide (PDF)" [ref=e10] [cursor=pointer]:
+      - /url: https://github.com/jasonpersinger/ghoulbox-fm1-dungeon-synth/releases/latest
+    - link "Video lessons" [ref=e11] [cursor=pointer]:
+      - /url: https://www.youtube.com/playlist?list=PLMUs0QD7QfOw
+  - generic [ref=e14]:
+    - img [aria-hidden]:
+      - generic: MASTER
+      - generic:
+        - generic: SELECT
+        - generic: ↑ ↓
+      - generic: PRESETS
+      - generic:
+        - generic: ALGORITHM
+        - generic: ← →
+      - generic: KNOB 1
+      - generic: KNOB 2
+      - generic: KNOB 3
+      - generic: KNOB 4
+      - generic:
+        - generic: OCT-
+        - generic: "["
+      - generic:
+        - generic: OCT+
+        - generic: "]"
+      - generic:
+        - generic: FX
+        - generic: "1"
+      - generic:
+        - generic: HOME
+        - generic: "7"
+      - generic:
+        - generic: SCL
+        - generic: "2"
+      - generic:
+        - generic: SAVE
+        - generic: "8"
+      - generic:
+        - generic: ENV
+        - generic: "3"
+      - generic:
+        - generic: ARP
+        - generic: "9"
+      - generic:
+        - generic: LFO
+        - generic: "4"
+      - generic:
+        - generic: SEQ
+        - generic: "0"
+      - generic:
+        - generic: EDIT
+        - generic: "5"
+      - generic:
+        - generic: PLAY
+        - generic: STOP
+        - generic: "-"
+      - generic:
+        - generic: GLO
+        - generic: "6"
+      - generic:
+        - generic: REC
+        - generic: =
+      - generic: Z
+      - generic: X
+      - generic: C
+      - generic: V
+      - generic: B
+      - generic: "N"
+      - generic: M
+      - generic: ","
+      - generic: .
+      - generic: /
+      - generic: Q
+      - generic: W
+      - generic: R
+      - generic: "Y"
+      - generic: U
+      - generic: O
+      - generic: S
+      - generic: D
+      - generic: F
+      - generic: H
+      - generic: J
+      - generic: L
+      - generic: ;
+      - generic: "'"
+      - generic: E
+      - generic: T
+      - generic: I
+    - button "Screen; enter Focus Mode" [ref=e15]
+    - slider "MASTER" [ref=e16]
+    - slider "SELECT" [ref=e17]
+    - slider "PRESETS" [ref=e18]
+    - slider "ALGORITHM" [ref=e19]
+    - slider "KNOB 1" [ref=e20]
+    - slider "KNOB 2" [ref=e21]
+    - slider "KNOB 3" [ref=e22]
+    - slider "KNOB 4" [ref=e23]
+    - button "OCT-" [ref=e24] [cursor=pointer]
+    - button "OCT+" [ref=e25] [cursor=pointer]
+    - button "FX" [ref=e26] [cursor=pointer]
+    - button "HOME" [ref=e27] [cursor=pointer]
+    - button "SCL" [ref=e28] [cursor=pointer]
+    - button "SAVE" [ref=e29] [cursor=pointer]
+    - button "ENV" [ref=e30] [cursor=pointer]
+    - button "ARP" [ref=e31] [cursor=pointer]
+    - button "LFO" [ref=e32] [cursor=pointer]
+    - button "SEQ" [ref=e33] [cursor=pointer]
+    - button "EDIT" [ref=e34] [cursor=pointer]
+    - button "PLAY / STOP" [ref=e35] [cursor=pointer]
+    - button "GLO" [ref=e36] [cursor=pointer]
+    - button "REC" [ref=e37] [cursor=pointer]
+    - button "F3" [ref=e38] [cursor=pointer]
+    - button "F♯3" [ref=e39] [cursor=pointer]
+    - button "G3" [ref=e40] [cursor=pointer]
+    - button "G♯3" [ref=e41] [cursor=pointer]
+    - button "A3" [ref=e42] [cursor=pointer]
+    - button "A♯3" [ref=e43] [cursor=pointer]
+    - button "B3" [ref=e44] [cursor=pointer]
+    - button "C4" [ref=e45] [cursor=pointer]
+    - button "C♯4" [ref=e46] [cursor=pointer]
+    - button "D4" [ref=e47] [cursor=pointer]
+    - button "D♯4" [ref=e48] [cursor=pointer]
+    - button "E4" [ref=e49] [cursor=pointer]
+    - button "F4" [ref=e50] [cursor=pointer]
+    - button "F♯4" [ref=e51] [cursor=pointer]
+    - button "G4" [ref=e52] [cursor=pointer]
+    - button "G♯4" [ref=e53] [cursor=pointer]
+    - button "A4" [ref=e54] [cursor=pointer]
+    - button "A♯4" [ref=e55] [cursor=pointer]
+    - button "B4" [ref=e56] [cursor=pointer]
+    - button "C5" [ref=e57] [cursor=pointer]
+    - button "C♯5" [ref=e58] [cursor=pointer]
+    - button "D5" [ref=e59] [cursor=pointer]
+    - button "D♯5" [ref=e60] [cursor=pointer]
+    - button "E5" [ref=e61] [cursor=pointer]
+    - button "F5" [ref=e62] [cursor=pointer]
+    - button "F♯5" [ref=e63] [cursor=pointer]
+    - button "G5" [ref=e64] [cursor=pointer]
+    - button "Switch on" [ref=e66] [cursor=pointer]
+  - paragraph [ref=e68]:
+    - text: Play with the mouse, or with the computer keys printed on the panel. Drag or scroll a knob to turn it.
+    - generic [ref=e69]: Shift-click a button to keep it held (for GLO + a key, and the like).
+    - text: Click the screen for Focus Mode.
+  - group [ref=e70]:
+    - generic "MIDI, saves, audio & display" [ref=e71] [cursor=pointer]
+    - option "Absolute 0–127" [selected]
+    - option "Relative 1 / 127"
+    - option "Keyboard velocity" [selected]
+    - option "Fixed 64"
+    - option "Fixed 80"
+    - option "Fixed 96"
+    - option "Fixed 100 (FM-1 keys)"
+    - option "Fixed 112"
+    - option "Fixed 127"
+    - option "FLAC · lossless" [selected]
+    - option "MP3 · sharing"
+    - option "WAV · original PCM"
+  - generic [ref=e72]:
+    - text: GHOULBOX 2.1 (preview) · on Felucca v1.4.1 GHOULBOX by Jason Persinger · on
+    - link "Felucca" [ref=e73] [cursor=pointer]:
+      - /url: https://github.com/hugelton/Felucca
+    - text: by Leo Kuroshita, Hügelton Instruments ·
+    - link "GPL-3.0" [ref=e74] [cursor=pointer]:
+      - /url: https://www.gnu.org/licenses/gpl-3.0.html
+    - text: · browser build after charlesvestal's
+    - link "X0X" [ref=e75] [cursor=pointer]:
+      - /url: https://github.com/charlesvestal/fm1-x0x
+    - text: · DotGothic16 font,
+    - link "SIL OFL 1.1" [ref=e76] [cursor=pointer]:
+      - /url: fonts/OFL.txt
+    - text: · the name in Pirata One (SIL OFL 1.1)
+    - navigation [ref=e77]:
+      - link "Install" [ref=e78] [cursor=pointer]:
+        - /url: ../installer/
+      - link "Editor" [ref=e79] [cursor=pointer]:
+        - /url: ../editor/
+      - link "Source" [ref=e80] [cursor=pointer]:
+        - /url: https://github.com/jasonpersinger/ghoulbox-fm1-dungeon-synth
+    - text: M-VAVE and FM-1 are trademarks of their respective owners. GHOULBOX and Felucca are not affiliated with or endorsed by them.
