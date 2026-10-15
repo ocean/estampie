@@ -121,7 +121,7 @@ static void settings_init(void)
     }
     if (settings.magic != SETTINGS_MAGIC || settings.palette >= NPALETTES) {
         settings.magic = SETTINGS_MAGIC;
-        settings.palette = UI_CRYPT_INDEX;     /* GHOULBOX: CRYPT (Felucca's default: GREY, named MONO before 1.0.2) */
+        settings.palette = UI_VELLUM_INDEX;    /* ESTAMPIE: VELLUM (GHOULBOX: CRYPT; Felucca: GREY, named MONO before 1.0.2) */
         settings.lowcut = 0;
         settings.zoom = 0;                     /* (retired: the LEDS setting, settings_persist.c) */
     }

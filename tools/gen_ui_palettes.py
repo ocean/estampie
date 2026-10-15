@@ -51,6 +51,9 @@ PALETTES = [
     ("NIGHT",  (0, 0, 0),       (0, 24, 10),     (150, 230, 170), (56, 220, 100),  (255, 255, 255)),
     # 1.0.2: black and white (the derived tokens are set, not blended: bw()); the old MONO is GREY (id 0)
     ("MONO",   (0, 0, 0),       (0, 0, 0),       (255, 255, 255), (255, 255, 255), (255, 255, 255)),
+    # ESTAMPIE: an illuminated manuscript (appended: saved ids are indices). Parchment, iron-gall ink, vermilion
+    # rubrics for values and curves, lapis blue for the one active thing
+    ("VELLUM", (238, 226, 196), (224, 206, 168), (46, 30, 20),    (150, 32, 18),   (26, 62, 148)),
 ]
 BW = "MONO"
 BW_GREY = (82, 82, 82)             # MONO's one mid grey (RGB565 10/20/10): DIM LINE RAISE LANE
@@ -188,7 +191,8 @@ def main():
             out.append(f'    {{"{p[0]}", ' + ", ".join(f"0x{x:04x}" for x in v) + "},")
         crypt = [p[0] for p in PALETTES].index("CRYPT")
         out += ["};", f"#define UI_NPALETTES {len(PALETTES)}u", "#define UI_GREY_INDEX 0u",
-                f"#define UI_CRYPT_INDEX {crypt}u   /* GHOULBOX: a fresh device's palette */",
+                f"#define UI_CRYPT_INDEX {crypt}u   /* GHOULBOX: its fresh device's palette */",
+                f"#define UI_VELLUM_INDEX {[p[0] for p in PALETTES].index('VELLUM')}u   /* ESTAMPIE: a fresh device's palette */",
                 f"#define UI_BW_INDEX {names.index(BW)}u          /* MONO: black and white (src/gfx.c palette_set) */",
                 f"#define UI_BW_GREY 0x{to565(BW_GREY):04x}u          /* MONO's one grey: DIM LINE RAISE LANE */",
                 f"#define UI_PAL_TAG {PAL_TAG}u          /* stored id = UI_PAL_TAG + index; below 20: an old id */"]
