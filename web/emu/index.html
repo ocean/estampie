@@ -6,61 +6,56 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="dark">
-<title>GHOULBOX</title>
+<meta name="color-scheme" content="light">
+<title>ESTAMPIE</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Crect width=%2216%22 height=%2216%22 rx=%223%22/%3E%3Crect x=%224%22 y=%224%22 width=%228%22 height=%228%22 fill=%22%23fff%22/%3E%3C/svg%3E">
-<meta name="description" content="GHOULBOX, the dungeon synth firmware for the FM-1, running in your browser: the same code the instrument runs.">
+<meta name="description" content="ESTAMPIE, a mediaeval groovebox firmware for the FM-1, running in your browser: the same code the instrument runs.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=swap">
 <style>
 /* DotGothic16 (SIL OFL 1.1, fonts/OFL.txt), cut to printable ASCII, for the knob labels */
 @font-face { font-family: "DotGothic16"; src: url("fonts/DotGothic16-subset.woff") format("woff"); font-display: swap; }
 :root { --bg: #8e8e93; --fg: #111; --dim: #2c2c2e; --rule: #5a5a5e;
         --body: #1d1d1f; --tray: #141415; --part: #2a2a2d; --edge: #3a3a3e; --label: #d6d6d8;
         --lit: #fff4d6; --green: #5fe08a;
-        /* GHOULBOX: the dungeon around it, in CRYPT's colours (build/gen/ui_palettes.h; the art: tools/gen_emu_art.py) */
-        --bone: #efdfc6; --amber: #ef9a29; --ember: #ef4d42; --night: #080808; --plaque: rgba(8, 8, 8, .86);
-        color-scheme: dark; }   /* (dark: Chrome's forced dark leaves the page be) */
-html { background: var(--night); }
-body { margin: 0; color: var(--bone); font: 13px/1.6 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
-       min-height: 100vh; image-rendering: pixelated;
-       background: radial-gradient(ellipse 75% 70% at 50% 45%, transparent 35%, rgba(0, 0, 0, .78) 100%) fixed,
-                   url("art/wall.png") 0 0 / 256px 128px var(--night); }
-main { max-width: 1240px; margin: 0 auto; padding: 20px 16px 32px; }
-/* the crest: the boot screen's skull and name, x2 */
-.crest { display: flex; justify-content: center; align-items: center; gap: 24px; margin: 4px 0 18px; }
-.crest .skull { width: 96px; height: 112px; }
-.crest .logo { height: 104px; width: auto; filter: drop-shadow(0 0 10px rgba(239, 154, 41, .35)); }
-.crest img { image-rendering: auto; }   /* (drawn smooth at 2x: tools/gen_emu_art.py) */
-.tagline { margin: -8px 0 18px; text-align: center; font: 700 19px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-           "Helvetica Neue", Arial, sans-serif; color: var(--bone); letter-spacing: .02em; text-shadow: 0 0 3px #000, 0 0 6px #000, 0 2px 0 #000; }
-/* the calls under the tagline: Install as the installer's own button (a pixel slab in torch amber) */
-.calls { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 12px 24px; margin: 0 0 24px; }
-.slab { display: inline-block; font: 600 18px/1 monospace; letter-spacing: .08em; text-decoration: none; color: var(--night);
-        background: var(--amber); padding: 14px 32px; box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .35),
-        inset 0 4px 0 rgba(255, 255, 255, .3), 0 0 0 2px #000; }
+        /* ESTAMPIE: a manuscript leaf around it, in VELLUM's colours (build/gen/ui_palettes.h; the crest:
+         * tools/gen_emu_art.py), with gold leaf for the borders */
+        --vellum: #eee2c4; --vellum-dark: #dfcca0; --ink: #2e1e14; --ink-soft: #5b4532; --vermilion: #962012;
+        --lapis: #1a3e94; --gold: #b8892a;
+        color-scheme: light; }
+html { background: #c9b48a; }
+body { margin: 0; color: var(--ink); font: 17px/1.6 "IM Fell English", Georgia, "Times New Roman", serif; min-height: 100vh;
+       background:
+         radial-gradient(ellipse 80% 70% at 50% 40%, transparent 55%, rgba(120, 82, 30, .28) 100%) fixed,
+         url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .32 0 0 0 0 .15 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23f)'/%3E%3C/svg%3E"),
+         var(--vellum); }
+main { max-width: 1240px; margin: 0 auto; padding: 24px 16px 32px; }
+/* the crest: the boot screen's illuminated initial and word, drawn at 4x, shown at 2x */
+.crest { display: flex; justify-content: center; align-items: flex-end; gap: 6px; margin: 8px 0 14px; }
+.crest .initial { width: 120px; height: 120px; }
+.crest .word { height: 90px; width: auto; margin-bottom: 18px; }
+.tagline { margin: 0 0 18px; text-align: center; font: italic 22px/1.4 "IM Fell English", Georgia, serif; color: var(--ink); }
+.tagline b { font-style: normal; color: var(--vermilion); font-variant: small-caps; letter-spacing: .04em; }
+/* the calls under the tagline: Install as a lapis plate with gold rules */
+.calls { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 12px 24px; margin: 0 0 26px; }
+.slab { display: inline-block; font: 20px/1 "IM Fell English SC", "IM Fell English", Georgia, serif; letter-spacing: .06em;
+        text-decoration: none; color: var(--vellum); background: var(--lapis); padding: 13px 28px;
+        box-shadow: 0 0 0 2px var(--vellum), 0 0 0 4px var(--gold), 0 3px 8px rgba(60, 40, 10, .35); }
 .slab:active { transform: translateY(2px); }
-.slab.bone { background: var(--bone); font-size: 15px; padding: 12px 22px; }
-.calls .plain { font: 700 17px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-               text-shadow: 0 0 3px #000, 0 0 6px #000, 0 2px 0 #000; }
-/* the instrument between two torches (the firmware's own, x4: its 4 frames each 120 ms, the right one 2 frames on) */
-.stage { display: grid; grid-template-columns: 48px minmax(0, 1040px) 48px; gap: 40px; align-items: center;
-         justify-content: center; isolation: isolate; }   /* (the glow: over the wall, under the torch) */
-.torch { position: relative; width: 48px; height: 120px; background: url("art/torch.png") 0 0 / 192px 120px no-repeat;
-         animation: torch .48s steps(4) infinite; }
-.torch.r { animation-delay: -.24s; }
-.torch::before { content: ""; position: absolute; left: 50%; top: 18px; width: 420px; height: 420px; margin: -210px 0 0 -210px;
-                 background: radial-gradient(circle, rgba(239, 154, 41, .30), rgba(239, 77, 66, .10) 40%, transparent 68%);
-                 animation: glow 1.7s ease-in-out infinite alternate; pointer-events: none; z-index: -1; }
-.torch.r::before { animation-duration: 1.3s; }
-@keyframes torch { to { background-position: -192px 0; } }
-@keyframes glow { 0% { opacity: .75; } 40% { opacity: 1; } 55% { opacity: .82; } 100% { opacity: .95; } }
-@media (prefers-reduced-motion: reduce) { .torch, .torch::before { animation: none; } }
-@media (max-width: 1100px) { .stage { grid-template-columns: minmax(0, 1040px); } .stage .torch { display: none; } }
-@media (max-width: 600px) { .crest .skull { width: 48px; height: 56px; } .crest .logo { height: 52px; width: auto; }
-                            .crest { gap: 12px; } .tagline { font-size: 15px; }
+.slab.bone { color: var(--vermilion); background: var(--vellum); font-size: 17px; padding: 11px 20px;
+             box-shadow: 0 0 0 2px var(--vermilion), 0 2px 6px rgba(60, 40, 10, .2); }
+.calls .plain { font-size: 18px; }
+/* the instrument on the leaf, inside a ruled frame (a vermilion rule, a gold one) */
+.stage { max-width: 1040px; margin: 0 auto; padding: 18px; border: 3px double var(--vermilion);
+         outline: 2px solid var(--gold); outline-offset: 5px; background: rgba(255, 248, 228, .35); }
+/* the text on ruled panels, as a gloss in the margin */
+.keys, .utility, footer { max-width: 1040px; margin-left: auto; margin-right: auto; padding: 12px 18px;
+                          border-top: 2px solid var(--vermilion); border-bottom: 1px solid var(--vermilion);
+                          background: rgba(255, 248, 228, .45); }
+@media (max-width: 600px) { .crest .initial { width: 60px; height: 60px; } .crest .word { height: 45px; margin-bottom: 9px; }
+                            .tagline { font-size: 17px; } .stage { padding: 6px; }
                             p.keys span, p.keys label { display: block; white-space: normal; margin: 4px 0; } }
-/* the text on stone plaques (a window's frame: EDGE outside, STONE inside, as gfx.c cv_window) */
-.keys, .utility, footer { max-width: 1040px; margin-left: auto; margin-right: auto; background: var(--plaque); padding: 12px 16px;
-                box-shadow: 0 0 0 2px #6b4513, 0 0 0 4px #000, 0 0 0 6px #3a3a3e; }
 @media (orientation: portrait) and (max-width: 700px) { main { padding: 8px 8px 24px; } }
 a { color: inherit; }
 .device { position: relative; width: 100%; aspect-ratio: 1000 / 624; user-select: none; -webkit-user-select: none;
@@ -108,64 +103,64 @@ a { color: inherit; }
 .start p { margin: 0; max-width: 32em; text-align: center; color: #fff; }
 .audio-recovery { position: absolute; z-index: 4; left: 50%; top: 3%; transform: translateX(-50%); box-sizing: border-box;
                   display: flex; align-items: center; gap: 12px; width: max-content; max-width: 92%; padding: 9px 10px 9px 14px;
-                  color: var(--bone); background: rgba(8, 8, 8, .94); border: 1px solid #6b4513;
-                  box-shadow: 0 0 0 2px #000, 0 0 0 3px var(--edge), 0 8px 24px rgba(0, 0, 0, .55); }
+                  color: var(--ink); background: var(--vellum); border: 1px solid var(--vermilion);
+                  box-shadow: 0 0 0 2px var(--vellum), 0 0 0 4px var(--gold), 0 8px 24px rgba(60, 40, 10, .45); }
 .audio-recovery[hidden] { display: none; }
 .audio-recovery p { margin: 0; text-align: left; }
-.audio-recovery button { flex: 0 0 auto; min-height: 44px; padding: 8px 13px; border: 0; color: var(--night); background: var(--amber);
-                         font: 700 13px/1.2 DotGothic16, monospace; cursor: pointer; box-shadow: inset 0 -3px rgba(0, 0, 0, .32); }
+.audio-recovery button { flex: 0 0 auto; min-height: 44px; padding: 8px 13px; border: 0; color: var(--vellum); background: var(--lapis);
+                         font: 16px/1.2 "IM Fell English SC", Georgia, serif; cursor: pointer; box-shadow: inset 0 -3px rgba(0, 0, 0, .32); }
 .audio-recovery button:disabled { opacity: .55; cursor: progress; }
-.keys, .utility, footer { margin-top: 22px; color: var(--bone); text-align: center; }
-a { color: var(--amber); }
+.keys, .utility, footer { margin-top: 26px; color: var(--ink); text-align: center; }
+a { color: var(--vermilion); }
 .keys span { white-space: nowrap; margin: 0 8px; }
 .keys label { white-space: nowrap; margin: 0 8px; cursor: pointer; }
 /* GHOULBOX: the computer's keys printed on the panel (the wide layout only) */
 .hint { fill: #8e8e93; font: 600 13px ui-monospace, Menlo, monospace; pointer-events: none; }
 .hint.small { font-size: 10px; }
-kbd { font: 600 11px ui-monospace, Menlo, monospace; border: 1px solid #6b6b70; padding: 0 4px; color: var(--bone); background: #1d1d1f; }
+kbd { font: 600 12px ui-monospace, Menlo, monospace; border: 1px solid var(--ink-soft); padding: 0 4px; color: var(--ink); background: var(--vellum-dark); }
 footer { margin-top: 12px; font-size: 12px; }
 footer nav a { margin: 0 6px; }
 footer small { font-size: 11px; opacity: .8; }
 .utility { text-align: left; }
-.utility > summary { cursor: pointer; color: var(--amber); font: 700 15px/1.4 DotGothic16, monospace; letter-spacing: .04em; }
+.utility > summary { cursor: pointer; color: var(--vermilion); font: 19px/1.4 "IM Fell English SC", Georgia, serif; letter-spacing: .04em; }
 .utility-grid { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin-top: 12px; }
 .utility label { white-space: nowrap; }
-.utility button, .utility select { border: 1px solid #6b4513; color: var(--bone); background: #1d1d1f; font: inherit;
+.utility button, .utility select { border: 1px solid var(--ink-soft); color: var(--ink); background: var(--vellum); font: inherit;
                                   min-height: 34px; padding: 6px 11px; }
-.utility button { cursor: pointer; box-shadow: inset 0 -2px rgba(0, 0, 0, .45); }
-.utility button:hover:not(:disabled), .utility button:focus-visible { border-color: var(--amber); }
+.utility button { cursor: pointer; box-shadow: inset 0 -2px rgba(80, 50, 20, .25); }
+.utility button:hover:not(:disabled), .utility button:focus-visible { border-color: var(--vermilion); }
 .utility button:disabled { opacity: .45; cursor: default; }
-.utility .primary { color: var(--night); background: var(--amber); font-weight: 700; }
+.utility .primary { color: var(--vellum); background: var(--lapis); font-weight: 700; }
 .recorder { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 5px 8px;
-            border: 1px solid rgba(239, 223, 198, .2); background: rgba(0, 0, 0, .2); }
-.record-format { display: inline-flex; align-items: center; gap: 6px; color: #b9ac99; font-size: 12px; }
+            border: 1px solid rgba(46, 30, 20, .25); background: rgba(255, 248, 228, .4); }
+.record-format { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-soft); font-size: 13px; }
 .record-format select { min-height: 30px; padding: 4px 7px; }
-.recorder .record { color: #ffd9d2; border-color: #7c2c24; }
+.recorder .record { color: var(--vermilion); border-color: var(--vermilion); }
 .recorder.recording .record { color: #fff; background: #8f2018; border-color: #ff8c7f; }
 .recorder.recording .rec-dot { animation: rec-pulse 1.1s steps(2, end) infinite; }
 .rec-dot { display: inline-block; width: .62em; height: .62em; margin-right: 6px; border-radius: 50%; background: #e54b3d; }
-.rec-clock { min-width: 4.6em; color: var(--bone); font: 700 14px/1 ui-monospace, Menlo, monospace; font-variant-numeric: tabular-nums; }
-.rec-meter { display: inline-block; width: 70px; height: 7px; padding: 1px; border: 1px solid #5c4a34; background: #080808; }
+.rec-clock { min-width: 4.6em; color: var(--ink); font: 700 14px/1 ui-monospace, Menlo, monospace; font-variant-numeric: tabular-nums; }
+.rec-meter { display: inline-block; width: 70px; height: 7px; padding: 1px; border: 1px solid var(--ink-soft); background: var(--vellum-dark); }
 .rec-meter::after { content: ""; display: block; width: var(--peak, 0%); height: 100%; max-width: 100%;
-                    background: var(--amber); }
+                    background: var(--lapis); }
 .recorder.clipped .rec-meter::after { background: #ff4f42; }
-.rec-peak { min-width: 6.4em; font-size: 11px; color: #b9ac99; font-variant-numeric: tabular-nums; }
-.rec-help { flex-basis: 100%; margin: 0; font-size: 11px; color: #b9ac99; }
+.rec-peak { min-width: 6.4em; font-size: 12px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.rec-help { flex-basis: 100%; margin: 0; font-size: 13px; color: var(--ink-soft); }
 @keyframes rec-pulse { 50% { opacity: .25; } }
 @media (prefers-reduced-motion: reduce) { .recorder.recording .rec-dot { animation: none; } }
-.tool-status { min-height: 1.6em; margin: 9px 0 0; color: var(--amber); }
+.tool-status { min-height: 1.6em; margin: 9px 0 0; color: var(--vermilion); }
 .midi-map { margin-top: 8px; }
 .midi-map summary { cursor: pointer; }
 .midi-map table { margin: 8px auto 0; border-collapse: collapse; font-variant-numeric: tabular-nums; }
-.midi-map th, .midi-map td { padding: 3px 10px; border-bottom: 1px solid rgba(239, 223, 198, .18); text-align: left; }
-.tools-manual-link { margin: 12px 0 0; padding-top: 10px; border-top: 1px solid rgba(239, 223, 198, .18); text-align: right; }
-.tools-manual-link a { font: 700 13px/1.4 DotGothic16, monospace; letter-spacing: .035em; }
+.midi-map th, .midi-map td { padding: 3px 10px; border-bottom: 1px solid rgba(46, 30, 20, .18); text-align: left; }
+.tools-manual-link { margin: 12px 0 0; padding-top: 10px; border-top: 1px solid rgba(46, 30, 20, .18); text-align: right; }
+.tools-manual-link a { font: 16px/1.4 "IM Fell English SC", Georgia, serif; letter-spacing: .035em; }
 .screen-hint { cursor: zoom-in; }
 body.focus-mode { overflow: hidden; background: #000; }
 body.focus-mode main { max-width: none; padding: 0; }
 body.focus-mode main > :not(.stage) { display: none; }
-body.focus-mode .stage { display: block; width: 100vw; height: 100vh; }
-body.focus-mode .torch, body.focus-mode .device svg, body.focus-mode .device .hit, body.focus-mode .device .start { display: none; }
+body.focus-mode .stage { display: block; width: 100vw; height: 100vh; max-width: none; padding: 0; border: 0; outline: 0; }
+body.focus-mode .device svg, body.focus-mode .device .hit, body.focus-mode .device .start { display: none; }
 body.focus-mode .device { width: 100vw; height: 100vh; aspect-ratio: auto !important; background: #000; }
 body.focus-mode .device canvas { position: fixed; left: 50% !important; top: 50% !important;
                                  width: min(100vw, 100vh) !important; height: min(100vw, 100vh) !important;
@@ -176,17 +171,13 @@ body.focus-mode .audio-recovery { position: fixed; top: max(16px, env(safe-area-
 <body>
 <main>
 <header class="crest">
-  <img class="skull" src="art/skull.png" alt="">
-  <img class="logo" src="art/logo.png" alt="GHOULBOX">
+  <img class="initial" src="art/initial.png" alt="E">
+  <img class="word" src="art/word.png" alt="stampie">
 </header>
-<p class="tagline">Dungeon synth for the FM-1 · play it here, in your browser</p>
+<p class="tagline">A <b>mediaeval groovebox</b> for the FM-1 · lutes, shawms, hurdy-gurdies &amp; tabors · play it here, in your browser</p>
 <nav class="calls"><a class="slab" href="../installer/">Install on your FM-1</a>
-  <a class="slab bone" href="https://ko-fi.com/ghoulbox" target="_blank" rel="noopener">Support on Ko-fi</a>
-  <a class="slab bone" href="https://ghoulbox-shop.fourthwall.com/" target="_blank" rel="noopener">Merch</a>
-  <a class="plain" href="https://github.com/jasonpersinger/ghoulbox-fm1-dungeon-synth/releases/latest">User guide (PDF)</a>
-  <a class="plain" href="https://www.youtube.com/playlist?list=PLMUs0QD7QfOw" target="_blank" rel="noopener">Video lessons</a></nav>
+  <a class="slab bone" href="https://github.com/ocean/estampie">Source &amp; notes</a></nav>
 <div class="stage">
-<div class="torch" aria-hidden="true"></div>
 <div class="device" id="device">
   <svg id="panel" viewBox="0 0 1000 624" aria-hidden="true"></svg>
   <canvas id="screen" width="240" height="240" role="button" tabindex="0" aria-label="Screen; enter Focus Mode"></canvas>
@@ -195,7 +186,6 @@ body.focus-mode .audio-recovery { position: fixed; top: max(16px, env(safe-area-
     <p id="audio-recovery-status" role="status" aria-live="polite">Audio is paused.</p><button id="audio-resume" type="button">Resume audio</button>
   </div>
 </div>
-<div class="torch r" aria-hidden="true"></div>
 </div>
 
 <p class="keys">
@@ -230,16 +220,16 @@ body.focus-mode .audio-recovery { position: fixed; top: max(16px, env(safe-area-
   <p class="tool-status" id="tool-status" role="status" aria-live="polite"></p>
   <details class="midi-map"><summary>Panel MIDI CC list</summary>
     <table><thead><tr><th>CC</th><th>Control</th><th>Message</th></tr></thead><tbody id="midi-map"></tbody></table>
-    <p>Buttons must send 127 when pressed and 0 when released. Panel CC messages are consumed by the emulator; GHOULBOX’s direct sound CC map remains available for every other CC.</p>
+    <p>Buttons must send 127 when pressed and 0 when released. Panel CC messages are consumed by the emulator; ESTAMPIE’s direct sound CC map remains available for every other CC.</p>
   </details>
   <p class="tools-manual-link"><a href="tools.html" target="_blank" rel="noopener">Open the Web Synth Tools manual ↗</a></p>
 </details>
 
 <footer>
-  <small class="version">GHOULBOX @GBVERSION@@PREVIEW@ · on Felucca @VERSION@</small><br>
-  GHOULBOX by Jason Persinger · on <a href="https://github.com/hugelton/Felucca">Felucca</a> by Leo Kuroshita, Hügelton Instruments · <a href="https://www.gnu.org/licenses/gpl-3.0.html">GPL-3.0</a> · browser build after charlesvestal's <a href="https://github.com/charlesvestal/fm1-x0x">X0X</a> · DotGothic16 font, <a href="fonts/OFL.txt">SIL OFL 1.1</a> · the name in Pirata One (SIL OFL 1.1)<br>
-  <nav><a href="../installer/">Install</a><a href="../editor/">Editor</a><a href="https://github.com/jasonpersinger/ghoulbox-fm1-dungeon-synth">Source</a></nav>
-  <small>M-VAVE and FM-1 are trademarks of their respective owners. GHOULBOX and Felucca are not affiliated with or endorsed by them.</small>
+  <small class="version">ESTAMPIE @ESVERSION@@PREVIEW@ · on GHOULBOX @GBVERSION@ · on Felucca @VERSION@</small><br>
+  ESTAMPIE is a fork of <a href="https://github.com/jasonpersinger/ghoulbox-fm1-dungeon-synth">GHOULBOX</a> by Jason Persinger, itself on <a href="https://github.com/hugelton/Felucca">Felucca</a> by Leo Kuroshita, Hügelton Instruments: with thanks to both · <a href="https://www.gnu.org/licenses/gpl-3.0.html">GPL-3.0</a> · browser build after charlesvestal's <a href="https://github.com/charlesvestal/fm1-x0x">X0X</a> · DotGothic16 font, <a href="fonts/OFL.txt">SIL OFL 1.1</a> · the name in UnifrakturMaguntia, the page in IM Fell (SIL OFL 1.1)<br>
+  <nav><a href="../installer/">Install</a><a href="../editor/">Editor</a><a href="https://github.com/ocean/estampie">Source</a></nav>
+  <small>M-VAVE and FM-1 are trademarks of their respective owners. ESTAMPIE, GHOULBOX and Felucca are not affiliated with or endorsed by them. Not affiliated with teenage engineering.</small>
 </footer>
 </main>
 
@@ -261,11 +251,11 @@ const PLAY_GREEN = 14;
 const WHITE = [0, 2, 4, 6, 7, 9, 11, 12, 14, 16, 18, 19, 21, 23, 24, 26];
 const BLACK = [1, 3, 5, 8, 10, 13, 15, 17, 20, 22, 25];
 const BLACK_AFTER = [0, 1, 2, 4, 5, 7, 8, 9, 11, 12, 14];      // the white key each black one follows
-const STORE = "ghoulbox-emu-flash";   // (GHOULBOX: its own saves, not a Felucca page's)
-const MIDI_PREF = "ghoulbox-emu-midi"; // (GHOULBOX: MIDI in off until asked: a plugged-in FM-1 would play it)
-const PANEL_PREF = "ghoulbox-emu-panel-midi", KNOB_PREF = "ghoulbox-emu-knob-mode", VEL_PREF = "ghoulbox-emu-velocity";
-const PENDING = "ghoulbox-emu-import-project", RECOVERY = "ghoulbox-emu-import-recovery";
-const FIRMWARE = "GHOULBOX @GBVERSION@ on Felucca @VERSION@";
+const STORE = "estampie-emu-flash";   // (ESTAMPIE: its own saves, not a GHOULBOX or Felucca page's)
+const MIDI_PREF = "estampie-emu-midi"; // (GHOULBOX: MIDI in off until asked: a plugged-in FM-1 would play it)
+const PANEL_PREF = "estampie-emu-panel-midi", KNOB_PREF = "estampie-emu-knob-mode", VEL_PREF = "estampie-emu-velocity";
+const PENDING = "estampie-emu-import-project", RECOVERY = "estampie-emu-import-recovery";
+const FIRMWARE = "ESTAMPIE @ESVERSION@ on GHOULBOX @GBVERSION@ on Felucca @VERSION@";
 
 // ------------------------------------------------------------------ the panel
 // Two drawings of the same controls: WIDE after the FM-1's own layout, TALL for a phone held upright (the
@@ -716,7 +706,7 @@ async function toolOp(fn) {
   finally { toolBusy = false; toolsReady(); }
 }
 function workletRequest(type, data = {}) {
-  if (!node) return Promise.reject(new Error("Switch on GHOULBOX first"));
+  if (!node) return Promise.reject(new Error("Switch on ESTAMPIE first"));
   const id = ++requestId;
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => { requests.delete(id); reject(new Error("The emulator did not answer")); }, 5000);
@@ -746,7 +736,7 @@ function installState(archive) {
 stateExport.addEventListener("click", () => toolOp(async () => {
   toolSay("Capturing the live instrument…");
   const s = await snapshot(), file = makeEmulatorState(s.sectors, s.runtime, FIRMWARE);
-  download(`GHOULBOX-emulator-state-${new Date().toISOString().slice(0, 10)}.json`, file);
+  download(`ESTAMPIE-emulator-state-${new Date().toISOString().slice(0, 10)}.json`, file);
   toolSay("State exported: live music, projects, sounds, samples and settings.");
 }));
 stateImport.addEventListener("click", () => stateFile.click());
@@ -759,7 +749,7 @@ stateFile.addEventListener("change", () => {
     const archive = readEmulatorState(await file.text());
     const valid = await workletRequest("validate-project", { runtime: archive.runtime });
     if (!valid.ok) throw new Error("The live project failed firmware validation");
-    if (!confirm("Import this GHOULBOX emulator state? Current browser music, projects, sounds, samples and settings will be replaced.")) {
+    if (!confirm("Import this ESTAMPIE emulator state? Current browser music, projects, sounds, samples and settings will be replaced.")) {
       toolSay("Import cancelled."); return;
     }
     const old = await snapshot(), recovery = makeEmulatorState(old.sectors, old.runtime, FIRMWARE);
@@ -812,7 +802,7 @@ async function completeRecording(take, message) {
       fallback = take.requested !== "wav" ? ` WAV fallback saved: ${take.encodingFailed || "compressed encoding was unavailable"}.` : "";
     }
     const info = AUDIO_FORMATS[take.format], stamp = new Date().toISOString().replace(/[:.]/g, "-");
-    downloadBlob(`GHOULBOX-recording-${stamp}.${info.extension}`, blob);
+    downloadBlob(`ESTAMPIE-recording-${stamp}.${info.extension}`, blob);
     const clipped = take.clipped ? ` Warning: ${take.clipped} sample${take.clipped === 1 ? "" : "s"} clipped.` : "";
     const limit = message.reason === "limit" ? `${Math.round(take.maxSeconds / 60)}-minute limit reached. ` : "";
     toolSay(`${limit}${info.label} saved: ${recordingTime(take.frames, take.rate)}, ${(blob.size / 1048576).toFixed(1)} MB.${fallback}${clipped}`);
@@ -915,7 +905,7 @@ for (const x of [...PANEL_KNOBS, ...PANEL_BUTTONS]) {
 }
 
 function focusMode(on) {
-  if (on && !node) { document.getElementById("utility").open = true; toolSay("Switch on GHOULBOX before entering Focus Mode."); return; }
+  if (on && !node) { document.getElementById("utility").open = true; toolSay("Switch on ESTAMPIE before entering Focus Mode."); return; }
   document.body.classList.toggle("focus-mode", on);
   canvas.setAttribute("aria-label", on ? "Screen; exit Focus Mode" : "Screen; enter Focus Mode");
   focusButton.textContent = on ? "Exit focus" : "Focus screen";
@@ -972,7 +962,7 @@ audioResume.addEventListener("click", async () => {
   } catch (error) {
     audioResume.disabled = false;
     audioRecoveryState("Audio did not resume. Tap again, or reload this page in a regular Safari tab.");
-    console.warn("GHOULBOX: could not resume audio", error);
+    console.warn("ESTAMPIE: could not resume audio", error);
   }
 });
 async function switchOn() {

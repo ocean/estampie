@@ -1,215 +1,57 @@
-# GHOULBOX: FM-1 Dungeon Synth
+# ESTAMPIE: a mediaeval groovebox for the FM-1
 
-![GHOULBOX 1.0: boot, HOME, PRESETS, MENU](docs/ghoulbox-1.0.png)
+**ESTAMPIE** is custom firmware for the **M-VAVE FM-1**, named after the *estampie*, a fast dance of the
+13th and 14th centuries. It is a groovebox for lively mediaeval music: tavern and court dances rather than the
+crypt, with plucked lutes and citoles, buzzing hurdy-gurdies, shawms and bagpipes over drones, frame drums,
+tabors and nakers, chant, and the church modes.
 
-**GHOULBOX** is dungeon-synth firmware for the **M-VAVE FM-1**: a fork of
-[Felucca](https://github.com/hugelton/Felucca) by Hügelton Instruments (1.4.1), tuned for dark ambient,
-medieval and fantasy synth music, from Old Tower and Hole Dweller to Mortiis-era dungeon synth.
+It is a fork of [GHOULBOX](https://github.com/jasonpersinger/ghoulbox-fm1-dungeon-synth) by Jason Persinger, the
+dungeon-synth firmware, which is itself a fork of [Felucca](https://github.com/hugelton/Felucca) by Leo Kuroshita
+(Hügelton Instruments). Nearly everything here is their work: Felucca's engines, sequencer, effects, editor,
+installer and tests, and GHOULBOX's hurdy-gurdy, medieval tunings, drone latch, dungeon sounds and browser synth.
+Thank you both. The browser emulator follows the design of Charles Vestal's
+[X0X](https://github.com/charlesvestal/fm1-x0x). The full history of both projects is kept in this repository.
 
-**Latest: 2.1.** [Play it in your browser](https://ghoulbox.messy.quest/) ·
-[install it](https://ghoulbox.messy.quest/webapp/installer/) ·
-[hear every sound](https://ghoulbox.messy.quest/sounds/) ·
-[watch the 2.0 demo](https://youtu.be/NMSw1_wnCwQ) ·
-[learn it in five video lessons](https://www.youtube.com/playlist?list=PLMUs0QD7QfOw) ·
-[read the guide (PDF)](docs/guide/GHOULBOX-User-Guide-2.1.pdf)
+Inspired by the idea of teenage engineering's EP-1320 *medieval*; not affiliated with them, and none of their
+sounds are used.
 
-GHOULBOX is free and always will be. To support it: [Ko-fi](https://ko-fi.com/ghoulbox) · [merch](https://ghoulbox-shop.fourthwall.com/).
+**Status: 0.1, early work.** So far: the VELLUM look (parchment, iron-gall ink, vermilion rubrics, lapis), the
+illuminated boot screen and the browser emulator page. The sounds are still GHOULBOX's. See [ROADMAP.md](ROADMAP.md).
 
-## What's new
+## Building
 
-### 2.1
+Everything the build needs is fetched into the repository (`.toolchain/`, `.venv/`, both git-ignored), so
+nothing is installed in your home directory:
 
-- **Two sounds at once.** A new KEYS page (tap HOME on HOME: MIXER, CLOCK, KEYS) plays two tracks from the keys:
-  **LAYER** stacks them on every key (a recorder doubled by strings), **SPLIT** divides the keyboard (a drone or bass
-  in the left hand, the tune in the right). Pick the second track, the split point and its octave; saved with
-  the project.
-- **Note and chord names.** While you play, the top of the screen names what you're playing: D4, Dm, A7, Gsus4,
-  C/E. Turn it off in MENU > CONTROL > NOTE NAMES.
-- **Your music comes back at power-on.** RESTORE LAST is ON again, so the FM-1 wakes up with what you were playing
-  (stop for a few seconds before switching off). A new FM-1 still starts with the power-on scene; set RESTORE LAST
-  to OFF to have the scene every time. Updating switches it ON once; your choice is kept after that.
-
-### 2.0
-
-- **Built on Felucca 1.4.1** (it was 1.0.5.2), with everything Felucca has added since: see
-  [Felucca's releases](https://github.com/hugelton/Felucca/releases).
-- **12 voices** shared by the four tracks (it was 8), so chords on one track cut fewer notes on another.
-- **Drone latch.** Hold GLO and press F#4, G#4, A#4 or C#5 (the top-row keys labelled OP6, PIT, GLO, MONO)
-  to latch tracks 1–4: a chord you play keeps sounding after you let go, and other tracks can't steal its
-  voices. A new chord replaces it; pressing one of its notes stops it.
-- **Turn the hurdy-gurdy's crank.** Set GURDY's COUP to CRANK and the SELECT knob becomes the wheel: the
-  faster you turn, the louder and brighter; a flick of the wrist kicks the trompette's buzz.
-- **Medieval tunings.** TEMP (SCL > CHORD) tunes a track in Pythagorean, meantone or just intonation from
-  its ROOT, for pure fifths and drones that ring without beating.
-- **Cave ambience.** AMB and CRKL (FX > TAPE) lay a low cave wind and a torch's crackle under the music,
-  with no track and no voice used. Off by default.
-- **Three dungeon scales**: Phrygian dominant, Hungarian minor and double harmonic.
-- **A USB rescue.** If GHOULBOX fails to start twice in a row, or you hold OCT- while switching on, the FM-1
-  starts in a rescue mode with no sound and no menu, where the installer still works.
-- **Play it in your browser** at [ghoulbox.messy.quest](https://ghoulbox.messy.quest): the same firmware on a
-  drawn FM-1, played with the mouse, computer keys or MIDI, before you install anything. The web synth can
-  save and move its complete state, focus the display, and record a performance locally as FLAC, MP3 or
-  24-bit stereo WAV.
-- **A [demo of what's new](https://youtu.be/NMSw1_wnCwQ)**, rendered by the firmware's own sound and screen
-  code: the cave, the latch, the crank, the tunings and the scales.
-
-Your saved projects, user presets and settings load as before.
-
-### 1.4
-
-- **Power-on scenes.** Hold HOME for the menu and pick **SYSTEM > SCENE** to choose what the FM-1 plays
-  when you switch it on:
-
-  | Scene | What plays |
-  |---|---|
-  | **DUNGEON** | The default: hurdy-gurdy, crypt pad, monks, drone. 72 BPM. |
-  | **CRYPT** | Low drone, crypt choir, cave wind, slow tomb drums. 60 BPM. |
-  | **TAVERN** | Dance gurdy, harp arpeggio, lute, a light drum kit. 96 BPM. |
-  | **CHAPEL** | Cathedral organ, monks, a recorder lament, the vielle. 66 BPM. |
-  | **BLANK** | DUNGEON's four sounds with no notes, for starting from nothing. |
-
-  The web editor's Settings tab has it too.
-- **A hurdy-gurdy icon** for the GURDY engine, with its wheel, keybox and crank.
-
-### 1.3
-
-- **The hurdy-gurdy, reworked.** The trompette's buzz now cuts through the drones, and the six GURDY
-  sounds each have their own character: HURDY GURDY, DRONE WHEEL, DANCE GURDY, TROMPETTE, VIELLE and
-  BAGPIPE.
-- **MIDI control of the effects and the LFO**: distortion send, LFO rate, vibrato, fade-in, filter and
-  tremolo depth, reverb size and damping, delay time, feedback, tone and mix, chorus rate and depth.
-  The full CC table is in the guide (chapter 20).
-- **A 48-page user guide** with dark pages, for beginners and old hands alike.
-- **A [2½-minute demo](https://github.com/jasonpersinger/ghoulbox-fm1-dungeon-synth/releases/download/ghoulbox-v1.3/ghoulbox-demo-1.3.mp4)**
-  in four styles (crypt, tower, tavern, crypt again), rendered by the firmware's own sound and screen code.
-
-### 1.2
-
-- **CRYPT drums**: frame drum, rope snare, hand slap, shaker, jingles, timpani, stick and gong, with the
-  slow TOMBBEAT pattern.
-- **MIDI CC control** of level, pan, envelope, sends, the engine knobs, CRSH, TAPE and a master filter.
-- **Five new patterns**, two new sounds (LOW DRONE and SHAWM), and USB SERIAL off by default.
-
-Every release loads your saved projects, user presets and settings. Full notes are on the
-[Releases](https://github.com/jasonpersinger/ghoulbox-fm1-dungeon-synth/releases) page.
-
-## What GHOULBOX adds to Felucca
-
-Felucca's sequencer, song mode, effects, editor and backups all work as they do there. On top of them:
-
-- **A dungeon at power-on.** The FM-1 starts in D minor at 72 BPM, ready to play: press PLAY. Four other
-  scenes are in MENU > SYSTEM > SCENE.
-- **HALL reverb**: a third REVERB TYPE beside ROOM and SPRING, 1.5 s stone chamber to 12 s cathedral, on at
-  power-on; it borrows the delay's buffer, so it needs no extra RAM.
-- **TAPE and CRSH** (FX > TAPE): the mix through a worn cassette (wow, flutter, saturation, hiss) and a
-  cheap sampler's bits and rate.
-- **Ambience** (FX > TAPE, KNOB 3 and 4): **AMB** adds a cave's low wind to the mix and **CRKL** a torch's
-  crackle, with no track and no voice, playing even with the song stopped. AMB 0 (the default) is off; it saves
-  with the project. CAVE WIND and TORCH are still there as sounds when you want them on a track.
-- **Drone latch** (hold GLO, then F#4, G#4, A#4 or C#5 for tracks 1–4): a latched track keeps sounding the chord
-  you play after you let go, so you can select another track and play over the drone. A new chord replaces it;
-  pressing a note of the drone stops it. Other tracks never steal its voices (up to 8). The latch isn't saved,
-  and it does nothing on a DRUM track or with the ARP on (ARP HOLD does that job there).
-- **GURDY**, a hurdy-gurdy engine: a bowed melody string, drones you tune, and the trompette's buzzing
-  bridge struck in time, in six sounds.
-  - **Crank mode:** set COUP to **CRANK** and SELECT becomes the wheel's crank. The keys pick the notes; turning
-    plays them, louder and brighter the faster you turn, and the strings fall silent when you stop (the key still
-    held: turn again and it sounds). A sharp flick of the wrist kicks the trompette's buzz, as a player's strokes
-    do. WHL becomes **GEAR**: how fast you turn for full pressure. While a track cranks, the tempo is GLO + SELECT
-    (or HOME > CLOCK).
-- **Medieval tunings**: TEMP (press SCL twice for the CHORD page, KNOB 3) tunes a track from its ROOT in
-  **PYTH** (Pythagorean: pure fifths), **MEAN** (quarter-comma meantone: pure thirds) or **JUST** (just intonation:
-  in a minor key the i, iv and ♭VI chords ring pure); **EQUAL**, the default, is as before. GURDY's drones follow it.
-- **Dungeon scales**: Phrygian dominant (PHDOM), Hungarian minor (HUNG) and double harmonic (DHARM), beside
-  Felucca's sixteen on the SCL page.
-- **Real recordings**: a bowed psaltery, a Renaissance chamber organ, a baroque tenor recorder and a folk
-  harp, sampled from public-domain (CC0) libraries, on the SAMPLE engine.
-- **45 dungeon sounds**: crypt pads, string machines, monk, crypt and glass choirs, a low drone voice, cathedral,
-  reed and pipe organs, lute, harpsichord and virginal, a dungeon harp, tower and lo-fi flutes, recorder, French
-  horn, mournful and grim brass, tuba, dark strings, cave wind, torch crackle, a bagpipe, a shawm and five
-  hurdy-gurdies, two crypt drum kits, plus the four recordings; seven of them are new 6-operator FM patches.
-- **CRYPT drums**: a dungeon kit on the DRUM engine with the TOMBBEAT pattern.
-- **Nine dungeon patterns** (SAVE > PHRASES), in D minor over the power-on scene's chords: DIRGE, BALLAD,
-  CHANT, PEDAL, MARCH, LAMENT, ARPEGGIO, ANTIPHON and TOMBBEAT.
-- **MIDI CC control**: a keyboard or DAW can turn level, pan, envelope, sends, the four engine knobs, the
-  LFO, the reverb, delay and chorus settings, CRSH, TAPE and a master low/high-pass filter.
-- **A curated list**: 59 sounds across 13 engines. The pop, techno and percussion presets and the SLICE
-  engine are retired from the menus; projects and user presets that use them still load and play them.
-- **USB SERIAL off by default**: the FM-1 shows up as plain audio and MIDI; turn the developer
-  console on in the menu if you want it.
-- **An old-RPG screen**: VT323 pixel type, stone windows, a sword cursor, flickering wall torches, and the
-  CRYPT palette (stone, bone, torch amber, blood red), a blackletter wordmark and a skull at boot.
-
-Version 2.1 (HOME held > ABOUT). A hobby project, tested on one FM-1: **install at your own risk.**
-
-**[User guide (PDF)](docs/guide/GHOULBOX-User-Guide-2.1.pdf):** a 52-page manual: the FM-1's hardware and
-installing; synth basics in plain words (oscillators, filters, envelopes, LFOs, effects, sequencing), each
-with a hands-on exercise; a full reference to every page and all 59 sounds; a first piece built step by
-step, a minor-key chord cheat sheet and dungeon recipes; recording, troubleshooting and a glossary.
-
-## Install
-
-In Chrome or Edge on a computer, with the FM-1 on a USB **data** cable and no other music app open:
-
-**[ghoulbox.messy.quest/webapp/installer](https://ghoulbox.messy.quest/webapp/installer/)**
-
-First save a backup: the installer doesn't make one. Open the
-[web editor](https://ghoulbox.messy.quest/webapp/editor/), connect, and on its
-Settings tab press **Save backup** (your music, sounds, samples and settings, to your computer).
-
-Then press Install. If it stops after "update mode", replug the USB cable and press Install again: the FM-1 stays in
-update mode until the install is finished.
-
-To go back, install Felucca from [its installer](https://hugelton.github.io/Felucca/) and restore the
-backup in its editor; its "Return to official V15" returns to M-VAVE's firmware. The package (and the user
-guide) are also on the [Releases](https://github.com/jasonpersinger/ghoulbox-fm1-dungeon-synth/releases) page.
-
-Something wrong, or a sound you want? [Open an issue](https://github.com/jasonpersinger/ghoulbox-fm1-dungeon-synth/issues/new/choose); plans are in the [roadmap](ROADMAP.md).
-
-To build it yourself (JieLi toolchain and AC79 SDK, see [BUILDING.md](BUILDING.md)):
-
-```
-./build.sh
-python3 tools/ghoulbox_serve.py    # http://localhost:8000/webapp/installer/
+```sh
+tools/setup_toolchain.sh     # JieLi toolchain, AC79 SDK, Emscripten, Python 3.14 venv (once)
+./build.sh                   # build/felucca.fwsc: the firmware package (Docker runs the JieLi tools on macOS)
+sh web/emu/build.sh          # build/emu/: the browser emulator
+python3 -m http.server -d build/emu 8790     # open http://localhost:8790/
 ```
 
-## If the FM-1 does not start
+Docker Desktop must be running for `./build.sh` on macOS.
 
-- If GHOULBOX itself won't start, switch the FM-1 off, then on again while holding **OCT-**: it starts in
-  GHOULBOX's USB rescue (no sound, no menu), and the web installer can install again from there. Two failed
-  starts in a row open the rescue on their own.
-- If an update is interrupted and the FM-1 stays black, check whether a computer sees it as a USB device named
-  **WL80UBOOT** (or a USB mass-storage device with ID 4C4A:8057). That is the chip's built-in boot mode: try another
-  USB data cable, close every other app that uses MIDI, and run the web installer again.
-- If it stays in boot mode, [FM-1 Transporter](https://github.com/kurogedelic/FM-1-transporter) reads and
-  writes the FM-1's flash from a Mac through a Seeed XIAO RP2040 (three wires to the FM-1's USB lines). Back up
-  the flash first, then write the official firmware (M-VAVE's FM-1.fwsc).
-- Still stuck? [Open an issue](https://github.com/jasonpersinger/ghoulbox-fm1-dungeon-synth/issues/new/choose).
+## Testing
 
-## Sound auditions
+Three levels, cheapest first:
 
-The firmware's own audio and screen code runs on a computer, so a change can be heard and seen before
-flashing:
+1. **Browser emulator** (`web/emu/`): the firmware's own C sources compiled to WebAssembly against a simulated
+   FM-1. The quick loop for designing sounds and screens.
+2. **Host tests**: `tests/run_tests.sh` (with `AC79_SDK=.toolchain/ac79-sdk` and the venv on `PATH`): golden
+   renders of every sound, the UI's layout lint, CPU budgets and more. The reverb's HALL cost check fails on
+   Apple silicon hosts (it measures host instructions; CI has no counter and skips it); this is inherited.
+3. **Emulated hardware**: `tools/hw_check.sh` boots the real `build/felucca.fwsc` on an emulation of the
+   AC791N's pi32v2 cores and the board
+   ([shcherbakov7/m-wave-fm1-browser-emulator](https://github.com/shcherbakov7/m-wave-fm1-browser-emulator), Rust),
+   and saves the screen to `build/hw/screen.png`. This checks the real image: memory layout, start-up, timing.
 
-```
-gcc -O2 -w -Ibuild/gen -Ifirmware/src -o build/host/dungeon_demo tests/dungeon_demo.c -lm
-build/host/dungeon_demo build/dungeon_demo     # the power-on scene, passages, every GHOULBOX preset
-gcc -O2 -w -Ibuild/gen -Ifirmware/src -o build/host/preset_preview tests/preset_preview.c -lm
-build/host/preset_preview build/preset_preview # every factory preset on its own pattern
-gcc -O1 -w -Ibuild/gen -Ifirmware/src -Itests -o build/host/ghoulbox_shots tests/ghoulbox_shots.c -lm
-build/host/ghoulbox_shots build/gb_shots       # the screenshots above (PPM)
-```
+Then a real FM-1. M-VAVE's own updater returns it to stock firmware.
 
-## Credits and licence
+## Licence
 
-GHOULBOX changes © 2026 Jason Persinger ([@jasonpersinger](https://github.com/jasonpersinger)),
-GPL-3.0-only, like Felucca. It is built entirely on **Felucca** by Leo Kuroshita / Hügelton Instruments
-(GPL-3.0-only); please support the original ([GitHub Sponsors](https://github.com/sponsors/hugelton),
-[itch.io](https://hugelton.itch.io/felucca)). GHOULBOX adds the VT323 font (Peter Hull, SIL OFL 1.1) and
-the Pirata One font (Rodrigo Fuenzalida, Nicolas Massi; SIL OFL 1.1); see [LICENSING.md](LICENSING.md).
-M-VAVE and FM-1 are trademarks of their owners; GHOULBOX is not affiliated with or endorsed by them or by
-Hügelton Instruments.
+GPL-3.0-only, as GHOULBOX and Felucca. See [LICENSING.md](LICENSING.md) for the parts under other licences.
+GHOULBOX's own README is kept at [docs/GHOULBOX-README.md](docs/GHOULBOX-README.md).
 
-For everything Felucca itself does (the sequencer, songs, the menu, every engine), see
-[Felucca's README](https://github.com/hugelton/Felucca#readme); every third-party component and its licence is
-listed in [LICENSING.md](LICENSING.md).
+M-VAVE and FM-1 are trademarks of their respective owners. ESTAMPIE, GHOULBOX and Felucca are not affiliated with
+or endorsed by them.

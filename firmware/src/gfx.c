@@ -25,7 +25,7 @@ typedef struct { uint16_t off; uint8_t w; const char *label; } kc_t;
 #include "ui_fonts.h"                   /* AF_S 12 px / 400, AF_M 15 px / 500, AF_L 28 px / 600 */
 #include "ui_palettes.h"
 #include "ui_keycaps.h"                 /* KC_*: the keycaps / badges (tools/gen_aa_keycaps.py), KNOB_* arcs */
-#include "ghoulbox_art.h"               /* GB_LOGO, GB_LOGO_S, GB_SKULL (tools/gen_ghoulbox_art.py) */
+#include "estampie_art.h"               /* ES_INIT, ES_INIT_RULE, ES_WORD, ES_LOGO_S (tools/gen_estampie_art.py) */
 #define ELLIPSIS '\x85'                 /* the ellipsis glyph of AF_S and AF_M */
 
 /* host tests hook in here (layout lint, draw cost); nothing in the firmware */
@@ -927,7 +927,7 @@ static void draw_text_box(uint32_t x, uint32_t y, uint32_t w, const aafont_t *f,
 {
     draw_text_line(x, y, w, f, s, c, T_BG, align);
 }
-/* GHOULBOX: a 4-bit alpha picture (ghoulbox_art.h) centred on a full-width band at row y, in c (one-shots: boot) */
+/* GHOULBOX: a 4-bit alpha picture (estampie_art.h) centred on a full-width band at row y, in c (one-shots: boot) */
 static void draw_art_box(uint32_t y, uint32_t w, uint32_t h, const uint8_t *d, uint16_t c)
 {
     cv_begin(240, h, T_BG);

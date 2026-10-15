@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
-# GHOULBOX: the browser emulator page's pixel art (web/emu/build.sh), in the CRYPT palette (build/gen/ui_palettes.h):
+# ESTAMPIE: the emulator page's crest, in the VELLUM palette (build/gen/ui_palettes.h):
+#   initial.png  the illuminated initial (tools/gen_estampie_art.py initial: ES_INIT and ES_INIT_RULE) at 4x
+#   word.png     "stampie" (ES_WORD) at 4x
+# GHOULBOX: the installer's, editor's and tools pages' pixel art (until they are restyled), in the CRYPT palette:
 #   torch.png  the wall torch, the firmware's own (src/ui_graph.c torch_draw): its 4 frames side by side, 12 x 30 each
 #   logo.png   "GHOULBOX" and skull.png, the boot screen's art drawn large (tools/gen_ghoulbox_art.py logo, skull: the
 #              same word and skull as GB_LOGO, GB_SKULL, at 4x their size: smooth, the page shows them at 2x) in its
@@ -17,6 +20,7 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from gen_ghoulbox_art import logo, skull  # noqa: E402
+from gen_estampie_art import initial, word  # noqa: E402
 
 
 def rgb565(v):
@@ -98,9 +102,23 @@ def wall():
     return im
 
 
+def vellum(gen):
+    """ESTAMPIE: the VELLUM palette's colours (build/gen/ui_palettes.h)"""
+    m = re.search(r'\{"VELLUM",\s*(0x\w+),\s*(0x\w+),\s*(0x\w+),\s*(0x\w+),\s*(0x\w+)\}',
+                  (gen / "ui_palettes.h").read_text())
+    bg, surf, text, theme, accent = (rgb565(int(v, 16)) for v in m.groups())
+    return {"bg": bg, "surf": surf, "text": text, "theme": theme, "accent": accent}
+
+
 def main():
     gen, out = Path(sys.argv[1]), Path(sys.argv[2])
     out.mkdir(parents=True, exist_ok=True)
+    v = vellum(gen)                                     # ESTAMPIE: the crest, 4x the boot screen's (drawn smooth)
+    field, rule = initial(4)
+    crest = tinted(field, v["accent"])
+    crest.alpha_composite(tinted(rule, v["theme"]))
+    crest.save(out / "initial.png")
+    tinted(word("stampie", 156, 46, 4), v["theme"]).save(out / "word.png")
     c = crypt(gen)
     torch(c).save(out / "torch.png")
     tinted(logo(896, 208), c["theme"]).save(out / "logo.png")      # (GB_LOGO is logo(224, 52))
