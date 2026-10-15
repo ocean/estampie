@@ -39,6 +39,15 @@ jobs:
         run: uv sync --frozen --no-default-groups && echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
 
       # ESTAMPIE: Zig (pinned by SHA-256 in tools/toolchain.lock), so the browser emulator is built and tested too.
+      # Cached: the download (setup re-checks its hash every run, so a cache can't slip in another archive) and
+      # Zig's build cache (the wasi-libc it compiles once). A pull request's cache stays on its own branch.
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9   # v6.1.0
+        with:
+          path: |
+            .toolchain/downloads/zig-*.tar.xz
+            .toolchain/zig-cache
+          key: zig-${{ runner.os }}-${{ hashFiles('tools/toolchain.lock') }}
+
       - name: Zig
         run: tools/setup_toolchain.sh --only zig
 

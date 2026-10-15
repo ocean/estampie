@@ -125,7 +125,8 @@ if want python; then
 fi
 
 # Zig: one archive, minisign-signed by its maintainers (the pin's hash was taken after checking that signature,
-# tools/minisign_verify.py). zig cc builds the wasi-libc it needs from the source it ships, once, into the cache.
+# tools/minisign_verify.py). zig cc builds the wasi-libc it needs from the source it ships, once, into
+# .toolchain/zig-cache (keyed by Zig's own version and inputs, so it survives a Zig update safely).
 if want zig; then
     set -- $(pin zig)
     if ! current $TC/zig "$2"; then
@@ -134,7 +135,6 @@ if want zig; then
         inner=$(ls -d $TC/zig/zig-*)
         for d in "$inner"/*; do mv "$d" $TC/zig/; done
         rmdir "$inner"
-        rm -rf $TC/zig-cache
     fi
     [ "$($TC/zig/zig version)" = "$1" ] || die "$TC/zig: zig doesn't run, or isn't $1"
 fi
