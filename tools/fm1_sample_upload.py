@@ -59,7 +59,7 @@ class Link:
         try:
             import mido
         except ImportError:
-            sys.exit("needs mido: pip install mido python-rtmidi")
+            sys.exit("needs mido: uv sync (the device group)")
         self.mido = mido
         outs = [n for n in mido.get_output_names() if "Felucca" in n]
         ins = [n for n in mido.get_input_names() if "Felucca" in n]
