@@ -47,12 +47,13 @@ int main(int argc, char **argv)
     static const uint8_t pd[] = {0x08, 0xf0};
     const aafont_t probe = {1, 1, 'A', 'A', 0, 0, pg, pd, 0, 0, 0};
     double worst = 100;
-    assert(NPALETTES == 12u && !strcmp(UI_PALETTES[0].name, "GREY") && !strcmp(UI_PALETTES[7].name, "HI-CON") &&
+    assert(NPALETTES == 13u && !strcmp(UI_PALETTES[0].name, "GREY") && !strcmp(UI_PALETTES[7].name, "HI-CON") &&
            !strcmp(UI_PALETTES[8].name, "CRYPT") && UI_CRYPT_INDEX == 8u &&
            !strcmp(UI_PALETTES[9].name, "NIGHT") && !strcmp(UI_PALETTES[10].name, "MONO") && UI_BW_INDEX == 10u &&
-           !strcmp(UI_PALETTES[11].name, "VELLUM") && UI_VELLUM_INDEX == 11u);
+           !strcmp(UI_PALETTES[11].name, "VELLUM") && UI_VELLUM_INDEX == 11u &&
+           !strcmp(UI_PALETTES[12].name, "TAVERN") && UI_TAVERN_INDEX == 12u);
     /* (#50, 1.0.2: appended, the ids stay; GREY is the MONO of 1.0.1, id 0; GHOULBOX's CRYPT keeps its id 8;
-     * ESTAMPIE's VELLUM is appended as id 11) */
+     * ESTAMPIE's VELLUM and TAVERN are appended as ids 11 and 12) */
     for (unsigned st = ST_FLAT; st <= ST_LINE; st++) {   /* MONO: every token black or white, in FLAT and LINE */
         uint16_t *tok = &ux.bg;
         ux.style = (uint8_t)st;

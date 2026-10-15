@@ -16,7 +16,7 @@
 # UI renders (tests/ui_render.c): every screen in every palette from the real drawing code: the layout lint (no text
 #                   off the screen, cut, hidden, overlapping or spilling out of its cell / card; only free text
 #                   ellipsised), GREY gray, MONO neutral, the draw cost, the text audit (build/ui_new/text_audit.tsv);
-#                   PNGs of GREY MONO GREEN PAPER NIGHT CRYPT VELLUM in build/ui_new (tests/ui_render.py), the findings in build/ui_new/report.txt;
+#                   PNGs of GREY MONO GREEN PAPER NIGHT CRYPT VELLUM TAVERN in build/ui_new (tests/ui_render.py), the findings in build/ui_new/report.txt;
 #                   FM6's 32 algorithm charts as drawn (no box overlapping, no route through a box or crossing another), again
 #                   on OPERATOR with each operator picked and its frequency text at its widest (1.2, #76);
 #                   DIGITAL's screens (its algorithm charts, OP ENV) with FELUCCA_FM4=1 too (build/ui_fm4: lint, GREY, MONO);
