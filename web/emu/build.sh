@@ -11,9 +11,9 @@
 set -e
 cd "$(dirname "$0")/../.."
 [ -f build/gen/felucca_tables.h ] || { echo "emu: run ./build.sh once first (build/gen)"; exit 1; }
-# ESTAMPIE: use the in-repo Emscripten (.toolchain/emsdk) when there is no emcc on the PATH.
-if ! command -v emcc >/dev/null 2>&1 && [ -f .toolchain/emsdk/emsdk_env.sh ]; then
-    EMSDK_QUIET=1 . .toolchain/emsdk/emsdk_env.sh
+# ESTAMPIE: the in-repo, pinned Emscripten (tools/setup_toolchain.sh); EMU_SYSTEM_EMCC=1 uses emcc from the PATH.
+if [ "${EMU_SYSTEM_EMCC:-0}" != 1 ] && [ -f .toolchain/emscripten/.emscripten ]; then
+    . tools/emscripten_env.sh
 fi
 command -v emcc >/dev/null 2>&1 || { echo "emu: no emcc (Emscripten: run tools/setup_toolchain.sh)"; exit 1; }
 VERSION=$(sed -n 's/^#define FELUCCA_VERSION "\([^"]*\)".*/\1/p' firmware/src/felucca.c)

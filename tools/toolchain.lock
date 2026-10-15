@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: GPL-3.0-only
+# ESTAMPIE: every external tool the build fetches, pinned. tools/setup_toolchain.sh reads this file and refuses
+# anything whose SHA-256 (archives, binaries) or commit (git) differs. To update a pin, follow docs/SECURITY.md
+# ("Updating a pin"): check the release's signature or provenance where the project publishes one, wait out the
+# cooldown, record the new hash here, then run tools/osv_scan.sh.
+#
+# name         platform      version                        sha256 (file) | commit (git)                                       url
+jieli          any           20260730.1                     a1545cddbc451a06bac43eb5cd96d831470c42a97c5c0b1f98879a20fc7647bd  https://jl-update.oss-cn-shenzhen.aliyuncs.com/jieli-linux-toolchains-20260730.1.tar.xz
+ac79-sdk       git           AC79NN_SDK_V1.2.1_2023-12-13   d179b4484759423312073f5fbb232501aa491047                          https://gitee.com/Jieli-Tech/fw-AC79_AIoT_SDK.git
+# Node: only the node binary is kept (emcc's JavaScript passes); npm, npx and corepack are deleted after unpacking.
+# The SHASUMS256.txt.asc of each release is signed by a key in github.com/nodejs/release-keys.
+node           darwin-arm64  24.22.0                        75ddfb875bbd868ebe57536f4442225f54dd10f6d2178dd439de869a5c648dc3  https://nodejs.org/dist/v24.22.0/node-v24.22.0-darwin-arm64.tar.xz
+node           linux-x64     24.22.0                        cc2f601cee82d9a5a233302fe307abc600727035fd7d2c3a3571755989e95008  https://nodejs.org/dist/v24.22.0/node-v24.22.0-linux-x64.tar.xz
+# Emscripten: the release build emsdk would install (6.0.12 = releases 6e9f6885...), without emsdk's own Node and
+# Python; it runs on the Node above and the uv-locked Python 3.14 (.venv). Emscripten publishes no signatures.
+emscripten     darwin-arm64  6.0.12                         8e91c0eca2b8728aa2babb32b805318eaf5e8d6652c6535163d0ea467a6d907c  https://storage.googleapis.com/webassembly/emscripten-releases-builds/mac/6e9f6885cb17a3d6c8fd488a5cff730f50aba61d/wasm-binaries-arm64.tar.xz
+emscripten     linux-x64     6.0.12                         7b073a102b07eca5a0fe344037681e53162639f3540432456874c0446a5e8fa7  https://storage.googleapis.com/webassembly/emscripten-releases-builds/linux/6e9f6885cb17a3d6c8fd488a5cff730f50aba61d/wasm-binaries.tar.xz
+# osv-scanner: the vulnerability scanner itself (tools/osv_scan.sh); hashes from the release's osv-scanner_SHA256SUMS.
+osv-scanner    darwin-arm64  2.7.0                          d4926ef8da134332543be276dff157e4c170f99ad91fc48e89448a8816bdf70b  https://github.com/google/osv-scanner/releases/download/v2.7.0/osv-scanner_darwin_arm64
+osv-scanner    linux-x64     2.7.0                          160c6253e2922e9e0a6a9771c5c4c40a4b3c6090b34a3cdd5e80c96cc2e4218b  https://github.com/google/osv-scanner/releases/download/v2.7.0/osv-scanner_linux_amd64
+# The pi32v2 hardware emulator (tools/hw_check.sh), built with cargo --locked; optional (setup_toolchain.sh --hw).
+fm1-hw-emu     git           main                           056621b0c3187e6712326ef854d0a78ed9605600                          https://github.com/shcherbakov7/m-wave-fm1-browser-emulator.git
+# The container the JieLi tools run in on macOS / non-x86 hosts (tools/build.py): sha256 is the image index digest.
+build-image    linux-amd64   cc-debian13:nonroot            e792ab3d241a468a4fd7519ddbbebe66b49b5f365771716ea688ad40b6c6f1c2  gcr.io/distroless/cc-debian13:nonroot

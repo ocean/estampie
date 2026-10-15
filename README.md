@@ -24,7 +24,8 @@ Everything the build needs is fetched into the repository (`.toolchain/`, `.venv
 nothing is installed in your home directory. Needs [uv](https://docs.astral.sh/uv/), Docker Desktop and git:
 
 ```sh
-tools/setup_toolchain.sh     # JieLi toolchain, AC79 SDK, Emscripten; Python 3.14 from uv.lock (uv sync)
+tools/setup_toolchain.sh     # every tool, pinned by hash (tools/toolchain.lock); Python 3.14 from uv.lock
+tools/osv_scan.sh            # known vulnerabilities in everything the build runs (docs/SECURITY.md)
 ./build.sh                   # build/felucca.fwsc: the firmware package (Docker runs the JieLi tools on macOS)
 sh web/emu/build.sh          # build/emu/: the browser emulator
 python3 -m http.server -d build/emu 8790     # open http://localhost:8790/
