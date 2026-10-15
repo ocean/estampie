@@ -239,6 +239,8 @@ if [ -f build/gen/felucca_tables.h ]; then
         -o "$OUT/fm4_div0_test" tests/fm4_div0_test.c -lm
     run "DIGITAL -> FM6 without a divide by zero (#61): the same values as before, a 0.9 ORGAN project (UBSan)" \
         "$OUT/fm4_div0_test"
+    $CC -O1 -w -Ibuild/gen -Ifirmware/src -o "$OUT/scene_test" tests/scene_test.c -lm
+    run "scenes (ESTAMPIE): TROTTO first, every scene's sounds and phrases, the Trotto's notes against its ABC" "$OUT/scene_test"
     $CC -O1 -w -Ibuild/gen -Ifirmware/src -o "$OUT/theme_test" tests/theme_test.c -lm
     run "themes: contrast, text blending and font metrics" "$OUT/theme_test"
     $CC -O1 -w -Ibuild/gen -Ifirmware/src -o "$OUT/text_ref_test" tests/text_ref_test.c -lm

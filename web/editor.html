@@ -1846,7 +1846,8 @@ function makeMockDevice(opt = {}) {
         D("DLVL", F.PCT, 0, 127, 90), D("5TH", F.PCT, 0, 127, 50), D("WHL", F.PCT, 0, 127, 80), D("BUZZ", F.PCT, 0, 127, 60),
         E("COUP", ["HOLD", "1/4", "1/8", "1/8T", "1/16", "CRANK"], 2), D("BODY", F.PCT, 0, 127, 70), D("WOBL", F.PCT, 0, 127, 40)],
       presets: [
-        /* GHOULBOX presets (tools/ghoulbox_presets.py) */ P("HURDY GURDY", [2, 90, 50, 80, 85, 2, 70, 40], [8, 64, 127, 40], 1, 15), P("DRONE WHEEL", [2, 127, 110, 45, 0, 0, 105, 70], [50, 64, 127, 100], 1, 17), P("DANCE GURDY", [2, 45, 0, 120, 127, 4, 35, 20], [2, 64, 127, 25], 1, 21), P("TROMPETTE", [2, 60, 0, 95, 110, 0, 60, 30], [4, 64, 127, 40], 1, 18), P("VIELLE", [2, 0, 0, 70, 0, 0, 100, 45], [35, 64, 120, 70], 1, 19), P("BAGPIPE", [2, 127, 90, 127, 0, 0, 25, 0], [4, 64, 127, 30], 1, 15) /* GHOULBOX end */] },
+        /* GHOULBOX presets (tools/ghoulbox_presets.py) */ P("HURDY GURDY", [2, 90, 50, 80, 85, 2, 70, 40], [8, 64, 127, 40], 1, 15), P("DRONE WHEEL", [2, 127, 110, 45, 0, 0, 105, 70], [50, 64, 127, 100], 1, 17), P("DANCE GURDY", [2, 45, 0, 120, 127, 4, 35, 20], [2, 64, 127, 25], 1, 21), P("TROMPETTE", [2, 60, 0, 95, 110, 0, 60, 30], [4, 64, 127, 40], 1, 18), P("VIELLE", [2, 0, 0, 70, 0, 0, 100, 45], [35, 64, 120, 70], 1, 19), P("BAGPIPE", [2, 127, 90, 127, 0, 0, 25, 0], [4, 64, 127, 30], 1, 15) /* GHOULBOX end */,
+        /* ESTAMPIE presets (tools/estampie_presets.py) */ P("TROTTO GURDY", [9, 70, 55, 110, 100, 1, 55, 15], [2, 64, 127, 20], 1, 21) /* ESTAMPIE end */] },
   ];
   const FM6_E = ENG.findIndex((e) => e.name === "FM6"), FM6_OWN = FM6.FACTORY_PK.length, DRUM_E = ENG.findIndex((e) => e.name === "DRUM");
   /* factory PATTERNS[] (engines.c; the device loads them from SAVE > PHRASES, presets only suggest one): absolute

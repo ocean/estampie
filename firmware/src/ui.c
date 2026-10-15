@@ -103,7 +103,7 @@ static void rp_put(uint32_t f, uint32_t v)
  * 0 in older ones = FLAT; 2, the retired PIXEL (1.0.1), reads as LINE; anything else unknown as FLAT (settings_persist.c). gfx.c draws from its copy, ux.style
  * (ui_draw.c style_apply) */
 #define ui_style (favorites.factory[15][29])
-#define ui_scene (favorites.factory[15][27])   /* 1.3: MENU > SYSTEM > SCENE (engines.c GB_SCENES; 0 = DUNGEON) */
+#define ui_scene (favorites.factory[15][27])   /* 1.3: MENU > SYSTEM > SCENE (engines.c GB_SCENES; 0 = TROTTO) */
 static void draw_gaps(uint32_t y, uint32_t h);        /* (ui_draw.c) */
 
 static uint8_t sync_reload;                  /* engine / preset / project / user preset loaded: editor RELOAD push */
@@ -1259,7 +1259,7 @@ static void gb_scene_load(uint32_t s)
 {
     uint32_t i;
     if (s >= GB_NSCENE)
-        s = 0;
+        s = 0;                                /* (ESTAMPIE: TROTTO) */
     for (i = 0; i < G_COUNT; i++)
         song.g[i] = GP[i].def;
     undo_depth++;                             /* (no undo copy of the power-on loads) */
@@ -1272,16 +1272,20 @@ static void gb_scene_load(uint32_t s)
         t->engine = t->eng_req;
         eng_mem_claim(t);                     /* (Felucca 1.5's engine memory; zeros already: no note can come before) */
         track_defaults_steps(t);              /* (a sound load never touches them) */
-        if (p[2])
+        t->p[P_SDIV] = 1;                     /* 1/8, a slow scene */
+        if (p[2] >= ES_PHR(0))
+            es_phrase_load(t, p[2] - ES_PHR(0));   /* ESTAMPIE: a longer phrase, its own LEN and DIV */
+        else if (p[2])
             load_pat16(t, PATTERNS[p[2] - 1u].note, PATTERNS[p[2] - 1u].flags);
         pat_sig[i] = steps_sig(t);            /* a default pattern, not the user's */
-        pat_last[i] = p[2];
-        t->p[P_SDIV] = 1;                     /* 1/8, a slow scene */
+        pat_last[i] = p[2] < ES_PHR(0) ? p[2] : 0u;   /* (a phrase is in no PATTERNS list) */
+        if (GB_SCENES[s].lvl[i % NPART])
+            t->p[P_LEVEL] = GB_SCENES[s].lvl[i % NPART];
     }
     undo_depth--;
     song.sel = 0;
     song.g[G_BPM] = GB_SCENES[s].bpm;
-    song.g[G_RTYPE] = 2;                      /* HALL */
+    song.g[G_RTYPE] = GB_SCENES[s].rtype;     /* HALL (ESTAMPIE: the scene's; TROTTO a ROOM) */
     song.g[G_TAPE] = GB_SCENES[s].tape;
     ui.home = 1;
     ui.force = 1;

@@ -157,7 +157,7 @@ static uint32_t menu_get(uint32_t row)
     case MI_STYLE: return ui_style == ST_LINE;
     case MI_LOWCUT: return settings.lowcut % 3u;
     case MI_HOLD: return settings_hold % 4u;
-    case MI_SCENE: return ui_scene < GB_NSCENE ? ui_scene : 0u;   /* (a later version's: DUNGEON, as played) */
+    case MI_SCENE: return ui_scene < GB_NSCENE ? ui_scene : 0u;   /* (a later version's: the first, as played) */
     case MI_SCROFF: return scr_get();
     case MI_ANIM: return ui_prefs & PREF_ANIM_OFF ? 1u : (ui_idle & 1u) ? 2u : 0u;
     case MI_HOME: return (uint32_t)home_tracks();

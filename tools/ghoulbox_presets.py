@@ -107,23 +107,31 @@ def check(eng, p):
     assert all(0 <= v <= 127 for v in env + list(fx)) and mono in (0, 1) and 1 <= pat <= NPATTERNS, (eng, name)
 
 
-def strip_block(s, open_c, close_c):
-    return re.sub(rf"\s*{re.escape(open_c)} {re.escape(BEGIN)} {re.escape(close_c)}.*?{re.escape(open_c)} "
-                  rf"{re.escape(END)} {re.escape(close_c)}", "", s, flags=re.S)
+def block_re(open_c, close_c, begin, end):
+    return re.compile(rf"\s*{re.escape(open_c)} {re.escape(begin)} {re.escape(close_c)}.*?{re.escape(open_c)} "
+                      rf"{re.escape(end)} {re.escape(close_c)}", re.S)
 
 
-def write_c(eng, presets):
+def put_block(s, lo, hi, block, open_c, close_c, begin, end):
+    """s with the marked block in s[lo:hi] replaced by `block` where it was (or put at hi): appended blocks keep their
+    order whichever generator runs (ESTAMPIE: tools/estampie_presets.py appends its own after GHOULBOX's)"""
+    m = block_re(open_c, close_c, begin, end).search(s, lo, hi)
+    if m:
+        return s[:m.start()] + block + s[m.end():]
+    return s[:hi] + block + s[hi:]
+
+
+def write_c(eng, presets, begin=BEGIN, end=END):
     fname, arr = ENGINES[eng]
     path = ROOT / "firmware/src" / fname
-    s = strip_block(path.read_text(), "/*", "*/")
+    s = path.read_text()
     i = s.index(f"static const preset_t {arr}[] = {{")
     j = s.index("\n};", i)                              # the array's end
-    block = f"\n    /* {BEGIN} */\n" + "\n".join(c_line(p) for p in presets) + f"\n    /* {END} */"
-    path.write_text(s[:j] + block + s[j:])
+    block = f"\n    /* {begin} */\n" + "\n".join(c_line(p) for p in presets) + f"\n    /* {end} */"
+    path.write_text(put_block(s, i, j, block, "/*", "*/", begin, end))
 
 
-def write_js(s, eng, presets):
-    s = s
+def write_js(s, eng, presets, begin=BEGIN, end=END):
     i = s.index(f'{{ name: "{eng}",')
     k = s.index("presets: [", i) + len("presets: [")
     depth, j = 1, k                                     # the array's matching ]
@@ -131,10 +139,14 @@ def write_js(s, eng, presets):
         depth += {"[": 1, "]": -1}.get(s[j], 0)
         j += 1
     j -= 1
-    inner = strip_block(s[k:j], "/*", "*/").rstrip().rstrip(",")   # (the separator before an old block too)
-    sep = "," if inner.strip() else ""
-    block = f"{sep}\n        /* {BEGIN} */ " + ", ".join(js_item(p) for p in presets) + f" /* {END} */"
-    return s[:k] + inner + block + s[j:]
+    inner = s[k:j]
+    items = ", ".join(js_item(p) for p in presets)
+    if block_re("/*", "*/", begin, end).search(inner):      # in place, after the separator already there
+        inner = put_block(inner, 0, len(inner), f"\n        /* {begin} */ {items} /* {end} */", "/*", "*/", begin, end)
+    else:
+        inner = inner.rstrip().rstrip(",")
+        inner += ("," if inner.strip() else "") + f"\n        /* {begin} */ {items} /* {end} */"
+    return s[:k] + inner + s[j:]
 
 
 def main():

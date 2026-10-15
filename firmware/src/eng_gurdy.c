@@ -205,6 +205,9 @@ static const preset_t GURDY_PRESETS[] = {
     {"VIELLE", {2, 0, 0, 70, 0, 0, 100, 45}, {35, 64, 120, 70}, 0, 1, FX(0, 25, 10, 100), PAT(19)},
     {"BAGPIPE", {2, 127, 90, 127, 0, 0, 25, 0}, {4, 64, 127, 30}, 0, 1, FX(18, 0, 0, 80), PAT(15)},
     /* GHOULBOX end */
+    /* ESTAMPIE presets (tools/estampie_presets.py) */
+    {"TROTTO GURDY", {9, 70, 55, 110, 100, 1, 55, 15}, {2, 64, 127, 20}, 0, 1, FX(8, 0, 0, 40), PAT(21)},
+    /* ESTAMPIE end */
 };
 
 /* COUP CRANK: WHL is GEAR (crank_pressure) */

@@ -39,7 +39,8 @@ static const char *const PRESET_CAT[16] = {   /* GHOULBOX: its sounds after Felu
     "KUBLPUKU" "LKPPLKB",        /* 12 FM6: TINE EP, BELL, FM BASS, BRASS, PAD, MARIMBA, ORGAN, PLUCK; FRENCH HORN,
                                   * VIRGINAL, GLASS CHOIR, DARK STRINGS, LOFI FLUTE, PIPE ORGAN, TUBA */
     "DD",                        /* 13 SLICE: CHOP, STUTTER */
-    "LPLLLL",                    /* 14 GURDY: HURDY GURDY, DRONE WHEEL, DANCE GURDY, TROMPETTE, VIELLE, BAGPIPE */
+    "LPLLLL" "L",                /* 14 GURDY: HURDY GURDY, DRONE WHEEL, DANCE GURDY, TROMPETTE, VIELLE, BAGPIPE;
+                                  * ESTAMPIE's TROTTO GURDY */
 };
 static uint32_t preset_cat(uint32_t e, uint32_t k)    /* factory preset k of engine e */
 {

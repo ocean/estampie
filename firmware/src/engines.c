@@ -233,21 +233,89 @@ static const struct {
 /* the parts at power-on (engine, preset, PATTERNS[n - 1] in the sequencer, 0 = empty: all are): bass, pad, lead, drums */
 static const uint8_t TRK_DEF[NPART][3] = {{0, 4, 0}, {ENGI_FM6, 4, 0}, {3, 0, 0}, {ENGI_DRUM, 0, 0}}; /* ANALOG ACID,
                                                                        * FM6 PAD (was DIGITAL PAD), LOFI PULSE LD, DRUM KIT */
-/* GHOULBOX: what felucca_init plays instead (TRK_DEF stays Felucca's: an old project's missing parts are those), in D
- * minor, 1/8 steps, HALL (ui.c gb_scene_load). 1.3: MENU > SYSTEM > SCENE picks one (ui_scene; append-only: a saved
- * value keeps its scene, an unknown one plays DUNGEON). The patterns are the dungeon nine (PATTERNS[n - 1]) */
-#define GB_NSCENE 5u
-static const struct { const char *name; uint8_t bpm, tape, part[NPART][3]; } GB_SCENES[GB_NSCENE] = {
-    {"DUNGEON", 72, 40, {{ENGI_GURDY, 0, 15}, {0, 12, 14}, {5, 4, 16}, {ENGI_GURDY, 1, 17}}},   /* HURDY GURDY BALLAD,
-                                    * CRYPT PAD DIRGE, MONKS CHANT, DRONE WHEEL PEDAL: the scene up to 1.2 */
-    {"CRYPT", 60, 55, {{5, 7, 17}, {5, 5, 14}, {11, 4, 17}, {ENGI_DRUM, 2, 22}}},              /* LOW DRONE PEDAL,
-                                    * CRYPT CHOIR DIRGE, CAVE WIND PEDAL, TOMB DRUMS TOMBBEAT */
-    {"TAVERN", 96, 30, {{ENGI_GURDY, 2, 15}, {ENGI_PHYS, 11, 20}, {ENGI_PHYS, 9, 18}, {ENGI_DRUM, 1, 22}}},   /* DANCE
-                                    * GURDY BALLAD, DUNGEON HARP ARPEGGIO, LUTE MARCH, CRYPT KIT TOMBBEAT */
-    {"CHAPEL", 66, 40, {{7, 6, 14}, {5, 4, 16}, {ENGI_SAMPLE, 7, 19}, {ENGI_GURDY, 4, 21}}},     /* CATHEDRAL DIRGE,
-                                    * MONKS CHANT, TENOR RECORD LAMENT, VIELLE ANTIPHON */
-    {"BLANK", 72, 40, {{ENGI_GURDY, 0, 0}, {0, 12, 0}, {5, 4, 0}, {ENGI_GURDY, 1, 0}}},         /* DUNGEON's sounds, no
-                                    * notes: a clean start */
+/* ESTAMPIE: the scenes' own phrases, longer than PATTERNS' 16 steps (a dance's whole punctum), each with its length and
+ * division. A melodic phrase: absolute notes, 0 = rest, ES_T = hold the previous note; a DRUM phrase: each step's lane
+ * hits (bit l: lane l, eng_drum.c DRUM_LANE_NOTE). acc: bit i accents step i. Loaded by es_phrase_load. */
+#define ES_T 255u
+#define ES_PHR(n) (0x80u + (n))                  /* a scene part's pattern: ES_PHRASES[n] (below 0x80: PATTERNS[n - 1]) */
+typedef struct {
+    const char *name;
+    uint8_t len, div, drum;                      /* steps, N_DIV index (4 = 8T: 6/8 as three steps a beat), lane hits */
+    uint64_t acc;
+    uint8_t step[NSTEP];
+} es_phrase_t;
+#define ES_BAR6(n) (1ull << (6u * (n)))           /* the first step of 6/8 bar n */
+static const es_phrase_t ES_PHRASES[] = {
+    /* 0..3 TROTTO: "Trotto", London, British Library Add. MS 29987 f. 63v (Tuscany, c. 1390): its first punctum with
+     * the chiuso (closed) ending, A Dorian, 6/8, one 8T step an eighth note: 6 bars, the pickup (A2A) last. The
+     * chiuso's ornament B/A/B (sixteenths) is played as a plain B, the grid's finest note being an eighth. */
+    {"TROTTO", 36, 4, 0, ES_BAR6(0) | ES_BAR6(1) | ES_BAR6(2) | ES_BAR6(3) | ES_BAR6(4) | ES_BAR6(5),  /* the melody, */
+     {64, 57, 64, 64, ES_T, 62,   60, 59, 60, 57, 55, 57,   59, 57, 59, 55, ES_T, ES_T,             /* an octave down */
+      57, ES_T, 59, 62, ES_T, 64, 62, ES_T, 60, 59, ES_T, 55,   57, ES_T, ES_T, 57, ES_T, 57}},     /* (the drones above) */
+    {"TROT LUTE", 36, 4, 0, ES_BAR6(0) | ES_BAR6(1) | ES_BAR6(2) | ES_BAR6(3) | ES_BAR6(4) | ES_BAR6(5),
+     {57, ES_T, 64, 57, ES_T, 64,   57, ES_T, 64, 57, ES_T, 64,   55, ES_T, 62, 55, ES_T, 62,      /* root and fifth, long */
+      50, ES_T, 57, 50, ES_T, 57,   55, ES_T, 62, 55, ES_T, 62,   57, ES_T, 64, 57, ES_T, 64}},    /* short: A A G D G A */
+    {"TROT DESC", 36, 4, 0, ES_BAR6(0) | ES_BAR6(3),                                              /* the tune's skeleton, */
+     {76, ES_T, ES_T, 76, ES_T, ES_T,   72, ES_T, ES_T, 69, ES_T, ES_T,   71, ES_T, ES_T, 67, ES_T, ES_T,   /* held: */
+      69, ES_T, ES_T, 74, ES_T, ES_T,   74, ES_T, ES_T, 71, ES_T, ES_T,   69, ES_T, ES_T, ES_T, ES_T, 0}},  /* heterophony */
+    {"TABOR", 12, 4, 1, ES_BAR6(0) | ES_BAR6(1),        /* frame drum on the beats, the rope snare between, jingles on 2 */
+     {1, 0, 2, 1 | 16, 0, 2,   1, 8, 2, 1 | 16, 2, 2}},
 };
-#define GB_SCENE (GB_SCENES[0].part)   /* (the scene up to 1.2: tests/descdump.c, tests/ghoulbox_shots.c) */
+#define ES_NPHRASE (sizeof ES_PHRASES / sizeof ES_PHRASES[0])
+
+/* ESTAMPIE: phrase n into track t's steps, with its length and division (ui.c gb_scene_load; tests/estampie_demo.c) */
+static void es_phrase_load(track_t *t, uint32_t n)
+{
+    const es_phrase_t *ph = &ES_PHRASES[n % ES_NPHRASE];
+    uint32_t i, prev = 0;
+    for (i = 0; i < NSTEP; i++) {
+        step_t *s = &t->step[i];
+        uint32_t v = i < ph->len ? ph->step[i] : 0u, acc = (uint32_t)((ph->acc >> i) & 1u);
+        memset(s, 0, sizeof *s);
+        if (ph->drum) {                                    /* lane hits, as the DRUM grid holds them */
+            s->hit = (uint8_t)v;
+            s->acc = acc ? (uint8_t)v : 0u;
+            s->time = v ? ST_NOTE : ST_REST;
+            s->vel = v ? 96 : 0;
+        } else if (v == ES_T && prev) {
+            s->note[0] = (uint8_t)prev;
+            s->n = 1;
+            s->time = ST_TIE;
+        } else {
+            s->note[0] = (uint8_t)(v == ES_T ? 0u : v);
+            s->n = s->note[0] ? 1 : 0;
+            s->time = s->n ? ST_NOTE : ST_REST;
+            s->flags = s->n && acc ? SF_ACCENT : 0u;
+            s->vel = s->n ? 96 : 0;
+            prev = s->note[0];
+        }
+    }
+    t->p[P_SLEN] = ph->len;
+    t->p[P_SDIV] = ph->div;
+}
+
+/* GHOULBOX: what felucca_init plays instead (TRK_DEF stays Felucca's: an old project's missing parts are those)
+ * (ui.c gb_scene_load). 1.3: MENU > SYSTEM > SCENE picks one (ui_scene; append-only: a saved value keeps its scene, an
+ * unknown one plays the first). PATTERNS parts play in 1/8 steps; ES_PHR parts at their own length and division.
+ * ESTAMPIE: a dance first: TROTTO takes id 0, a fresh device's (and a GHOULBOX DUNGEON's: its sounds are still here,
+ * moved to the end); CRYPT, TAVERN, CHAPEL and BLANK keep their ids. rtype: G_RTYPE (ROOM SPRING HALL); lvl: each
+ * part's LVL (P_LEVEL), 0 = the sound's own */
+#define GB_NSCENE 6u
+#define GB_DUNGEON 5u
+static const struct { const char *name; uint8_t bpm, tape, rtype, part[NPART][3], lvl[NPART]; } GB_SCENES[GB_NSCENE] = {
+    {"TROTTO", 112, 12, 0, {{ENGI_GURDY, 6, ES_PHR(0)}, {ENGI_PHYS, 9, ES_PHR(1)}, {ENGI_SAMPLE, 7, ES_PHR(2)},
+                           {ENGI_DRUM, 1, ES_PHR(3)}},   /* ESTAMPIE: TROTTO GURDY, LUTE, TENOR RECORD, CRYPT KIT; */
+     {0, 118, 86, 100}},                                 /* the lute up, the recorder under the melody */
+    {"CRYPT", 60, 55, 2, {{5, 7, 17}, {5, 5, 14}, {11, 4, 17}, {ENGI_DRUM, 2, 22}}},           /* LOW DRONE PEDAL,
+                                    * CRYPT CHOIR DIRGE, CAVE WIND PEDAL, TOMB DRUMS TOMBBEAT */
+    {"TAVERN", 96, 30, 2, {{ENGI_GURDY, 2, 15}, {ENGI_PHYS, 11, 20}, {ENGI_PHYS, 9, 18}, {ENGI_DRUM, 1, 22}}},   /* DANCE
+                                    * GURDY BALLAD, DUNGEON HARP ARPEGGIO, LUTE MARCH, CRYPT KIT TOMBBEAT */
+    {"CHAPEL", 66, 40, 2, {{7, 6, 14}, {5, 4, 16}, {ENGI_SAMPLE, 7, 19}, {ENGI_GURDY, 4, 21}}},  /* CATHEDRAL DIRGE,
+                                    * MONKS CHANT, TENOR RECORD LAMENT, VIELLE ANTIPHON */
+    {"BLANK", 72, 40, 2, {{ENGI_GURDY, 0, 0}, {0, 12, 0}, {5, 4, 0}, {ENGI_GURDY, 1, 0}}},      /* DUNGEON's sounds, no
+                                    * notes: a clean start */
+    {"DUNGEON", 72, 40, 2, {{ENGI_GURDY, 0, 15}, {0, 12, 14}, {5, 4, 16}, {ENGI_GURDY, 1, 17}}},  /* HURDY GURDY BALLAD,
+                                    * CRYPT PAD DIRGE, MONKS CHANT, DRONE WHEEL PEDAL: GHOULBOX's scene up to 1.2 */
+};
+#define GB_SCENE (GB_SCENES[GB_DUNGEON].part)   /* (GHOULBOX's scene up to 1.2: tests/descdump.c, tests/ghoulbox_shots.c) */
 static uint32_t trk_def_engine(uint32_t i) { return TRK_DEF[i % NPART][0]; }
