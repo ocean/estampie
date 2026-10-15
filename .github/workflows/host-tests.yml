@@ -12,8 +12,14 @@ on:
 permissions:
   contents: read
 
+# A newer push to the same branch cancels the run still going.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   host-tests:
+    name: Host tests
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
@@ -26,7 +32,7 @@ jobs:
 
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020   # v4.4.0
         with:
-          node-version: "24"
+          node-version: "24.22.0"   # ESTAMPIE: exact, as tools/toolchain.lock
 
       # ESTAMPIE: Python 3.14 and the packages in uv.lock, hash-checked (pyproject.toml).
       - name: Python packages

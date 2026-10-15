@@ -10,27 +10,26 @@ The build makes three files in `build/`:
 
 ## Prerequisites (macOS)
 
-- Python 3.14 with Pillow and fontTools, from `uv sync` (ESTAMPIE: `tools/setup_toolchain.sh`; the UI font and icons are
-  rasterised at build time)
-- Docker Desktop. The JieLi toolchain is Linux x86-64 only; the build runs each tool in a
-  `linux/amd64` `debian:bookworm-slim` container (Rosetta on Apple silicon). Keep the source
-  tree in a folder Docker can share, e.g. under `/Users`.
-- The JieLi Linux toolchain (clang 4.0.1 for pi32v2, from JieLi's package server):
+ESTAMPIE: one command fetches everything into the repository (`.toolchain/`, `.venv/`, both git-ignored), each
+download checked against its pinned SHA-256 or commit in `tools/toolchain.lock` before it is unpacked:
 
-  ```
-  tools/get_toolchain.sh            # installs to ~/.jieli/toolchain
-  ```
+```
+tools/setup_toolchain.sh          # add --hw for the pi32v2 hardware emulator (tools/hw_check.sh; needs cargo)
+```
 
-- The JieLi AC79 SDK (Apache-2.0). The package uses three of its files
-  (`cpu/wl82/tools/uboot.boot`, `cfg_tool.bin`, `cfg/eq_cfg_hw.bin`); they are not part of this tree.
+It needs [uv](https://docs.astral.sh/uv/), git, curl and Docker Desktop, and fetches:
 
-  ```
-  git clone --depth 1 --branch AC79NN_SDK_V1.2.1_2023-12-13 \
-      https://gitee.com/Jieli-Tech/fw-AC79_AIoT_SDK.git ~/fw-AC79_AIoT_SDK
-  ```
+- the JieLi Linux toolchain (clang 4.0.1 for pi32v2). It is Linux x86-64 only: on macOS the build runs each tool in
+  the pinned `gcr.io/distroless/cc-debian13:nonroot` container (Rosetta on Apple silicon), with no network, no
+  capabilities and the sources read-only. Keep the source tree in a folder Docker can share, e.g. under `/Users`.
+- three files of the JieLi AC79 SDK (Apache-2.0: `cpu/wl82/tools/uboot.boot`, `cfg_tool.bin`, `cfg/eq_cfg_hw.bin`),
+  at a pinned commit;
+- Python 3.14 and its packages from `uv.lock` (hash-pinned; the UI font and icons are rasterised at build time);
+- Emscripten for the browser emulator (`web/emu/`), with Node (the binary alone) and the uv Python, no emsdk;
+- osv-scanner, for `tools/osv_scan.sh`.
 
-- Node.js (optional, for the web tests).
-- Emscripten (optional, `emcc`: the browser emulator, `web/emu/`).
+[docs/SECURITY.md](docs/SECURITY.md) explains the pins, the scans and how to update them. Felucca's
+`tools/get_toolchain.sh` (an unpinned download into `~/.jieli`) is kept for reference only.
 
 On Linux x86-64 the toolchain runs natively and Docker is not needed.
 
@@ -41,7 +40,7 @@ On Linux x86-64 the toolchain runs natively and Docker is not needed.
 ```
 
 `JIELI_TOOLCHAIN` and `AC79_SDK` override the default locations
-(`~/.jieli/toolchain`, `~/fw-AC79_AIoT_SDK`).
+(`.toolchain/jieli/toolchain`, `.toolchain/ac79-sdk`); `JIELI_DOCKER_IMAGE` overrides the pinned container.
 
 `./build.sh --release 1.0` makes a release build: the package identity becomes `FM-1_910`
 and the version string `v1.0`; the package is `build/felucca-1.0.fwsc`, and

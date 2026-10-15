@@ -11,8 +11,8 @@ PKG="${1:-build/felucca.fwsc}"
 LIMIT="${2:-600000000}"
 EMU=.toolchain/emulators/m-wave-fm1-browser-emulator
 DIAG="$EMU/emulator/target/release/examples/diagnose"
-[ -d "$EMU" ] || git clone --depth 1 https://github.com/shcherbakov7/m-wave-fm1-browser-emulator.git "$EMU"
-[ -x "$DIAG" ] || cargo build --release --manifest-path "$EMU/emulator/Cargo.toml" --example diagnose
+# The emulator at its pinned commit, built --locked (tools/toolchain.lock).
+[ -x "$DIAG" ] || sh tools/setup_toolchain.sh --hw
 mkdir -p build/hw
 OUT=$(FM1_LCD_PPM=build/hw/screen.ppm DIAG_FAST=1 "$DIAG" "$PKG" "$LIMIT" 2>&1) || true
 LCD=$(printf '%s\n' "$OUT" | sed -n 's/^LCD: \([0-9]*\) pixels.*/\1/p')

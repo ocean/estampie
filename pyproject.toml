@@ -18,7 +18,14 @@ device = [
     "mido==1.3.3",
     "python-rtmidi==1.5.8",
 ]
+# Supply-chain checks (tools/osv_scan.sh runs osv-scanner; this lints the GitHub workflows): uv run --group audit zizmor .
+audit = [
+    "zizmor==1.30.1",
+]
 
 [tool.uv]
 package = false
-default-groups = ["device"]
+default-groups = ["device", "audit"]
+# A cooldown: nothing newer than a week can be locked, so a hijacked release has time to be noticed and pulled before
+# it reaches this lock (docs/SECURITY.md).
+exclude-newer = "7 days"

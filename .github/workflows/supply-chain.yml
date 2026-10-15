@@ -1,0 +1,50 @@
+# ESTAMPIE: the supply-chain checks (docs/SECURITY.md) on every push and pull request, and weekly, so a vulnerability
+# published after a dependency was locked still turns up:
+#   osv-scanner (pinned by SHA-256 in tools/toolchain.lock) over uv.lock and the pinned build image;
+#   zizmor (pinned in uv.lock) over these workflows: pinning, permissions, injection, impostor commits.
+name: supply chain
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "17 3 * * 1"
+
+permissions: {}
+
+# A newer push to the same branch cancels the run still going.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  scan:
+    name: Vulnerabilities and workflow audit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      # Every action pinned to a commit (a tag can be moved), its version in the comment.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4.4.0
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884   # v10.3.0
+
+      - name: osv-scanner (checked against tools/toolchain.lock)
+        run: |
+          set -eu
+          set -- $(awk '$1 == "osv-scanner" && $2 == "linux-x64" { print $4, $5 }' tools/toolchain.lock)
+          mkdir -p .toolchain/bin
+          curl --proto '=https' --tlsv1.2 -fsSL --retry 3 -o .toolchain/bin/osv-scanner "$2"
+          echo "$1  .toolchain/bin/osv-scanner" | sha256sum -c -
+          chmod 755 .toolchain/bin/osv-scanner
+
+      - name: Known vulnerabilities (Python, build image)
+        run: tools/osv_scan.sh python build-image
+
+      - name: Workflow audit (zizmor)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: uv run --frozen --only-group audit zizmor --format github .github/workflows
