@@ -4,80 +4,88 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="dark">
-<title>Web Synth Tools Manual · GHOULBOX</title>
-<meta name="description" content="Instructions for MIDI control, portable saves, FLAC, MP3 and WAV recording, and Focus Mode in the GHOULBOX web synthesizer.">
+<meta name="color-scheme" content="light">
+<title>Web Synth Tools · ESTAMPIE</title>
+<meta name="description" content="Instructions for MIDI control, portable saves, FLAC, MP3 and WAV recording, and Focus Mode in the ESTAMPIE web synthesizer.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Crect width=%2216%22 height=%2216%22 rx=%223%22/%3E%3Crect x=%224%22 y=%224%22 width=%228%22 height=%228%22 fill=%22%23fff%22/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=swap">
 <style>
-@font-face { font-family: "DotGothic16"; src: url("fonts/DotGothic16-subset.woff") format("woff"); font-display: swap; }
-:root { --night: #080808; --ink: #121111; --stone: #242326; --edge: #3a3a3e; --bone: #efdfc6;
-        --ash: #b9ac99; --amber: #ef9a29; --ember: #ef4d42; --moss: #83b97d; color-scheme: dark; }
+/* ESTAMPIE: a manuscript leaf, as the emulator page (index.html): VELLUM's colours, gold leaf on the borders */
+:root { --vellum: #eee2c4; --vellum-dark: #dfcca0; --ink: #2e1e14; --ink-soft: #5b4532; --vermilion: #962012;
+        --lapis: #1a3e94; --gold: #b8892a; --leaf: rgba(255, 248, 228, .45); color-scheme: light; }
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; background: var(--night); }
-body { margin: 0; min-height: 100vh; color: var(--bone); font: 15px/1.65 Georgia, "Times New Roman", serif;
-       background: radial-gradient(ellipse 80% 45% at 50% 0, rgba(239, 154, 41, .13), transparent 65%) fixed,
-                   linear-gradient(rgba(0, 0, 0, .24), rgba(0, 0, 0, .58)),
-                   url("art/wall.png") 0 0 / 256px 128px var(--night); }
-a { color: var(--amber); text-underline-offset: .18em; }
-a:hover { color: #ffc36d; }
-.skip { position: fixed; left: 12px; top: -80px; z-index: 10; padding: 8px 12px; color: var(--night); background: var(--amber); }
+html { scroll-behavior: smooth; background: #c9b48a; }
+body { margin: 0; min-height: 100vh; color: var(--ink); font: 17px/1.6 "IM Fell English", Georgia, "Times New Roman", serif;
+       background:
+         radial-gradient(ellipse 80% 70% at 50% 40%, transparent 55%, rgba(120, 82, 30, .28) 100%) fixed,
+         url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .32 0 0 0 0 .15 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23f)'/%3E%3C/svg%3E"),
+         var(--vellum); }
+a { color: var(--vermilion); text-underline-offset: .18em; }
+/* IM Fell has no bold: emphasis is rubricated, as a scribe's */
+strong, b { font-weight: 400; color: var(--vermilion); }
+a:hover { color: var(--lapis); }
+.skip { position: fixed; left: 12px; top: -80px; z-index: 10; padding: 8px 12px; color: var(--vellum); background: var(--lapis); }
 .skip:focus { top: 12px; }
-.hero { max-width: 1100px; margin: 0 auto; padding: 34px 24px 26px; display: grid;
-        grid-template-columns: 74px 1fr auto; align-items: center; gap: 22px; }
-.hero img { width: 74px; height: auto; filter: drop-shadow(0 0 12px rgba(239, 154, 41, .28)); }
-.eyebrow, h1, h2, h3, .toc, .badge, th, .back, code, kbd { font-family: DotGothic16, ui-monospace, monospace; }
-.eyebrow { margin: 0 0 3px; color: var(--amber); font-size: 12px; letter-spacing: .18em; text-transform: uppercase; }
-h1 { margin: 0; color: #fff5e4; font-size: clamp(28px, 5vw, 48px); font-weight: 400; line-height: 1.05; letter-spacing: .025em; }
-.subtitle { margin: 8px 0 0; max-width: 650px; color: var(--ash); font-size: 16px; }
-.back { align-self: start; padding: 9px 13px; border: 1px solid #6b4513; background: rgba(8, 8, 8, .72);
-        font-size: 13px; text-decoration: none; white-space: nowrap; }
-.layout { max-width: 1100px; margin: 0 auto; padding: 0 24px 56px; display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 28px; }
-.toc { position: sticky; top: 18px; align-self: start; padding: 16px; border: 1px solid #6b4513; background: rgba(8, 8, 8, .9);
-       box-shadow: 0 0 0 2px #000, 0 0 0 3px var(--edge); }
-.toc strong { display: block; margin-bottom: 8px; color: var(--bone); letter-spacing: .08em; }
-.toc a { display: block; padding: 5px 0; color: var(--ash); text-decoration: none; }
-.toc a:hover, .toc a:focus { color: var(--amber); }
+.hero { max-width: 1100px; margin: 0 auto; padding: 30px 24px 26px; display: grid;
+        grid-template-columns: 84px 1fr auto; align-items: center; gap: 22px; }
+.hero img { width: 84px; height: auto; }
+.eyebrow, h1, h2, .toc strong, .back, th { font-family: "IM Fell English SC", "IM Fell English", Georgia, serif; }
+code, kbd, .badge { font-family: ui-monospace, Menlo, monospace; }
+.eyebrow { margin: 0 0 3px; color: var(--vermilion); font-size: 15px; letter-spacing: .12em; }
+h1 { margin: 0; color: var(--ink); font-size: clamp(30px, 5vw, 50px); font-weight: 400; line-height: 1.05; letter-spacing: .02em; }
+.subtitle { margin: 8px 0 0; max-width: 650px; color: var(--ink-soft); font-style: italic; font-size: 19px; }
+.back { align-self: start; padding: 9px 14px; color: var(--vellum); background: var(--lapis); font-size: 16px; text-decoration: none;
+        white-space: nowrap; box-shadow: 0 0 0 2px var(--vellum), 0 0 0 4px var(--gold); }
+.back:hover { color: var(--vellum); }
+.layout { max-width: 1100px; margin: 0 auto; padding: 0 24px 56px; display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 32px; }
+.toc { position: sticky; top: 18px; align-self: start; padding: 16px; border: 3px double var(--vermilion); background: var(--leaf); }
+.toc strong { display: block; margin-bottom: 8px; color: var(--vermilion); font-weight: 400; letter-spacing: .08em; }
+.toc a { display: block; padding: 4px 0; color: var(--ink); text-decoration: none; }
+.toc a:hover, .toc a:focus { color: var(--vermilion); text-decoration: underline; }
 .manual { min-width: 0; }
-.panel { position: relative; margin: 0 0 24px; padding: 24px clamp(18px, 4vw, 34px); border: 1px solid #6b4513;
-         background: linear-gradient(135deg, rgba(39, 37, 39, .96), rgba(13, 13, 14, .97));
-         box-shadow: 0 0 0 2px #000, 0 0 0 4px var(--edge), 0 18px 40px rgba(0, 0, 0, .28); }
-.panel::before { content: attr(data-rune); position: absolute; right: 18px; top: 8px; color: rgba(239, 154, 41, .12);
-                 font: 56px/1 DotGothic16, monospace; }
-h2 { margin: 0 0 16px; color: var(--amber); font-size: 24px; font-weight: 400; letter-spacing: .04em; }
-h3 { margin: 24px 0 7px; color: #fff5e4; font-size: 17px; font-weight: 400; }
+.panel { position: relative; margin: 0 0 34px; padding: 26px clamp(18px, 4vw, 36px); border: 3px double var(--vermilion);
+         outline: 2px solid var(--gold); outline-offset: 5px; background: var(--leaf); }
+/* the section's numeral, a rubric in the margin */
+.panel::before { content: attr(data-rune); position: absolute; right: 20px; top: 10px; color: rgba(150, 32, 18, .18);
+                 font: 52px/1 "IM Fell English SC", Georgia, serif; }
+h2 { margin: 0 0 16px; color: var(--vermilion); font-size: 28px; font-weight: 400; letter-spacing: .03em; }
+h3 { margin: 24px 0 7px; color: var(--lapis); font-size: 19px; font-weight: 400; font-style: italic; }
 p, ul, ol { margin-top: 0; }
 li + li { margin-top: 7px; }
 .steps { counter-reset: step; list-style: none; padding: 0; }
-.steps li { position: relative; min-height: 38px; padding: 5px 0 12px 48px; }
-.steps li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0; width: 32px; height: 32px;
-                    display: grid; place-items: center; color: var(--night); background: var(--amber); font: 700 16px/1 DotGothic16, monospace;
-                    box-shadow: inset 0 -3px rgba(0, 0, 0, .32); }
-.note, .warning { margin: 18px 0; padding: 12px 15px; border-left: 3px solid var(--moss); background: rgba(0, 0, 0, .32); }
-.warning { border-color: var(--ember); }
-.note strong, .warning strong { color: #fff5e4; }
-.badge { display: inline-block; margin: 0 4px 4px 0; padding: 2px 7px; border: 1px solid #6b4513; color: var(--amber);
-         background: var(--ink); font-size: 12px; white-space: nowrap; }
-code, kbd { padding: 1px 5px; border: 1px solid #555158; color: #fff5e4; background: var(--ink); font-size: .88em; }
-.table-wrap { max-width: 100%; overflow-x: auto; border: 1px solid #454146; }
-table { width: 100%; border-collapse: collapse; background: rgba(0, 0, 0, .22); font-variant-numeric: tabular-nums; }
-th, td { padding: 8px 10px; border-bottom: 1px solid #454146; text-align: left; vertical-align: top; }
-th { color: var(--amber); background: rgba(0, 0, 0, .42); font-size: 12px; letter-spacing: .06em; }
+.steps li { position: relative; min-height: 38px; padding: 4px 0 12px 50px; }
+.steps li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0; width: 34px; height: 34px;
+                    display: grid; place-items: center; color: var(--vellum); background: var(--lapis);
+                    font: 20px/1 "IM Fell English", Georgia, serif; box-shadow: 0 0 0 2px var(--vellum), 0 0 0 3px var(--gold); }
+.note, .warning { margin: 18px 0; padding: 12px 15px; border-left: 4px solid var(--lapis); background: rgba(26, 62, 148, .06); }
+.warning { border-color: var(--vermilion); background: rgba(150, 32, 18, .07); }
+.note strong, .warning strong { color: var(--vermilion); }
+.badge { display: inline-block; margin: 0 4px 4px 0; padding: 1px 7px; border: 1px solid var(--vermilion); color: var(--vermilion);
+         background: var(--vellum); font-size: 12px; white-space: nowrap; }
+code, kbd { padding: 1px 5px; border: 1px solid var(--ink-soft); color: var(--ink); background: var(--vellum-dark); font-size: .8em; }
+.table-wrap { max-width: 100%; overflow-x: auto; border: 1px solid rgba(46, 30, 20, .35); }
+table { width: 100%; border-collapse: collapse; background: rgba(255, 248, 228, .5); font-variant-numeric: tabular-nums; }
+th, td { padding: 7px 10px; border-bottom: 1px solid rgba(46, 30, 20, .2); text-align: left; vertical-align: top; }
+th { color: var(--vermilion); background: rgba(150, 32, 18, .07); font-size: 15px; font-weight: 400; letter-spacing: .04em; }
 tbody tr:last-child td { border-bottom: 0; }
-td:first-child { color: #fff5e4; font-family: ui-monospace, monospace; }
+td:first-child { color: var(--lapis); font-family: ui-monospace, Menlo, monospace; font-size: 14px; }
 .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-.mini { padding: 15px; border: 1px solid #454146; background: rgba(0, 0, 0, .22); }
+.mini { padding: 15px; border: 1px solid rgba(46, 30, 20, .25); background: rgba(255, 248, 228, .5); }
 .mini h3 { margin-top: 0; }
-.privacy { color: var(--ash); }
-.page-footer { max-width: 1100px; margin: 0 auto 32px; padding: 18px 24px; border-top: 1px solid #4c351d; color: var(--ash); text-align: center; }
+.privacy { color: var(--ink-soft); font-style: italic; }
+.page-footer { max-width: 1100px; margin: 0 auto 32px; padding: 18px 24px; border-top: 2px solid var(--vermilion); color: var(--ink-soft);
+               text-align: center; }
 @media (max-width: 760px) {
-  .hero { grid-template-columns: 52px 1fr; padding: 22px 16px; } .hero img { width: 52px; }
+  .hero { grid-template-columns: 56px 1fr; padding: 22px 16px; } .hero img { width: 56px; }
   .hero .back { grid-column: 1 / -1; justify-self: start; }
-  .layout { display: block; padding: 0 12px 40px; } .toc { position: static; margin-bottom: 22px; columns: 2; }
+  .layout { display: block; padding: 0 16px 40px; } .toc { position: static; margin-bottom: 26px; columns: 2; }
   .toc strong { column-span: all; } .panel { padding: 20px 16px; } .two { grid-template-columns: 1fr; }
 }
 @media print {
   body { color: #111; background: #fff; } .hero, .layout { max-width: none; } .toc, .back { display: none; }
-  .layout { display: block; } .panel { break-inside: avoid; color: #111; background: #fff; box-shadow: none; border-color: #777; }
+  .layout { display: block; } .panel { break-inside: avoid; color: #111; background: #fff; outline: 0; border-color: #777; }
   h1, h2, h3, .note strong, .warning strong { color: #111; } .panel::before { display: none; } a { color: #111; }
 }
 </style>
@@ -85,8 +93,8 @@ td:first-child { color: #fff5e4; font-family: ui-monospace, monospace; }
 <body>
 <a class="skip" href="#manual">Skip to instructions</a>
 <header class="hero">
-  <img src="art/skull.png" alt="">
-  <div><p class="eyebrow">Field notes · GHOULBOX 2.1</p><h1>Web Synth Tools</h1>
+  <img src="art/initial.png" alt="">
+  <div><p class="eyebrow">A gloss · ESTAMPIE 0.1</p><h1>Web Synth Tools</h1>
     <p class="subtitle">MIDI control, portable saves, live audio export and a screen-only performance view.</p></div>
   <a class="back" href="./">← Return to the synth</a>
 </header>
@@ -114,12 +122,12 @@ td:first-child { color: #fff5e4; font-family: ui-monospace, monospace; }
   <ol>
     <li>Connect your MIDI controller before or after switching on the synth.</li>
     <li>Enable <strong>MIDI in</strong> and allow MIDI access when the browser asks.</li>
-    <li>Play normally. Messages on all MIDI channels are passed to GHOULBOX.</li>
+    <li>Play normally. Messages on all MIDI channels are passed to ESTAMPIE.</li>
   </ol>
   <p><strong>Velocity</strong> affects incoming Note On messages only. Choose <span class="badge">Keyboard velocity</span> to preserve the controller’s dynamics, or a fixed value to make every external note equally strong. <span class="badge">Fixed 100</span> matches the FM-1’s built-in keys.</p>
 
   <h3>Control the drawn panel</h3>
-  <p>Enable <strong>Panel CC mapping</strong>, then assign the CCs below in your controller’s editor. These mapped messages operate the control currently shown on the GHOULBOX screen—just like touching the corresponding knob or button. Other CCs continue to reach GHOULBOX’s direct parameter map.</p>
+  <p>Enable <strong>Panel CC mapping</strong>, then assign the CCs below in your controller’s editor. These mapped messages operate the control currently shown on the ESTAMPIE screen—just like touching the corresponding knob or button. Other CCs continue to reach ESTAMPIE’s direct parameter map.</p>
   <div class="two">
     <div><h3>Knobs</h3><div class="table-wrap"><table><thead><tr><th>CC</th><th>Control</th><th>Send</th></tr></thead><tbody id="knob-map"></tbody></table></div></div>
     <div><h3>Buttons</h3><div class="table-wrap"><table><thead><tr><th>CC</th><th>Control</th><th>Send</th></tr></thead><tbody id="button-map"></tbody></table></div></div>
@@ -134,10 +142,10 @@ td:first-child { color: #fff5e4; font-family: ui-monospace, monospace; }
   <p>The emulator already remembers its flash in this browser. A portable state file is different: it lets you keep a dated copy, move work to another browser or device, and maintain more than the four visible project slots.</p>
   <div class="two">
     <div class="mini"><h3>Export state</h3><ol><li>Switch on the synth.</li><li>Press <strong>Export state</strong>.</li><li>Keep the downloaded <code>.json</code> file somewhere backed up.</li></ol><p>The file includes the live session plus saved projects, user sounds, settings and other emulator storage.</p></div>
-    <div class="mini"><h3>Import state</h3><ol><li>Press <strong>Import state</strong> and select a GHOULBOX state file.</li><li>Read the replacement warning and confirm.</li><li>The page validates the file, installs it and restarts.</li></ol><p>Malformed data, bad checksums and invalid live projects are rejected before replacement.</p></div>
+    <div class="mini"><h3>Import state</h3><ol><li>Press <strong>Import state</strong> and select a ESTAMPIE state file.</li><li>Read the replacement warning and confirm.</li><li>The page validates the file, installs it and restarts.</li></ol><p>Malformed data, bad checksums and invalid live projects are rejected before replacement.</p></div>
   </div>
   <h3>Undo an import</h3>
-  <p>Immediately before an import, GHOULBOX keeps one recovery copy of the state it is replacing. Press <strong>Undo last import</strong> to restore that copy. A later import replaces the recovery copy, so export important work rather than treating Undo as a backup history.</p>
+  <p>Immediately before an import, ESTAMPIE keeps one recovery copy of the state it is replacing. Press <strong>Undo last import</strong> to restore that copy. A later import replaces the recovery copy, so export important work rather than treating Undo as a backup history.</p>
   <div class="warning"><strong>Browser storage is not a backup.</strong> Clearing site data, using private browsing, changing browsers or losing the device can remove the automatic save. Export state files regularly.</div>
 </section>
 
@@ -155,9 +163,9 @@ td:first-child { color: #fff5e4; font-family: ui-monospace, monospace; }
     <tr><td>WAV</td><td>Original PCM and broad editor compatibility</td><td>Uncompressed 24-bit stereo PCM. It is also the automatic safety format if compressed encoding fails.</td></tr>
   </tbody></table></div>
   <p>The timer advances as audio chunks are secured. The meter shows the highest level reached, in dBFS. If it turns red or the completion message reports clipping, lower MASTER or the track levels and record again.</p>
-  <div class="note"><strong>Local, live and recoverable:</strong> audio is encoded entirely in a background worker in this browser and is never uploaded. Recording captures a performance in real time; it does not render a saved project automatically. If the selected compressed encoder cannot start or finish, GHOULBOX keeps the take and downloads it as WAV instead.</div>
-  <div class="warning"><strong>Ten-minute limit:</strong> recording stops and downloads automatically at ten minutes. GHOULBOX retains original PCM during compressed recording so it can make the WAV fallback. A maximum-length take represents roughly 151 MiB at 44.1 kHz or 165 MiB at 48 kHz, plus browser and encoder overhead. On a phone or low-memory device, make shorter takes. Do not close or reload the tab before the download begins.</div>
-  <p>FLAC and MP3 use self-hosted WebAssembly encoders, so the result does not depend on the browser providing those codecs. FLAC encoding is provided by libFLAC through libflac.js; MP3 encoding is provided by LAME through wasm-media-encoders. Source and licence details are in the project’s <a href="https://github.com/jasonpersinger/ghoulbox-fm1-dungeon-synth/blob/ghoulbox/LICENSING.md">licensing notes</a>.</p>
+  <div class="note"><strong>Local, live and recoverable:</strong> audio is encoded entirely in a background worker in this browser and is never uploaded. Recording captures a performance in real time; it does not render a saved project automatically. If the selected compressed encoder cannot start or finish, ESTAMPIE keeps the take and downloads it as WAV instead.</div>
+  <div class="warning"><strong>Ten-minute limit:</strong> recording stops and downloads automatically at ten minutes. ESTAMPIE retains original PCM during compressed recording so it can make the WAV fallback. A maximum-length take represents roughly 151 MiB at 44.1 kHz or 165 MiB at 48 kHz, plus browser and encoder overhead. On a phone or low-memory device, make shorter takes. Do not close or reload the tab before the download begins.</div>
+  <p>FLAC and MP3 use self-hosted WebAssembly encoders, so the result does not depend on the browser providing those codecs. FLAC encoding is provided by libFLAC through libflac.js; MP3 encoding is provided by LAME through wasm-media-encoders. Source and licence details are in GHOULBOX’s <a href="https://github.com/jasonpersinger/ghoulbox-fm1-dungeon-synth/blob/ghoulbox/LICENSING.md">licensing notes</a>.</p>
 </section>
 
 <section class="panel" id="display" data-rune="V">
@@ -175,17 +183,18 @@ td:first-child { color: #fff5e4; font-family: ui-monospace, monospace; }
     <div class="mini"><h3>No downloaded file</h3><p>Check the browser’s download indicator and permission settings. On mobile, the file may appear in the system Files or Downloads app.</p></div>
     <div class="mini"><h3>Import is refused</h3><p>Use an unedited state file exported by this emulator. A hardware-editor backup is a different format and cannot be imported here.</p></div>
     <div class="mini"><h3>The recording clipped</h3><p>Reduce MASTER or individual track levels until the peak stays below 0 dBFS, then make another take.</p></div>
-    <div class="mini"><h3>I received a WAV instead</h3><p>The selected FLAC or MP3 encoder could not complete, so GHOULBOX preserved the take in its original PCM safety format. The status line includes the encoder error.</p></div>
+    <div class="mini"><h3>I received a WAV instead</h3><p>The selected FLAC or MP3 encoder could not complete, so ESTAMPIE preserved the take in its original PCM safety format. The status line includes the encoder error.</p></div>
     <div class="mini"><h3>Finishing takes time</h3><p>Keep the tab open while the encoder closes the file and the browser prepares the download. Longer recordings and slower phones take more time.</p></div>
-    <div class="mini"><h3>No sound on iPhone or iPad</h3><p>If the synth reports that audio was paused or interrupted, tap <strong>Resume audio</strong>. After locking the device or changing apps, you may need to tap it again. If a Home Screen web app remains silent, open GHOULBOX in a regular Safari tab and switch it on there.</p></div>
+    <div class="mini"><h3>No sound on iPhone or iPad</h3><p>If the synth reports that audio was paused or interrupted, tap <strong>Resume audio</strong>. After locking the device or changing apps, you may need to tap it again. If a Home Screen web app remains silent, open ESTAMPIE in a regular Safari tab and switch it on there.</p></div>
   </div>
   <p class="privacy">Preferences, saves, recovery data and recorded audio stay on the device running the browser. Only the files you explicitly download leave browser storage.</p>
 </section>
 </main>
 </div>
 
-<footer class="page-footer"><a href="./">← Return to the GHOULBOX web synth</a> · <a href="https://github.com/jasonpersinger/ghoulbox-fm1-dungeon-synth">Source</a><br>
-  Web Synth Tools manual for GHOULBOX 2.1</footer>
+<footer class="page-footer"><a href="./">← Return to the ESTAMPIE web synth</a><br>
+  Web Synth Tools manual for ESTAMPIE 0.1, on <a href="https://github.com/jasonpersinger/ghoulbox-fm1-dungeon-synth">GHOULBOX</a>
+  and <a href="https://github.com/hugelton/Felucca">Felucca</a></footer>
 
 <script type="module">
 import { PANEL_BUTTONS, PANEL_KNOBS } from "./emu_io.js";

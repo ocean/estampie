@@ -9,7 +9,7 @@
                               JieLi SDK files under Apache-2.0, see LICENSING.md)
   webapp/installer/index.html index_pkg.html, self-contained (fm1pkg.js, fm1ota.js, metadata inlined)
   webapp/editor/index.html    editor.html (+ fukiai.ttf, FUKIAI-LICENSE.txt)
-  webapp/art/                 GHOULBOX: the dungeon's pixel art the installer shows (tools/gen_emu_art.py, from build/gen)
+  webapp/art/                 ESTAMPIE: the crest the installer and editor show (tools/gen_emu_art.py, from build/gen)
   webapp/emu/                 GHOULBOX: the browser emulator, build/emu as web/emu/build.sh made it (when it is there)
   src/                        not touched
 
