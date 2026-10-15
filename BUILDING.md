@@ -10,7 +10,7 @@ The build makes three files in `build/`:
 
 ## Prerequisites (macOS)
 
-- Python 3 with Pillow and fontTools: `pip3 install Pillow fonttools` (the UI font and icons are
+- Python 3.14 with Pillow and fontTools, from `uv sync` (ESTAMPIE: `tools/setup_toolchain.sh`; the UI font and icons are
   rasterised at build time)
 - Docker Desktop. The JieLi toolchain is Linux x86-64 only; the build runs each tool in a
   `linux/amd64` `debian:bookworm-slim` container (Rosetta on Apple silicon). Keep the source
@@ -117,7 +117,7 @@ does the same for the cost files.
 Use the web installer in Chrome or Edge:
 <https://hugelton.github.io/Felucca/webapp/installer/>. It installs the released package.
 
-From the command line (needs `pip3 install mido python-rtmidi`):
+From the command line (needs mido and python-rtmidi: `uv sync`, the device group):
 
 ```
 python3 tools/fm1_install.py build/felucca.fwsc

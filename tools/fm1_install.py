@@ -470,7 +470,7 @@ def main(argv=None, backend=None, out=sys.stdout, ask=ask_tty):
             try:
                 backend = MidoBackend()
             except ImportError:
-                raise InstallError("usage", "needs mido and python-rtmidi (pip install mido python-rtmidi)")
+                raise InstallError("usage", "needs mido and python-rtmidi (uv sync: the device group)")
         return run(a, backend, out, ask)
     except InstallError as e:
         print(f"error: {e}", file=sys.stderr)

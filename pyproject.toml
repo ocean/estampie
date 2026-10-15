@@ -1,0 +1,24 @@
+# ESTAMPIE: the Python the build, the tools and the tests use. Not a package: uv keeps .venv in step with uv.lock
+# (hash-pinned). Pillow, fontTools and NumPy are pinned exactly as CI pins them: tools/gen_samples.py's results, and so
+# the golden renders, follow their (and Python 3.14's) float summation.
+#   uv sync --frozen          (tools/setup_toolchain.sh)
+[project]
+name = "estampie-tools"
+version = "0.1"
+requires-python = "==3.14.*"
+dependencies = [
+    "pillow==12.3.0",
+    "fonttools==4.61.1",
+    "numpy==2.5.3",
+]
+
+[dependency-groups]
+# The command-line installer and sample upload (tools/fm1_install.py, tools/fm1_sample_upload.py): MIDI to an FM-1.
+device = [
+    "mido==1.3.3",
+    "python-rtmidi==1.5.8",
+]
+
+[tool.uv]
+package = false
+default-groups = ["device"]

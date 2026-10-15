@@ -4,7 +4,7 @@
 #   .toolchain/jieli     JieLi's Linux toolchain (clang 4.0.1 for pi32v2), run in Docker on macOS
 #   .toolchain/ac79-sdk  the JieLi AC79 SDK (three of its files go into every package)
 #   .toolchain/emsdk     Emscripten, for the browser emulator (web/emu/)
-#   .venv                Python with the build's pinned packages
+#   .venv                Python 3.14 with the packages in uv.lock (uv sync)
 # Each step is skipped when its folder is already there.
 #   tools/setup_toolchain.sh
 set -e
@@ -17,9 +17,8 @@ if [ ! -d .toolchain/emsdk ]; then
     git clone --depth 1 https://github.com/emscripten-core/emsdk.git .toolchain/emsdk
     (cd .toolchain/emsdk && ./emsdk install latest && ./emsdk activate latest)
 fi
-if [ ! -x .venv/bin/python3 ]; then
-    # Python 3.14, as CI: tools/gen_samples.py (and so the golden renders) follows its float summation.
-    "$(command -v python3.14 || command -v python3)" -m venv .venv
-    .venv/bin/pip install pillow==12.3.0 fonttools==4.61.1 numpy==2.5.3 mido python-rtmidi
-fi
+# Python 3.14 and the packages in uv.lock (hash-pinned; pyproject.toml says why these versions). Always run: a
+# no-op when .venv already matches the lock.
+command -v uv >/dev/null 2>&1 || { echo "setup_toolchain: needs uv (https://docs.astral.sh/uv/)"; exit 1; }
+uv sync --frozen
 echo "setup_toolchain: done (./build.sh, then web/emu/build.sh)"

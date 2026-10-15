@@ -1,8 +1,8 @@
 # GHOULBOX: the host tests on every push and pull request (tests/run_tests.sh, HOST_ONLY=1).
 # No JieLi toolchain or SDK here: tools/build.py --gen-only makes build/gen (the generated headers) and the tests
 # that need the firmware image itself (the update entry and loader, the target cost) are skipped; build them
-# locally with ./build.sh. Python and its packages are pinned: tools/gen_samples.py's results (and so the golden
-# renders) follow the float summation of the Python version.
+# locally with ./build.sh. Python and its packages are pinned (uv.lock): tools/gen_samples.py's results (and so the
+# golden renders) follow the float summation of the Python version.
 name: host tests
 
 on:
@@ -17,18 +17,20 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
+      # ESTAMPIE: every action pinned to a commit (a tag can be moved), its version in the comment.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4.4.0
         with:
-          python-version: "3.14"
+          persist-credentials: false
 
-      - uses: actions/setup-node@v4
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884   # v10.3.0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020   # v4.4.0
         with:
           node-version: "24"
 
+      # ESTAMPIE: Python 3.14 and the packages in uv.lock, hash-checked (pyproject.toml).
       - name: Python packages
-        run: python3 -m pip install pillow==12.3.0 fonttools==4.61.1 numpy==2.5.3
+        run: uv sync --frozen --no-default-groups && echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
 
       - name: Generated headers (no toolchain)
         run: python3 tools/build.py --gen-only
