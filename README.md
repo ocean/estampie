@@ -27,7 +27,7 @@ nothing is installed in your home directory. Needs [uv](https://docs.astral.sh/u
 tools/setup_toolchain.sh     # every tool, pinned by hash (tools/toolchain.lock); Python 3.14 from uv.lock
 tools/osv_scan.sh            # known vulnerabilities in everything the build runs (docs/SECURITY.md)
 ./build.sh                   # build/felucca.fwsc: the firmware package (Docker runs the JieLi tools on macOS)
-sh web/emu/build.sh          # build/emu/: the browser emulator
+sh web/emu/build.sh          # build/emu/: the browser emulator (zig cc to WebAssembly)
 python3 -m http.server -d build/emu 8790     # open http://localhost:8790/
 ```
 

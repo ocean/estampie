@@ -2,7 +2,10 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments
 # Felucca in the browser: the firmware's sources as the host tests build them (web/emu/felucca_web.c), compiled
-# to WebAssembly with Emscripten, plus the page. After X0X's web/emu/build.sh (charlesvestal/fm1-x0x, GPL-3.0).
+# to WebAssembly, plus the page. After X0X's web/emu/build.sh (charlesvestal/fm1-x0x, GPL-3.0).
+# ESTAMPIE: compiled with zig cc (clang with a bundled wasi-libc, one signed download; tools/setup_toolchain.sh)
+# rather than Emscripten: no Node, Python or npm in the build. A WASI reactor with no imports: the worklet calls
+# _initialize, then the exports. ZIG=path uses another zig; its caches stay in the repo.
 #   web/emu/build.sh   ->  build/emu/{index.html, tools.html, worklet.js, felucca.wasm, fonts/}
 # Run after one ./build.sh (build/gen: the tables, the fonts, the CC0 samples).
 # -ffp-contract=off: no fused multiply-adds, as the host build. EMU_OPT replaces -O2, EMU_CFLAGS adds flags
@@ -11,20 +14,18 @@
 set -e
 cd "$(dirname "$0")/../.."
 [ -f build/gen/felucca_tables.h ] || { echo "emu: run ./build.sh once first (build/gen)"; exit 1; }
-# ESTAMPIE: the in-repo, pinned Emscripten (tools/setup_toolchain.sh); EMU_SYSTEM_EMCC=1 uses emcc from the PATH.
-if [ "${EMU_SYSTEM_EMCC:-0}" != 1 ] && [ -f .toolchain/emscripten/.emscripten ]; then
-    . tools/emscripten_env.sh
-fi
-command -v emcc >/dev/null 2>&1 || { echo "emu: no emcc (Emscripten: run tools/setup_toolchain.sh)"; exit 1; }
+ZIG="${ZIG:-.toolchain/zig/zig}"
+[ -x "$ZIG" ] || { echo "emu: no zig in $ZIG (run tools/setup_toolchain.sh)"; exit 1; }
+export ZIG_GLOBAL_CACHE_DIR="$PWD/.toolchain/zig-cache" ZIG_LOCAL_CACHE_DIR="$PWD/build/zig-cache"
 VERSION=$(sed -n 's/^#define FELUCCA_VERSION "\([^"]*\)".*/\1/p' firmware/src/felucca.c)
 GBVERSION=$(sed -n 's/^#define GHOULBOX_VERSION "\([^"]*\)".*/\1/p' firmware/src/core.h)   # GHOULBOX: the page shows both
 ESVERSION=$(sed -n 's/^#define ESTAMPIE_VERSION "\([^"]*\)".*/\1/p' firmware/src/core.h)   # ESTAMPIE: and its own
 mkdir -p build/emu/fonts build/emu/vendor/libflac build/emu/vendor/mp3 build/emu/licenses
 # shellcheck disable=SC2086
-emcc ${EMU_OPT:--O2} -ffp-contract=off -std=gnu99 -w ${EMU_CFLAGS:-} \
-    "-DFELUCCA_VERSION=\"$VERSION\"" -Ibuild/gen -Ifirmware/src \
-    --no-entry -sSTANDALONE_WASM -sSTACK_SIZE=1048576 -sINITIAL_MEMORY=33554432 -sFILESYSTEM=0 \
-    -o build/emu/felucca.wasm web/emu/felucca_web.c
+"$ZIG" cc -target wasm32-wasi -mexec-model=reactor ${EMU_OPT:--O2} -g0 -s -ffp-contract=off -std=gnu99 -w ${EMU_CFLAGS:-} \
+    "-DFELUCCA_VERSION=\"$VERSION\"" -Iweb/emu/wasi -Ibuild/gen -Ifirmware/src \
+    -Wl,--export-dynamic -Wl,-z,stack-size=1048576 -Wl,--initial-memory=33554432 \
+    -o build/emu/felucca.wasm web/emu/felucca_web.c -lm
 [ "${EMU_PREVIEW:-1}" = 0 ] && PREVIEW='' || PREVIEW=' (preview)'
 sed -e "s/@ESVERSION@/$ESVERSION/g" -e "s/@GBVERSION@/$GBVERSION/g" -e "s/@VERSION@/$VERSION/g" -e "s/@PREVIEW@/$PREVIEW/g" web/emu/index.html > build/emu/index.html
 cp web/emu/worklet.js build/emu/

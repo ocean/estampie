@@ -3,8 +3,7 @@
 # Supply-chain security
 
 Building FM-1 firmware means running a lot of other people's code on your own machine: a closed-source compiler from
-the chip vendor, an SDK, Emscripten with its own Node packages, Python libraries, a container image and, in CI,
-GitHub Actions. Any of them could be tampered with on the way to you, ship a hijacked release, or carry a known
+the chip vendor, an SDK, a WebAssembly compiler, Python libraries, a container image and, in CI, GitHub Actions. Any of them could be tampered with on the way to you, ship a hijacked release, or carry a known
 vulnerability. ESTAMPIE treats that as part of the build. The approach is meant to be copied: nothing in it is
 specific to this firmware.
 
@@ -13,15 +12,17 @@ specific to this firmware.
 1. **Pin by content, not by name.** A version number or a tag can be moved to point at different bytes; a SHA-256 or
    a git commit can't. Every download is checked against `tools/toolchain.lock` before it is unpacked, every Python
    package against the hashes in `uv.lock`, every GitHub Action by commit, the container by digest.
-2. **Verify the publisher where it signs.** Node's checksums are GPG-signed by its releasers, osv-scanner publishes
-   SHA-256 sums and SLSA provenance. Where a project signs nothing (Emscripten, JieLi), the pin records what was
-   fetched and checked the first time (trust on first use), and any later change is refused.
+2. **Verify the publisher where it signs.** Zig's releases are minisign-signed (`tools/minisign_verify.py` checks
+   them without installing minisign), Node's checksums are GPG-signed by its releasers, and osv-scanner publishes
+   SHA-256 sums and SLSA provenance. Where a project signs nothing (JieLi), the pin records what was fetched and
+   checked the first time (trust on first use), and any later change is refused.
 3. **Wait before trusting something new.** Hijacked releases are usually found and pulled within days. uv won't lock a
    Python package less than 7 days old (`exclude-newer = "7 days"` in `pyproject.toml`); Dependabot waits 7 days too.
-4. **Install less.** The less that's installed, the less can go wrong. The browser build uses Emscripten's release
-   archive without emsdk, emsdk's bundled Python or npm. It keeps only the 51 npm packages emcc can load, out of 336:
-   the rest were Emscripten's own test and lint tooling. That cut the known vulnerabilities in the web toolchain from 72
-   to none.
+4. **Install less.** The less that's installed, the less can go wrong. The browser emulator was first built with
+   Emscripten, through emsdk: that brought its own Python, Node, npm and 336 npm packages, with 72 known
+   vulnerabilities between them, and emsdk checks no hashes. It is now built with `zig cc`: one signed archive with
+   no package dependencies, which compiles the C library it needs from the source it ships. The output is tested
+   bit for bit against the native build. Node remains only to run the web tests, without npm.
 5. **Contain what you can't inspect.** JieLi's compiler is a closed-source Linux binary. On macOS it runs in a
    distroless container (no shell, no package manager), as you rather than root, with no network, no capabilities, no
    privilege escalation, a read-only root, a process limit and the sources mounted read-only. Only `build/` is
@@ -40,8 +41,8 @@ specific to this firmware.
 | AC79 SDK (3 files used) | `tools/toolchain.lock` | git commit | data only (not run) | – |
 | Build container `cc-debian13:nonroot` | `tools/toolchain.lock` | image digest | see above | `osv_scan.sh build-image` |
 | Python 3.14 and packages | `uv.lock` | SHA-256 per file (uv) | `.venv` in the repo | `osv_scan.sh python` |
-| Node (binary only) | `tools/toolchain.lock` | SHA-256 from GPG-signed `SHASUMS256.txt` | npm, npx and corepack deleted | `osv_scan.sh node` (Node security releases) |
-| Emscripten 6.0.12 | `tools/toolchain.lock` | SHA-256 (first use; identical to emsdk's download) | dev npm packages removed | `osv_scan.sh emscripten` |
+| Node (binary only, for the tests) | `tools/toolchain.lock` | SHA-256 from GPG-signed `SHASUMS256.txt` | npm, npx and corepack deleted | `osv_scan.sh node` (Node security releases) |
+| Zig 0.17.0 (`zig cc` to WebAssembly) | `tools/toolchain.lock` | SHA-256, taken after checking its minisign signature | – | no package dependencies |
 | osv-scanner | `tools/toolchain.lock` | SHA-256 from the release's sums | – | – |
 | pi32v2 hardware emulator (Rust) | `tools/toolchain.lock` | git commit; `cargo build --locked` | – | `osv_scan.sh hw-emu` |
 | Web page codecs (libFLAC, LAME) | `web/emu/vendor/README.md` | SHA-256 per file | encode only, the app's own audio | no OSV entries for these versions |
@@ -54,8 +55,8 @@ you built yourself or got from a source you trust. The M-VAVE updater or the USB
 ## Day to day
 
 ```sh
-tools/setup_toolchain.sh        # fetch or update to the pins; refuses any hash mismatch
-tools/osv_scan.sh               # every part; or name parts: python emscripten node hw-emu build-image
+tools/setup_toolchain.sh        # fetch or update to the pins; refuses any hash mismatch (--only STEP,... for some)
+tools/osv_scan.sh               # every part; or name parts: python node hw-emu build-image
 uv run zizmor .github           # after editing a workflow
 ```
 
@@ -81,8 +82,11 @@ Do it in a commit of its own, so the change is easy to review.
   ```
 
   `tools/osv_scan.sh node` reports when a newer release in the line is a security release.
-- **Emscripten:** find the release's hash in emsdk's `emscripten-releases-tags.json`, download both archives, record
-  their SHA-256, then run `tools/setup_toolchain.sh` and `web/emu/build.sh`. The emulator page should behave the same.
+- **Zig:** take a release at least a week old from `https://ziglang.org/download/index.json`. Download both archives
+  with their `.minisig` files and check them with
+  `tools/minisign_verify.py RWSGOq2NVecA2UPNdBUZykf1CCb147pkmdtYxgb3Ti+JO/wCYvhbAb/U FILE`, comparing that key with
+  the one on ziglang.org/download. Then record the hashes, run `tools/setup_toolchain.sh` and `tests/run_tests.sh`. The
+  browser emulator test must still match the native build bit for bit.
 - **Build container:** `docker buildx imagetools inspect gcr.io/distroless/cc-debian13:nonroot`, then copy the digest
   into `tools/toolchain.lock`. `tools/osv_scan.sh build-image` reports when the tag has moved. Rebuild and compare the
   hashes of `build/felucca.bin` and `build/loader/ota.bin`: a new base image should not change the firmware. Then look

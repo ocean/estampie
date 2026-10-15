@@ -38,6 +38,10 @@ jobs:
       - name: Python packages
         run: uv sync --frozen --no-default-groups && echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
 
+      # ESTAMPIE: Zig (pinned by SHA-256 in tools/toolchain.lock), so the browser emulator is built and tested too.
+      - name: Zig
+        run: tools/setup_toolchain.sh --only zig
+
       - name: Generated headers (no toolchain)
         run: python3 tools/build.py --gen-only
 

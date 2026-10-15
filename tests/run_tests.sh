@@ -103,7 +103,7 @@
 # web (web/test_web.mjs, web/emu/io_test.mjs, web/emu/audio_export_test.mjs): the editor protocol against its mock device, whose tables must equal the
 #                   firmware's (tests/descdump.c -> build/host/desc.json; the MENU settings: tests/editor_test.c -> build/host/menu.json),
 #                   the package builder, the updater.
-# Browser emulator (web/emu, when emcc is there): the firmware in WebAssembly (build/emu) boots, plays keys and MIDI,
+# Browser emulator (web/emu, when zig is there: tools/setup_toolchain.sh, or ZIG=...): the firmware in WebAssembly (build/emu) boots, plays keys and MIDI,
 #                   draws, lights its LEDs, keeps a save across instances, plays a song bit for bit as the same file
 #                   built with cc (web/emu/native_check.c); the cost of 1 s of a heavy song against real time.
 # PHYS (tests/phys_test.c): stability over the whole parameter and pitch range, the worst-case cost against
@@ -142,6 +142,7 @@ set -e
 cd "$(dirname "$0")/.."
 export AC79_SDK="${AC79_SDK:-$PWD/.toolchain/ac79-sdk}"   # ESTAMPIE: the SDK lives in the repo (tools/setup_toolchain.sh).
 [ -x .venv/bin/python3 ] && export PATH="$PWD/.venv/bin:$PATH"   # ESTAMPIE: the uv-locked Python (uv sync --frozen).
+[ -x .toolchain/node/bin/node ] && export PATH="$PWD/.toolchain/node/bin:$PATH"   # ESTAMPIE: the pinned Node.
 OUT=build/host
 mkdir -p "$OUT"
 CC="${CC:-cc} -O1 -Wall -Wno-unused-function"
@@ -416,8 +417,8 @@ else
     echo "== skip web tests (no node)"
 fi
 
-if ! command -v emcc >/dev/null 2>&1; then
-    echo "== skip the browser emulator (no emcc: Emscripten builds web/emu)"
+if [ ! -x "${ZIG:-.toolchain/zig/zig}" ]; then
+    echo "== skip the browser emulator (no zig: tools/setup_toolchain.sh)"
 elif ! command -v node >/dev/null 2>&1 || [ ! -f build/gen/felucca_tables.h ]; then
     echo "== skip the browser emulator (needs node and build/gen)"
 else
