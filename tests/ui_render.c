@@ -1893,8 +1893,8 @@ int main(int argc, char **argv)
     const char *out = argc > 1 ? argv[1] : "build/ui_new";
     char path[600];
     uint32_t p, s;
-    static const char *const SHOW[] = {"GREY", "MONO", "GREEN", "PAPER", "NIGHT", "CRYPT"};   /* (NIGHT: #50, to review;
-                                                                                             * CRYPT: GHOULBOX's default) */
+    static const char *const SHOW[] = {"GREY", "MONO", "GREEN", "PAPER", "NIGHT", "CRYPT", "VELLUM"};   /* (NIGHT: #50, to review;
+                                                                                             * CRYPT: GHOULBOX's; VELLUM: ESTAMPIE's default) */
     snprintf(path, sizeof path, "%s/report.txt", out);
     rep = fopen(path, "w");
     if (!rep) { fprintf(stderr, "cannot write %s\n", path); return 1; }

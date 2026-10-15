@@ -36,6 +36,9 @@ static void draw_about_qr(int32_t x, int32_t y)
 enum { MC_TEXT, MC_TITLE, MC_URL };
 typedef struct { const char *text; uint8_t kind; } menu_credit_t;
 static const menu_credit_t MENU_CREDITS[] = {
+    {"ESTAMPIE", MC_TITLE},                  /* ESTAMPIE: this fork */
+    {"Drew Robinson: the medi\xE6val dance sounds, look and build pipeline, GPL-3.0", MC_TEXT},
+    {"", MC_TEXT},
     {"GHOULBOX", MC_TITLE},                  /* ESTAMPIE: the firmware it is a fork of */
     {"Jason Persinger: the hurdy-gurdy, tunings, dungeon sounds, GPL-3.0", MC_TEXT},
     {"https://github.com/jasonpersinger/ghoulbox-fm1-dungeon-synth", MC_URL},
@@ -120,9 +123,10 @@ static int32_t menu_document(int32_t y, int draw)
     uint32_t i;
     if (draw) {
         cv_alpha(6, y + 2, ES_LOGO_S_W, ES_LOGO_S_H, ES_LOGO_S, ramp(T_THEME, T_BG));   /* ESTAMPIE's wordmark */
-        cv_text(6, y + 38, &AF_S, "Medi\xE6val groovebox", T_TEXT);
-        cv_text(6, y + 58, &AF_M, ESTAMPIE_VERSION, T_THEME);
-        cv_text_r(232, y + 61, &AF_S, __DATE__, T_MID, T_BG);
+        cv_text(6 + ES_LOGO_S_W + 8, y + 12, &AF_M, ESTAMPIE_VERSION, T_THEME);   /* the version, in roman beside the blackletter */
+        cv_text(6, y + 40, &AF_S, "Medi\xE6val groovebox", T_TEXT);
+        cv_text(6, y + 58, &AF_S, "Drew Robinson", T_TEXT);
+        cv_text_r(232, y + 58, &AF_S, __DATE__, T_MID, T_BG);
         cv_text(6, y + 82, &AF_S, "on GHOULBOX " GHOULBOX_VERSION, T_TEXT);
         cv_text(6, y + 100, &AF_S, "Jason Persinger", T_TEXT);
         cv_text(6, y + 122, &AF_S, "on Felucca " FELUCCA_VERSION, T_TEXT);
