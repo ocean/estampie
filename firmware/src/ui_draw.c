@@ -1183,15 +1183,22 @@ static void draw_columns(void)
 }
 
 
-/* The power-on splash (main.c fm1_main, web/emu felucca_web.c): GHOULBOX's skull in bone, the blackletter wordmark in
- * the theme's colour, "DUNGEON SYNTH" under them (gfx.c draw_art_box: ghoulbox_art.h). In the saved palette
- * (settings_init before it) */
+/* The power-on splash (main.c fm1_main, web/emu felucca_web.c): ESTAMPIE's illuminated initial (the lapis field in
+ * ACCENT, its rule in THEME) beside the rest of the word in blackletter, "MEDIAEVAL GROOVEBOX" under them
+ * (estampie_art.h). In the saved palette (settings_init before it) */
+#define SPLASH_Y 70
 static void draw_splash(void)
 {
+    int32_t x = (240 - (int32_t)(ES_INIT_W + 2u + ES_WORD_W)) / 2;
     lcd_fill(0, 0, 240, 240, T_BG);
-    draw_art_box(34, GB_SKULL_W, GB_SKULL_H, GB_SKULL, T_TEXT);    /* GHOULBOX: bone */
-    draw_art_box(100, GB_LOGO_W, GB_LOGO_H, GB_LOGO, T_THEME);
-    draw_text_box(0, 166, 240, &AF_S, "DUNGEON SYNTH", T_MID, 1);
+    cv_begin(240, ES_INIT_H, T_BG);
+    cv_alpha(x, 0, ES_INIT_W, ES_INIT_H, ES_INIT, ramp(T_ACCENT, T_BG));
+    cv_alpha(x, 0, ES_INIT_RULE_W, ES_INIT_RULE_H, ES_INIT_RULE, ramp(T_THEME, T_BG));
+    cv_alpha(x + (int32_t)ES_INIT_W + 2, (int32_t)(ES_INIT_H - ES_WORD_H) - 6, ES_WORD_W, ES_WORD_H, ES_WORD,
+             ramp(T_THEME, T_BG));
+    cv_blit(0, SPLASH_Y);
+    lcd_sync();
+    draw_text_box(0, SPLASH_Y + ES_INIT_H + 22, 240, &AF_S, "MEDIAEVAL GROOVEBOX", T_MID, 1);
     lcd_sync();
 }
 

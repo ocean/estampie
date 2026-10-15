@@ -1413,9 +1413,9 @@ static void draw(int s)
     }
     if (s == S_SPLASH) {                          /* the power-on splash (main.c, before the UI): its lines, the version
                                                    * shown FELUCCA_VERSION (run_tests.sh: src/felucca.c's) */
-        /* GHOULBOX: its own splash (ui_draw.c draw_splash): the skull (rows 34 ..) and the wordmark (100 ..) inked, then
-         * DUNGEON SYNTH the only text */
-        static const char WANT[] = "DUNGEON SYNTH";
+        /* ESTAMPIE: its own splash (ui_draw.c draw_splash): the illuminated initial and the word (rows SPLASH_Y ..)
+         * inked, then MEDIAEVAL GROOVEBOX the only text */
+        static const char WANT[] = "MEDIAEVAL GROOVEBOX";
         splash_seen[0] = 0;
         in_splash = 1;
         draw_splash();
@@ -1423,10 +1423,12 @@ static void draw(int s)
         {
             uint16_t bg = host_screen[0];
             uint32_t sk = 0, lg = 0, i;
-            for (i = 34u * 240u; i < (34u + GB_SKULL_H) * 240u; i++) sk += host_screen[i] != bg;
-            for (i = 100u * 240u; i < (100u + GB_LOGO_H) * 240u; i++) lg += host_screen[i] != bg;
+            for (i = SPLASH_Y * 240u; i < (SPLASH_Y + ES_INIT_H) * 240u; i++) {
+                uint32_t x = i % 240u, x0 = (240u - (ES_INIT_W + 2u + ES_WORD_W)) / 2u;
+                if (x < x0 + ES_INIT_W) sk += host_screen[i] != bg; else lg += host_screen[i] != bg;
+            }
             if (sk < 200u || lg < 200u) {
-                if (rep) fprintf(rep, "FIND %-26s the splash's skull (%u px) or wordmark (%u px) missing\n", cur_name, sk, lg);
+                if (rep) fprintf(rep, "FIND %-26s the splash's initial (%u px) or word (%u px) missing\n", cur_name, sk, lg);
                 nfind++;
             }
         }

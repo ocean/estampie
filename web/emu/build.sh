@@ -18,6 +18,7 @@ fi
 command -v emcc >/dev/null 2>&1 || { echo "emu: no emcc (Emscripten: run tools/setup_toolchain.sh)"; exit 1; }
 VERSION=$(sed -n 's/^#define FELUCCA_VERSION "\([^"]*\)".*/\1/p' firmware/src/felucca.c)
 GBVERSION=$(sed -n 's/^#define GHOULBOX_VERSION "\([^"]*\)".*/\1/p' firmware/src/core.h)   # GHOULBOX: the page shows both
+ESVERSION=$(sed -n 's/^#define ESTAMPIE_VERSION "\([^"]*\)".*/\1/p' firmware/src/core.h)   # ESTAMPIE: and its own
 mkdir -p build/emu/fonts build/emu/vendor/libflac build/emu/vendor/mp3 build/emu/licenses
 # shellcheck disable=SC2086
 emcc ${EMU_OPT:--O2} -ffp-contract=off -std=gnu99 -w ${EMU_CFLAGS:-} \
@@ -25,7 +26,7 @@ emcc ${EMU_OPT:--O2} -ffp-contract=off -std=gnu99 -w ${EMU_CFLAGS:-} \
     --no-entry -sSTANDALONE_WASM -sSTACK_SIZE=1048576 -sINITIAL_MEMORY=33554432 -sFILESYSTEM=0 \
     -o build/emu/felucca.wasm web/emu/felucca_web.c
 [ "${EMU_PREVIEW:-1}" = 0 ] && PREVIEW='' || PREVIEW=' (preview)'
-sed -e "s/@GBVERSION@/$GBVERSION/g" -e "s/@VERSION@/$VERSION/g" -e "s/@PREVIEW@/$PREVIEW/g" web/emu/index.html > build/emu/index.html
+sed -e "s/@ESVERSION@/$ESVERSION/g" -e "s/@GBVERSION@/$GBVERSION/g" -e "s/@VERSION@/$VERSION/g" -e "s/@PREVIEW@/$PREVIEW/g" web/emu/index.html > build/emu/index.html
 cp web/emu/worklet.js build/emu/
 cp web/emu/emu_io.js build/emu/
 cp web/emu/audio_export.js build/emu/
@@ -36,6 +37,6 @@ cp web/emu/vendor/libflac/libflac.min.wasm.js web/emu/vendor/libflac/libflac.min
 cp web/emu/vendor/mp3/WasmMediaEncoder.min.js web/emu/vendor/mp3/mp3.wasm build/emu/vendor/mp3/
 cp web/emu/vendor/README.md build/emu/vendor/
 cp LICENSES/MIT-libflac.js.txt LICENSES/BSD-3-Clause-libFLAC.txt LICENSES/MIT-wasm-media-encoders.txt LICENSES/LGPL-2.0-LAME.txt LICENSES/LAME-NOTICE.txt build/emu/licenses/
-python3 tools/gen_emu_art.py build/gen build/emu/art   # GHOULBOX: the dungeon's pixel art (torch, wall, name)
+python3 tools/gen_emu_art.py build/gen build/emu/art   # ESTAMPIE: the crest; GHOULBOX: the dungeon's pixel art (torch, wall, name)
 cp web/emu/fonts/DotGothic16-subset.woff web/emu/fonts/OFL.txt build/emu/fonts/
-echo "emu: build/emu ($(wc -c < build/emu/felucca.wasm | tr -d ' ') B wasm, GHOULBOX $GBVERSION on Felucca $VERSION)"
+echo "emu: build/emu ($(wc -c < build/emu/felucca.wasm | tr -d ' ') B wasm, ESTAMPIE $ESVERSION on GHOULBOX $GBVERSION on Felucca $VERSION)"
