@@ -1,7 +1,7 @@
-# ESTAMPIE: a mediaeval groovebox for the FM-1
+# ESTAMPIE: a mediæval groovebox for the FM-1
 
 **ESTAMPIE** is custom firmware for the **M-VAVE FM-1**, named after the *estampie*, a fast dance of the
-13th and 14th centuries. It is a groovebox for lively mediaeval music: tavern and court dances rather than the
+13th and 14th centuries. It is a groovebox for lively mediæval music: tavern and court dances rather than the
 crypt, with plucked lutes and citoles, buzzing hurdy-gurdies, shawms and bagpipes over drones, frame drums,
 tabors and nakers, chant, and the church modes.
 
@@ -21,10 +21,10 @@ illuminated boot screen and the browser emulator page. The sounds are still GHOU
 ## Building
 
 Everything the build needs is fetched into the repository (`.toolchain/`, `.venv/`, both git-ignored), so
-nothing is installed in your home directory:
+nothing is installed in your home directory. Needs [uv](https://docs.astral.sh/uv/), Docker Desktop and git:
 
 ```sh
-tools/setup_toolchain.sh     # JieLi toolchain, AC79 SDK, Emscripten, Python 3.14 venv (once)
+tools/setup_toolchain.sh     # JieLi toolchain, AC79 SDK, Emscripten; Python 3.14 from uv.lock (uv sync)
 ./build.sh                   # build/felucca.fwsc: the firmware package (Docker runs the JieLi tools on macOS)
 sh web/emu/build.sh          # build/emu/: the browser emulator
 python3 -m http.server -d build/emu 8790     # open http://localhost:8790/

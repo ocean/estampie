@@ -398,7 +398,7 @@ static int gm_hits_play(track_t *t)
 }
 
 /* sounds never touch the steps; the arp, the scale, the SLICER and the pattern parameters are the track's */
-static void go_title(const char *title);              /* (below; GHOULBOX's torch check uses it) */
+static void go_title(const char *title);              /* (below; the ornaments' check uses it) */
 static int test_sound_loads(void)
 {
     int bad = 0;
@@ -603,53 +603,58 @@ static int test_sound_loads(void)
             blade += swap16(cv_px[(2u + 8u) * 240u + i]) == T_TEXT;   /* the blade's row */
         bad += check("a selected list row: the sword, accent text, no THEME bar", theme < 40u && accent > 40u && blade >= 6u);
     }
-    {   /* GHOULBOX: torches on HOME's stage; their flame moves; a list page has none */
-        static uint16_t f0[12 * 30], f2[12 * 30];
-        uint32_t i, diff = 0, ink = 0;
+    {   /* ESTAMPIE: the marginal ornaments on HOME's stage (GHOULBOX: torches), the right one the left mirrored, in
+         * ink, vermilion and lapis; a list page has none */
+        static uint16_t l[12 * 30], r[12 * 30];
+        uint32_t i, x, y, mirrored = 1, ink = 0, leaf = 0, dot = 0;
         cv_begin(12, 30, T_SURF);
-        torch_draw(0, 0, 0);
-        memcpy(f0, cv_px, sizeof f0);
+        ornament_draw(0, 0, 0);
+        memcpy(l, cv_px, sizeof l);
         cv_begin(12, 30, T_SURF);
-        torch_draw(0, 0, 2);
-        memcpy(f2, cv_px, sizeof f2);
+        ornament_draw(0, 0, 1);
+        memcpy(r, cv_px, sizeof r);
+        for (y = 0; y < 30u; y++)
+            for (x = 0; x < 12u; x++)
+                mirrored &= l[y * 12u + x] == r[y * 12u + 11u - x];
         for (i = 0; i < 12u * 30u; i++) {
-            diff += f0[i] != f2[i];
-            ink += swap16(f0[i]) == T_ACCENT;
+            ink += swap16(l[i]) == T_TEXT;
+            leaf += swap16(l[i]) == T_THEME;
+            dot += swap16(l[i]) == T_ACCENT;
         }
         ui_power_on();
         ui.force = 1; ui_draw();
-        bad += check("torches: the flame flickers (frames differ), it burns (accent), HOME shows them",
-                     diff > 4u && ink > 10u && ui.torches == 1u && PANEL_X0 >= 24);
+        bad += check("ornaments: the right mirrors the left; stem in ink, leaf in vermilion, dots in lapis; HOME shows them",
+                     mirrored && ink > 4u && leaf > 10u && dot > 2u && ui.ornaments == 1u && PANEL_X0 >= 24);
         go_title("PRESETS");
         ui.force = 1; ui_draw();
-        bad += check("  a list page: no torches, the full width", ui.torches == 0u && PANEL_X0 == 10);
+        bad += check("  a list page: no ornaments, the full width", ui.ornaments == 0u && PANEL_X0 == 10);
     }
-    {   /* GHOULBOX: on every page with torches, each torch tile holds the torch on stone and nothing else (the
-         * flicker repaints only the tile: a curve through it would be cut) */
+    {   /* GHOULBOX: on every page with ornaments (its torches), each tile holds the ornament on stone and nothing
+         * else (a curve through it would tangle with it) */
         static const char *const PG[4] = {"", "ENV", "LFO", "FX"};
         uint32_t k, x, y, n = 0, pages = 0;
         track_t keep = *TSEL;
         for (k = 0; k < 4u; k++) {
             ui_power_on();
             TSEL->p[P_ATK] = 0;                          /* (the steepest attack, the shortest release: the */
-            TSEL->p[P_REL] = 0;                          /* ENV curve's ends nearest the torches) */
+            TSEL->p[P_REL] = 0;                          /* ENV curve's ends nearest the ornaments) */
             TSEL->p[P_SUS] = 127;
             if (k) go_title(PG[k]);
             ui.force = 1; ui_draw();
-            if (!ui.torches) continue;
+            if (!ui.ornaments) continue;
             pages++;
             for (uint32_t side = 0; side < 2u; side++) {
-                int32_t tx = side ? TORCH_RX : TORCH_LX;
+                int32_t tx = side ? ORN_RX : ORN_LX;
                 cv_begin(12, 30, T_SURF);
-                cv_stone(0, 0, 12, 30, tx, TORCH_Y);
-                torch_draw(0, 0, side ? ui.torch_f ^ 2u : ui.torch_f);
+                cv_stone(0, 0, 12, 30, tx, ORN_Y);
+                ornament_draw(0, 0, (int)side);
                 for (y = 0; y < 30u; y++)
                     for (x = 0; x < 12u; x++)
-                        n += host_screen[(Y_GRAPH + TORCH_Y + y) * 240u + (uint32_t)tx + x] != cv_px[y * 12u + x];
+                        n += host_screen[(Y_GRAPH + ORN_Y + y) * 240u + (uint32_t)tx + x] != cv_px[y * 12u + x];
             }
         }
         *TSEL = keep;
-        bad += check("torch tiles: only the torch on stone on HOME, ENV, LFO, FX (no graph drawn into them)", pages == 4u && n == 0u);
+        bad += check("ornament tiles: only the ornament on stone on HOME, ENV, LFO, FX (no graph drawn into them)", pages == 4u && n == 0u);
     }
     {   /* GHOULBOX: inside a stone window nothing is drawn in INK (it was text on the old THEME bar): the PRESETS
          * row's suggested pattern, the EDIT layer's favourite star */
@@ -2087,9 +2092,7 @@ static uint32_t roll_diff(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int in
     for (y = 0; y < 240; y++)
         for (x = 0; x < 240; x++) {
             int inside = x >= x0 && x < x1 && y >= y0 && y < y1;
-            int torch = y >= Y_GRAPH + TORCH_Y && y < Y_GRAPH + TORCH_Y + 30 &&     /* (GHOULBOX: the torches flicker */
-                        ((x >= TORCH_LX && x < TORCH_LX + 12) || (x >= TORCH_RX && x < TORCH_RX + 12));   /* on their own) */
-            if (!torch && inside == in && host_screen[y * 240 + x] != roll_shot[y * 240 + x]) n++;
+            if (inside == in && host_screen[y * 240 + x] != roll_shot[y * 240 + x]) n++;
         }
     return n;
 }

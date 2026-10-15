@@ -38,7 +38,12 @@ APP_XIP = 0x02000120                # app.bin offset 0 in the XIP map; the SPL j
 APP_SLOT = fm1pkg_make.APP_SLOT
 LOADER_LOAD = 0x01C0A800
 LOADER_NAME = b"usb_hid_ota.bin"    # the file name the SPL looks for
-DOCKER_IMAGE = os.environ.get("JIELI_DOCKER_IMAGE", "debian:bookworm-slim")
+# ESTAMPIE: the JieLi tools need only glibc, libstdc++ and libgcc (ldd), so they run in distroless's cc image: no shell,
+# no package manager, far fewer known vulnerabilities than a full Debian (osv-scanner, docs/SECURITY.md). Pinned by
+# digest (a tag can be moved); update it with tools/osv_scan.sh's check.
+DOCKER_IMAGE = os.environ.get(
+    "JIELI_DOCKER_IMAGE",
+    "gcr.io/distroless/cc-debian13:nonroot@sha256:e792ab3d241a468a4fd7519ddbbebe66b49b5f365771716ea688ad40b6c6f1c2")
 CFLAGS = ["-Os", "-ffunction-sections", "-fno-builtin", "-Wall", "-Wno-unused-function"]
 LINE = re.compile(r"^\s*([0-9a-f]+):\s+((?:[0-9a-f]{2} )+)\s*\t(.*)$")
 
@@ -72,8 +77,11 @@ def tc(tool, *args):
     if tool == "cc":                # the toolchain's cc wrapper needs python3; call clang directly
         tool, rel = "pi32v2/bin/clang", ["-target", "pi32v2", *rel]
     if use_docker():
-        cmd = ["docker", "run", "--rm", "--platform", "linux/amd64", "-v", f"{SRC}:/work",
-               "-v", f"{toolchain()}:/opt/jieli:ro", "-w", "/work", DOCKER_IMAGE, f"/opt/jieli/{tool}", *rel]
+        # ESTAMPIE: each tool as you, with no network, no capabilities, no privilege gain and a read-only root
+        # (a scratch /tmp); only the source tree is writable, the toolchain read-only.
+        cmd = ["docker", "run", "--rm", "--platform", "linux/amd64", "--network", "none", "--cap-drop", "ALL",
+               "--security-opt", "no-new-privileges", "--read-only", "--tmpfs", "/tmp", "--user", f"{os.getuid()}:{os.getgid()}",
+               "-v", f"{SRC}:/work", "-v", f"{toolchain()}:/opt/jieli:ro", "-w", "/work", DOCKER_IMAGE, f"/opt/jieli/{tool}", *rel]
     else:
         cmd = [str(toolchain() / tool), *rel]
     r = subprocess.run(cmd, cwd=SRC, capture_output=True, text=True)

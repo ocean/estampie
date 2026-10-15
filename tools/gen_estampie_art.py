@@ -6,9 +6,13 @@
 #   ES_INIT_RULE  its frame: a double rule with a fleuron on each corner (drawn in THEME, vermilion)
 #   ES_WORD       "stampie" in UnifrakturMaguntia (assets/fonts, SIL OFL 1.1), the boot size
 #   ES_LOGO_S     "Estampie", the ABOUT size
+#   ES_ORN_*      the marginal ornament beside the graphs (in GHOULBOX's torches' place), 12 x 30, left (L) and right
+#                 (R, mirrored: both face the graph): a crozier's curl and stem (STEM, in TEXT, ink), a hanging ivy
+#                 leaf with its vein cut out (LEAF, THEME, vermilion), a dot above and below (DOT, ACCENT, lapis)
 # Format as the icons (tools/aa_raster.py): alpha 0..15, 2 px per byte, high nibble first, rows back to
 # back; the firmware draws them with cv_alpha in any colour.
 #   gen_estampie_art.py OUT.h
+import math
 import sys
 from pathlib import Path
 
@@ -62,6 +66,35 @@ def initial(scale=1):
     return field.resize((n, n), Image.LANCZOS), rule.resize((n, n), Image.LANCZOS)
 
 
+def hedera(d, cx, cy, r):
+    """an ivy leaf (a heart), its tip down, centred on (cx, cy), r across each lobe"""
+    pts = []
+    for k in range(96):
+        t = 2 * math.pi * k / 96
+        x = 16 * math.sin(t) ** 3
+        y = 13 * math.cos(t) - 5 * math.cos(2 * t) - 2 * math.cos(3 * t) - math.cos(4 * t)
+        pts.append((cx + x * r / 16, cy - y * r / 16))
+    d.polygon(pts, fill=255)
+
+
+ORN_W, ORN_H = 12, 30
+
+
+def ornament():
+    """the left ornament's stem, leaf and dots, each ORN_W x ORN_H (the right one: the same, mirrored)"""
+    u = SS * 2                                          # (fine lines: drawn at 8x)
+    stem, leaf, dot = (Image.new("L", (ORN_W * u, ORN_H * u), 0) for _ in range(3))
+    ds, dl, dd = ImageDraw.Draw(stem), ImageDraw.Draw(leaf), ImageDraw.Draw(dot)
+    cx = 6 * u
+    ds.arc([cx - 4 * u, 1 * u, cx + 4 * u, 9 * u], 180, 90, fill=255, width=int(1.1 * u))   # the crozier's curl
+    ds.line([(cx, 9 * u), (cx, 18 * u)], fill=255, width=int(1.1 * u))                     # the stem
+    hedera(dl, cx, 22 * u, 5.0 * u)                                                         # the leaf
+    dl.line([(cx, 19.5 * u), (cx, 25.5 * u)], fill=0, width=int(0.6 * u))                   # its vein
+    dd.ellipse([cx - 1.8 * u, 1 * u, cx + 1.8 * u, 4.6 * u], fill=255)                       # the dots
+    dd.ellipse([cx - 1.6 * u, 27.4 * u, cx + 1.6 * u, 30 * u - 1], fill=255)
+    return [im.resize((ORN_W, ORN_H), Image.LANCZOS) for im in (stem, leaf, dot)]
+
+
 def emit(name, im):
     w, h = im.size
     nib = [min(15, (v + 8) // 17) for v in im.tobytes()]
@@ -77,7 +110,9 @@ def main():
     total = 0
     field, rule = initial()
     for name, im in (("ES_INIT", field), ("ES_INIT_RULE", rule), ("ES_WORD", word("stampie", 156, 46)),
-                     ("ES_LOGO_S", word("Estampie", 180, 34))):
+                     ("ES_LOGO_S", word("Estampie", 180, 34))) + tuple(
+                    (f"ES_ORN_{side}_{part}", im if side == "L" else im.transpose(Image.FLIP_LEFT_RIGHT))
+                    for side in "LR" for part, im in zip(("STEM", "LEAF", "DOT"), ornament())):
         lines, n = emit(name, im)
         L += lines
         total += n
