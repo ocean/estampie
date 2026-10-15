@@ -47,10 +47,12 @@ int main(int argc, char **argv)
     static const uint8_t pd[] = {0x08, 0xf0};
     const aafont_t probe = {1, 1, 'A', 'A', 0, 0, pg, pd, 0, 0, 0};
     double worst = 100;
-    assert(NPALETTES == 11u && !strcmp(UI_PALETTES[0].name, "GREY") && !strcmp(UI_PALETTES[7].name, "HI-CON") &&
+    assert(NPALETTES == 12u && !strcmp(UI_PALETTES[0].name, "GREY") && !strcmp(UI_PALETTES[7].name, "HI-CON") &&
            !strcmp(UI_PALETTES[8].name, "CRYPT") && UI_CRYPT_INDEX == 8u &&
-           !strcmp(UI_PALETTES[9].name, "NIGHT") && !strcmp(UI_PALETTES[10].name, "MONO") && UI_BW_INDEX == 10u);
-    /* (#50, 1.0.2: appended, the ids stay; GREY is the MONO of 1.0.1, id 0; GHOULBOX's CRYPT keeps its id 8) */
+           !strcmp(UI_PALETTES[9].name, "NIGHT") && !strcmp(UI_PALETTES[10].name, "MONO") && UI_BW_INDEX == 10u &&
+           !strcmp(UI_PALETTES[11].name, "VELLUM") && UI_VELLUM_INDEX == 11u);
+    /* (#50, 1.0.2: appended, the ids stay; GREY is the MONO of 1.0.1, id 0; GHOULBOX's CRYPT keeps its id 8;
+     * ESTAMPIE's VELLUM is appended as id 11) */
     for (unsigned st = ST_FLAT; st <= ST_LINE; st++) {   /* MONO: every token black or white, in FLAT and LINE */
         uint16_t *tok = &ux.bg;
         ux.style = (uint8_t)st;
@@ -93,7 +95,7 @@ int main(int argc, char **argv)
         if (min < worst) worst = min;
         printf("%-7s text %.1f:1, labels %.1f:1, values %.1f:1, selection %.1f:1\n", UI_PALETTES[p].name,
                contrast(T_TEXT, T_BG), contrast(T_MID, T_BG), contrast(T_THEME, T_BG), contrast(T_INK, T_SEL));
-        assert((p == 6u) == ux.light);                         /* PAPER is the light one */
+        assert((p == 6u || p == UI_VELLUM_INDEX) == ux.light);   /* PAPER and VELLUM are the light ones */
         assert(T_REC == (p == UI_GREY_INDEX || p == UI_BW_INDEX ? T_ACCENT : ux.light ? UI_REC_LIGHT : UI_REC_DARK));
         /* the blend: transparent, solid and an edge between the two, on two backgrounds */
         for (unsigned b = 0; b < 2; b++) {
