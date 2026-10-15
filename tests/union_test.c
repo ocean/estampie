@@ -15,6 +15,8 @@
  * with the region: the 8 DRUM -> GRAIN / PHYS / FM6 / SLICE -> DRUM at presets 2 3 4 (a kit change across the switch):
  * the lanes start from rest as at power-on instead of running on (noise and phases: level within 0.5 dB, every band
  * within 1 dB; build/union_demo/drum_grain_drum_old.wav / _new.wav).
+ * ESTAMPIE: the 66 sequences that reach DRUM's presets 3 and 4 (past its list before: DANCE KIT and PROCESSION now,
+ * appended) recorded again; nothing else differs.
  * env: GOLDEN_UPDATE=1 rewrites GOLDEN_FILE (only with a reason: a switch is to sound as it did). */
 #define main hostsim_main
 #include "hostsim.c"

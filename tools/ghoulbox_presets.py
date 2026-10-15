@@ -22,6 +22,7 @@ ENGINES = {
     "PHASE": ("eng_phase.c", "PHASE_PRESETS"),
     "NOISE": ("eng_noise.c", "NOISE_PRESETS"),
     "GURDY": ("eng_gurdy.c", "GURDY_PRESETS"),
+    "DRUM": ("eng_drum.c", "DRUM_PRESETS"),          # (ESTAMPIE: its DANCE kit's)
 }
 
 # name, EDIT 1..8, {A D S R}, filter env, mono, FX(dist, chorus, delay, reverb), suggested pattern

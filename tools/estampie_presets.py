@@ -20,6 +20,11 @@ PRESETS = {
         # 8T steps, each dotted quarter), a bright wheel, little reverb: a dance, not a crypt.
         ("TROTTO GURDY", [9, 70, 55, 110, 100, 1, 55, 15], [2, 64, 127, 20], 0, 1, (8, 0, 0, 40), 21),
     ],
+    "DRUM": [  # KIT (10: DANCE, eng_drum.c DK_DANCE) TUNE TONE DECY SNAP ACC KICK DRV
+        # The DANCE kit as designed, in a small room; and lower, longer, roomier for a procession or a carol.
+        ("DANCE KIT", [10, 64, 64, 64, 64, 100, 0, 0], [0, 100, 127, 100], 0, 0, (0, 0, 0, 30), 23),
+        ("PROCESSION", [10, 52, 56, 80, 64, 100, 0, 0], [0, 100, 127, 100], 0, 0, (0, 0, 0, 60), 23),
+    ],
 }
 
 

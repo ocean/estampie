@@ -226,6 +226,9 @@ static const struct {
     /* GHOULBOX 1.2: for the DRUM engine's CRYPT kit (GM notes: its FRAME, SHAKR, TIMP, ROPE, SLAP lanes) */
     {"TOMBBEAT", {36, 42, 0, 42, 45, 42, 36, 42, 36, 42, 45, 45, 38, 42, 39, 42},       /* 22 a procession */
      {1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0}},
+    /* ESTAMPIE: for the DRUM engine's DANCE kit (GM notes: its TABOR, TAMB, BUZZ, NAKER, HANDS, JINGL, BONES lanes) */
+    {"TABOR", {36, 0, 42, 36, 38, 42, 36, 0, 36, 42, 45, 45, 38, 39, 46, 37},           /* 23 a dance: the drum's long-short */
+     {1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0}},
 };
 #undef T_
 #define NPATTERNS (sizeof PATTERNS / sizeof PATTERNS[0])
@@ -258,8 +261,8 @@ static const es_phrase_t ES_PHRASES[] = {
     {"TROT DESC", 36, 4, 0, ES_BAR6(0) | ES_BAR6(3),                                              /* the tune's skeleton, */
      {76, ES_T, ES_T, 76, ES_T, ES_T,   72, ES_T, ES_T, 69, ES_T, ES_T,   71, ES_T, ES_T, 67, ES_T, ES_T,   /* held: */
       69, ES_T, ES_T, 74, ES_T, ES_T,   74, ES_T, ES_T, 71, ES_T, ES_T,   69, ES_T, ES_T, ES_T, ES_T, 0}},  /* heterophony */
-    {"TABOR", 12, 4, 1, ES_BAR6(0) | ES_BAR6(1),        /* frame drum on the beats, the rope snare between, jingles on 2 */
-     {1, 0, 2, 1 | 16, 0, 2,   1, 8, 2, 1 | 16, 2, 2}},
+    {"TROT TABOR", 12, 4, 1, ES_BAR6(0) | ES_BAR6(1),   /* (the DANCE kit) the tabor on the beats, its snare string */
+     {1, 0, 2, 1 | 16, 0, 2,   1, 8, 2, 1 | 16, 32, 2}},  /* between, the tambourine; the nakers answer at the end */
 };
 #define ES_NPHRASE (sizeof ES_PHRASES / sizeof ES_PHRASES[0])
 
@@ -304,8 +307,8 @@ static void es_phrase_load(track_t *t, uint32_t n)
 #define GB_DUNGEON 5u
 static const struct { const char *name; uint8_t bpm, tape, rtype, part[NPART][3], lvl[NPART]; } GB_SCENES[GB_NSCENE] = {
     {"TROTTO", 112, 12, 0, {{ENGI_GURDY, 6, ES_PHR(0)}, {ENGI_PHYS, 9, ES_PHR(1)}, {ENGI_SAMPLE, 7, ES_PHR(2)},
-                           {ENGI_DRUM, 1, ES_PHR(3)}},   /* ESTAMPIE: TROTTO GURDY, LUTE, TENOR RECORD, CRYPT KIT; */
-     {0, 118, 86, 100}},                                 /* the lute up, the recorder under the melody */
+                           {ENGI_DRUM, 3, ES_PHR(3)}},   /* ESTAMPIE: TROTTO GURDY, LUTE, TENOR RECORD, DANCE KIT; */
+     {0, 118, 86, 94}},                                  /* the lute up, the recorder and the drums under the melody */
     {"CRYPT", 60, 55, 2, {{5, 7, 17}, {5, 5, 14}, {11, 4, 17}, {ENGI_DRUM, 2, 22}}},           /* LOW DRONE PEDAL,
                                     * CRYPT CHOIR DIRGE, CAVE WIND PEDAL, TOMB DRUMS TOMBBEAT */
     {"TAVERN", 96, 30, 2, {{ENGI_GURDY, 2, 15}, {ENGI_PHYS, 11, 20}, {ENGI_PHYS, 9, 18}, {ENGI_DRUM, 1, 22}}},   /* DANCE

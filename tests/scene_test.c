@@ -5,6 +5,7 @@
  *     tie follows a note, a DRUM phrase hits only the kit's lanes;
  *   - the TROTTO melody is the transcription: parsed here from its ABC (the source's own notation), an octave down;
  *   - es_phrase_load writes those steps, its LEN and DIV, and the ties as the sequencer reads them;
+ *   - TROTTO's drums are the DANCE kit, its lanes named for the period pieces;
  *   - TROTTO comes first (a fresh device's scene) and DUNGEON, GHOULBOX's, is still there.
  * Fails (exit 1) on the first difference it reports. */
 #define main hostsim_main
@@ -95,6 +96,17 @@ int main(void)
     for (i = 0; i < n; i++)
         ok &= ES_PHRASES[0].step[i] == (want[i] == ES_T ? ES_T : want[i] - 12u);
     check("TROTTO's melody is the transcription's (its ABC parsed here), an octave down, 36 eighths = 6 bars", ok);
+    {   /* the period kit: TROTTO's drums, its lanes named for the pieces they play, the TABOR pattern suggested */
+        static const char *const LN[NLANE] = {"TABOR", "BUZZ", "HANDS", "TAMB", "JINGL", "NAKER", "BONES", "BELLS"};
+        const preset_t *dk = &ENGINES[ENGI_DRUM]->presets[GB_SCENES[0].part[3][1]];
+        host_tracks_init();
+        host_preset(&trk[3], ENGI_DRUM, GB_SCENES[0].part[3][1]);
+        ok = !strcmp(dk->name, "DANCE KIT") && dk->e[0] == DK_DANCE && GB_SCENES[0].part[3][0] == ENGI_DRUM &&
+             !strcmp(PATTERNS[dk->pat - 1u].name, "TABOR") && !strcmp(N_DRUM_KIT[DK_DANCE], "DANCE");
+        for (i = 0; i < NLANE; i++)
+            ok &= !strcmp(drum_lane_name(&trk[3], i), LN[i]);
+        check("TROTTO's drums: DANCE KIT (KIT DANCE), lanes TABOR BUZZ HANDS TAMB JINGL NAKER BONES BELLS, pattern TABOR", ok);
+    }
     check("TROTTO GURDY drones on A (DRN), its fifth E sounding, its trompette struck a beat (COUP 1/4)",
           !strcmp(ENGINES[ENGI_GURDY]->presets[6].name, "TROTTO GURDY") && ENGINES[ENGI_GURDY]->presets[6].e[0] == 9 &&
           ENGINES[ENGI_GURDY]->presets[6].e[2] > 0 && ENGINES[ENGI_GURDY]->presets[6].e[5] == 1);
@@ -117,7 +129,7 @@ int main(void)
             ok &= st->time == ST_REST && st->n == 0;
     }
     check("es_phrase_load: TROTTO's notes, ties and bar accents into the steps, LEN 36, DIV 8T, the rest empty", ok);
-    host_preset(&trk[3], ENGI_DRUM, 1);
+    host_preset(&trk[3], ENGI_DRUM, 3);
     es_phrase_load(&trk[3], 3);
     ok = trk[3].p[P_SLEN] == 12 && trk[3].p[P_SDIV] == 4;
     for (i = 0; i < 12u; i++)

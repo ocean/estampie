@@ -69,7 +69,7 @@ enum {
 };
 /* a lane of a model kit as a type: the kit (1..DV_NKIT) in the high 4 bits, the lane in the low 3 (Felucca's own
  * types: 0 above). Its run (the DVT_* it plays through) is the kit's (DV_KIT) */
-#define DV_NKIT 6                                        /* (GHOULBOX: + CRYPT) */
+#define DV_NKIT 7                                        /* (GHOULBOX: + CRYPT; ESTAMPIE: + DANCE) */
 #define DV_KITOF(t) ((uint32_t)(t) >> 4)
 #define DV_KTYPE(kit, lane) ((uint8_t)(((kit) << 4) | (lane)))
 
@@ -180,7 +180,7 @@ typedef struct {
     int16_t v[13];
 } dv_kit_t;
 /* the accent per kit: + (x / 16384) per accent step (75: +4 dB at full, as Felucca's own) */
-static const uint8_t DV_KIT_ACC[DV_NKIT] = {120, 45, 100, 40, 40, 60};
+static const uint8_t DV_KIT_ACC[DV_NKIT] = {120, 45, 100, 40, 40, 60, 70};
 static const dv_kit_t DV_KIT[DV_NKIT][DV_NLANE] = {
     {   /* 80 */
         /* deep sine, a small drop, long decay */
@@ -289,6 +289,24 @@ static const dv_kit_t DV_KIT[DV_NKIT][DV_NLANE] = {
         {DVT_RIM, 32, 1250, 30, 6150, {200, 20000, 8000, 6000, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
         /* GONG: low bands of the four-square metal, a soft strike, a long shimmer */
         {DVT_CYM, 53, 900, 3500, 9000, {1500, 3413, 1300, 3413, 12000, 9000, 120, 19661, 0, 2, 0, 0, 0}},
+    },
+    {   /* DANCE (ESTAMPIE): a mediæval dance band's percussion, the lanes renamed (eng_drum.c drum_lane_name) */
+        /* TABOR: the pipe-and-tabor drum, shallow and dry, 98 Hz, the stick's click on the head */
+        {DVT_PUNCH, 64, 688, 220, 2900, {30, 120, 0, 2400, 1200, 1300, 3000, 5000, 0, 0, 0, 0, 0}},
+        /* BUZZ: the tabor's snare string, a 220 Hz shell under a bright, short rattle */
+        {DVT_SNARE, 40, 912, 260, 4590, {0, 60, 120, 60, 0, 12000, 1650, 8192, 30, 0, 26000, 0, 1828}},
+        /* HANDS: the dancers clapping, four claps not quite together, a dry tail */
+        {DVT_CLAP, 48, 1300, 120, 14780, {0, 4096, 1678, 0, 1200, 30000, 30, 520, 4, 0, 0, 0, 0}},
+        /* TAMB: a tambourine tapped, its jingles high and short */
+        {DVT_HATC, 45, 1909, 90, 4200, {1996, 5120, 1940, 2042, 3000, 14000, 9000, 3, 3, 0, 0, 0, 0}},
+        /* JINGL: the tambourine shaken, a swish in and a longer ring */
+        {DVT_HATO, 63, 1909, 400, 2364, {1996, 5120, 1940, 2042, 3000, 14000, 12000, 40, 3, 0, 0, 0, 0}},
+        /* NAKER: nakers, the small kettledrums of the Arab and crusader bands, 175 Hz, struck with sticks */
+        {DVT_TOM, 53, 848, 350, 2950, {20, 300, 1700, 3000, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+        /* BONES: wooden clappers, 1.5 kHz, dry */
+        {DVT_CLAVE, 32, 1450, 60, 3416, {84, 28000, 6000, 6348, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+        /* BELLS: a small hand bell, 1.3 kHz, an inharmonic partial, a long ring */
+        {DVT_BELL, 59, 1430, 1500, 1152, {281, 0, 2000, 20000, 30, 0, 0, 0, 0, 0, 0, 0, 0}},
     },
 };
 

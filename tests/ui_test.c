@@ -9496,14 +9496,14 @@ static int test_hidden_presets(void)
     bad += check("hidden presets: 54 names (PIANO covers SAMPLE's two), each one a real preset",
                  ok && NELEM(GB_HIDDEN) == 54u);
     preset_all_pos(&total);
-    ok = total == 60u + (FELUCCA_FM4 ? ENGINES[ENGI_DIGITAL]->npresets : 0u);   /* (+ DIGITAL's, built in; 1.1: + 4 CC0, BAGPIPE) */
+    ok = total == 62u + (FELUCCA_FM4 ? ENGINES[ENGI_DIGITAL]->npresets : 0u);   /* (+ DIGITAL's, built in; 1.1: + 4 CC0, BAGPIPE) */
     for (i = 0; i < total; i++) {
         e = preset_all_at(i, &k);
         ok &= e < NENGINES && !preset_hidden(ENGINES[e], k);
         for (uint32_t j = 0; j < NELEM(KEEP); j++)
             shown += str_eq(ENGINES[e]->presets[k].name, KEEP[j]);
     }
-    bad += check("hidden presets: the PRESETS list holds the 60 kept (ESTAMPIE: + TROTTO GURDY), none hidden", ok && shown >= NELEM(KEEP));
+    bad += check("hidden presets: the PRESETS list holds the 62 kept (ESTAMPIE: + TROTTO GURDY, DANCE KIT, PROCESSION), none hidden", ok && shown >= NELEM(KEEP));
     ok = NENG_SHOWN == 13u + FELUCCA_FM4 && eng_ok(ENGI_SLICE);
     for (i = 0, k = 0; i < NENG_SHOWN; i++) {
         ok &= eng_vis(i) != ENGI_SLICE;
@@ -9549,7 +9549,19 @@ static int test_hidden_presets(void)
                          c2 < ENGINES[ENGI_DRUM]->npresets && t2 < ENGINES[ENGI_DRUM]->npresets &&
                          !preset_hidden(ENGINES[ENGI_DRUM], c2) && !preset_hidden(ENGINES[ENGI_DRUM], t2) &&
                          ENGINES[ENGI_DRUM]->presets[c2].e[0] == DK_CRYPT && ENGINES[ENGI_DRUM]->presets[c2].pat == 22u &&
-                         NPATTERNS == 22u && str_eq(PATTERNS[21].name, "TOMBBEAT"));
+                         NPATTERNS >= 22u && str_eq(PATTERNS[21].name, "TOMBBEAT"));
+        }
+        {   /* ESTAMPIE: the DANCE kit: DANCE KIT and PROCESSION (KIT DANCE, appended), on TABOR (pattern 23) */
+            uint32_t d2, p2;
+            for (d2 = 0; d2 < ENGINES[ENGI_DRUM]->npresets && !str_eq(ENGINES[ENGI_DRUM]->presets[d2].name, "DANCE KIT"); d2++)
+                ;
+            for (p2 = 0; p2 < ENGINES[ENGI_DRUM]->npresets && !str_eq(ENGINES[ENGI_DRUM]->presets[p2].name, "PROCESSION"); p2++)
+                ;
+            bad += check("ESTAMPIE: DRUM's DANCE KIT and PROCESSION (KIT DANCE, after CRYPT's), suggesting TABOR (23)",
+                         d2 == 3u && p2 == 4u && !preset_hidden(ENGINES[ENGI_DRUM], d2) &&
+                         !preset_hidden(ENGINES[ENGI_DRUM], p2) && ENGINES[ENGI_DRUM]->presets[d2].e[0] == DK_DANCE &&
+                         ENGINES[ENGI_DRUM]->presets[p2].e[0] == DK_DANCE && DK_DANCE == DK_CRYPT + 1 &&
+                         ENGINES[ENGI_DRUM]->presets[d2].pat == 23u && NPATTERNS == 23u && str_eq(PATTERNS[22].name, "TABOR"));
         }
         bad += check("1.2: patterns 18..21 MARCH LAMENT ARPEGGIO ANTIPHON, after 1.0's (none renumbered)", NPATTERNS >= 21u &&
                      str_eq(PATTERNS[13].name, "DIRGE") && str_eq(PATTERNS[16].name, "PEDAL") && str_eq(PATTERNS[17].name, "MARCH") &&

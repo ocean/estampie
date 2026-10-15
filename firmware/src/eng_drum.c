@@ -36,15 +36,15 @@
  * source of each lane). */
 #include "drum_voice.c"
 
-enum { DK_STD, DK_HAND, DK_CYM, DK_HCYM, DK_80, DK_10, DK_66, DK_55, DK_77, DK_CRYPT, DK_COUNT };   /* (stored values;
-                                                                         * CRYPT: GHOULBOX's, appended) */
+enum { DK_STD, DK_HAND, DK_CYM, DK_HCYM, DK_80, DK_10, DK_66, DK_55, DK_77, DK_CRYPT, DK_DANCE, DK_COUNT };   /* (stored
+                                                 * values; CRYPT: GHOULBOX's, DANCE: ESTAMPIE's, appended) */
 /* the kit a stored KIT value plays: HAND CYM H+CYM (retired after 1.0.4) -> 66 (a conga on TOM), 10 (a cymbal on
  * BELL), 77 (claves on RIM, a cymbal on BELL) */
-static const uint8_t DK_PLAYS[DK_COUNT] = {DK_STD, DK_66, DK_10, DK_77, DK_80, DK_10, DK_66, DK_55, DK_77, DK_CRYPT};
+static const uint8_t DK_PLAYS[DK_COUNT] = {DK_STD, DK_66, DK_10, DK_77, DK_80, DK_10, DK_66, DK_55, DK_77, DK_CRYPT, DK_DANCE};
 static uint32_t drum_kit_plays(int32_t v) { return DK_PLAYS[clamp(v, 0, DK_COUNT - 1)]; }
 /* the model kits' pieces where a lane plays another than its own (the lane's name): 1 TOM -> CONGA, 2 RIM -> CLAVE,
  * 4 BELL -> CYM */
-static const uint8_t DK_SWAP[DV_NKIT] = {0, 4, 1, 0, 2 | 4, 0};
+static const uint8_t DK_SWAP[DV_NKIT] = {0, 4, 1, 0, 2 | 4, 0, 0};
 static const uint8_t DV_TYPE_LANE[DVT_COUNT] = {
     DV_KICK, DV_KICK, DV_SNARE, DV_CLAP, DV_HATC, DV_HATO, DV_TOM, DV_TOM, DV_RIM, DV_RIM, DV_BELL, DV_BELL,
 };
@@ -68,7 +68,7 @@ ENG_MEM_FITS("DRUM", sizeof(drum_lane_t) * DV_NLANE);
 static uint8_t drum_mute[NPART];
 
 /* 1..3 named as the kit they play: aliases, never shown or offered (EDITOR_PROTOCOL.md: retired values) */
-static const char *const N_DRUM_KIT[] = {"STD", "66", "10", "77", "80", "10", "66", "55", "77", "CRYPT"};
+static const char *const N_DRUM_KIT[] = {"STD", "66", "10", "77", "80", "10", "66", "55", "77", "CRYPT", "DANCE"};
 static const char *const N_DRUM_KICK[] = {"PUNCH", "ROUND"};
 
 /* General MIDI notes 35..81 -> the drum (DVT_*; DVT_PUNCH: the kick KICK picks) and semitones from its
@@ -120,10 +120,13 @@ static const char *drum_lane_name(const track_t *t, uint32_t l)
 {
     static const char *const N[NLANE] = {"KICK", "SNARE", "CLAP", "HATCL", "HATOP", "TOM", "RIM", "BELL"};
     static const char *const CR[NLANE] = {"FRAME", "ROPE", "SLAP", "SHAKR", "JINGL", "TIMP", "STICK", "GONG"};
+    static const char *const DA[NLANE] = {"TABOR", "BUZZ", "HANDS", "TAMB", "JINGL", "NAKER", "BONES", "BELLS"};
     uint32_t kit = drum_swaps(t);
     l &= NLANE - 1u;
     if (drum_kit_plays(t->p[P_E0]) == DK_CRYPT)         /* GHOULBOX: the dungeon kit's own pieces */
         return CR[l];
+    if (drum_kit_plays(t->p[P_E0]) == DK_DANCE)         /* ESTAMPIE: the dance band's */
+        return DA[l];
     if (l == DV_TOM && (kit & 1u))
         return "CONGA";
     if (l == DV_RIM && (kit & 2u))
@@ -135,10 +138,13 @@ static const char *drum_lane_abbr(const track_t *t, uint32_t l)
 {
     static const char *const N[NLANE] = {"BD", "SD", "CP", "CH", "OH", "TM", "RS", "CB"};
     static const char *const CR[NLANE] = {"FD", "RO", "SL", "SH", "JN", "TI", "ST", "GO"};
+    static const char *const DA[NLANE] = {"TB", "BZ", "HA", "TA", "JN", "NK", "BO", "BL"};
     uint32_t kit = drum_swaps(t);
     l &= NLANE - 1u;
     if (drum_kit_plays(t->p[P_E0]) == DK_CRYPT)
         return CR[l];
+    if (drum_kit_plays(t->p[P_E0]) == DK_DANCE)
+        return DA[l];
     if (l == DV_TOM && (kit & 1u))
         return "CG";
     if (l == DV_RIM && (kit & 2u))
@@ -325,6 +331,10 @@ static const preset_t DRUM_PRESETS[] = {
     /* GHOULBOX 1.2: the CRYPT kit as designed, and lower / longer */
     {"CRYPT KIT", {DK_CRYPT, 64, 64, 64, 64, 100, 0, 0}, {0, 100, 127, 100}, 0, 0, FX(0, 0, 0, 70), PAT(22)},
     {"TOMB DRUMS", {DK_CRYPT, 48, 50, 68, 64, 100, 0, 0}, {0, 100, 127, 100}, 0, 0, FX(0, 0, 0, 90), PAT(22)},
+    /* ESTAMPIE presets (tools/estampie_presets.py) */
+    {"DANCE KIT", {10, 64, 64, 64, 64, 100, 0, 0}, {0, 100, 127, 100}, 0, 0, FX(0, 0, 0, 30), PAT(23)},
+    {"PROCESSION", {10, 52, 56, 80, 64, 100, 0, 0}, {0, 100, 127, 100}, 0, 0, FX(0, 0, 0, 60), PAT(23)},
+    /* ESTAMPIE end */
 };
 
 static const engine_t ENG_DRUM = {

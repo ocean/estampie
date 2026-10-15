@@ -326,9 +326,10 @@ async function editorSamplePresets() {
   const kitD = E.parse[C.DESC](await rq(E.req.desc(0, info.pe0)));
   const kitSet = [];
   for (const v of [1, 2, 3]) kitSet.push(E.parse[C.SET](await rq(E.req.set(0, info.pe0, v))).value);
-  ok(eq(kitD.names, ["STD", "66", "10", "77", "80", "10", "66", "55", "77", "CRYPT"]) &&   /* (CRYPT: GHOULBOX 1.2) */
-     eq([0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((v) => E.aliasOf(kitD.names, v)), [0, 6, 5, 8, 4, 5, 6, 7, 8, 9]) &&
-     eq(E.enumShown(kitD).filter((v) => E.aliasOf(kitD.names, v) === v).map((v) => kitD.names[v]), ["STD", "80", "10", "66", "55", "77", "CRYPT"]) &&
+  ok(eq(kitD.names, ["STD", "66", "10", "77", "80", "10", "66", "55", "77", "CRYPT", "DANCE"]) &&   /* (CRYPT: GHOULBOX 1.2;
+                                                                                                   * DANCE: ESTAMPIE) */
+     eq([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((v) => E.aliasOf(kitD.names, v)), [0, 6, 5, 8, 4, 5, 6, 7, 8, 9, 10]) &&
+     eq(E.enumShown(kitD).filter((v) => E.aliasOf(kitD.names, v) === v).map((v) => kitD.names[v]), ["STD", "80", "10", "66", "55", "77", "CRYPT", "DANCE"]) &&
      eq(kitSet, [6, 5, 8]),
     "DRUM: KIT 1..3 (once HAND CYM H+CYM) named 66 10 77, aliases of 6 5 8: hidden, a SET lands there");
   const removed = E.parse[C.PRESET](await rq(E.req.preset(4, 4)));
@@ -376,8 +377,9 @@ function mockTables() {
        ph.presets.length === 13 && !ph.presets.some((p) => p.name === "RAIN" || p.name === "DRUM KIT"),
        "editor: PHYS models MODAL STRNG MEMB SYMP (no DUST, no DRUM), 13 presets (4 GHOULBOX)");
     ok(dr.name === "DRUM" && dr.edit.map((d) => d.label).join() === "KIT,TUNE,TONE,DECY,SNAP,ACC,KICK,DRV" &&
-       dr.presets.length === 3 && dr.presets[0].pat === 12 && dr.presets[1].pat === 22 && dr.presets[2].pat === 22,
-       "editor: DRUM engine 10 (KIT TUNE TONE DECY SNAP ACC KICK DRV): DRUM KIT on BEAT; GHOULBOX's CRYPT KIT, TOMB DRUMS on TOMBBEAT");
+       dr.presets.length === 5 && dr.presets[0].pat === 12 && dr.presets[1].pat === 22 && dr.presets[2].pat === 22 &&
+       dr.presets[3].pat === 23 && dr.presets[4].pat === 23,
+       "editor: DRUM engine 10 (KIT TUNE TONE DECY SNAP ACC KICK DRV): DRUM KIT on BEAT; GHOULBOX's CRYPT KIT, TOMB DRUMS on TOMBBEAT; ESTAMPIE's DANCE KIT, PROCESSION on TABOR");
   }
   const dj = DESC;
   if (!existsSync(dj)) { console.log("editor: mock tables == firmware (no build/host/desc.json)        skip"); return; }
