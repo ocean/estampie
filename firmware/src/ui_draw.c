@@ -1184,7 +1184,7 @@ static void draw_columns(void)
 
 
 /* The power-on splash (main.c fm1_main, web/emu felucca_web.c): ESTAMPIE's illuminated initial (the lapis field in
- * ACCENT, its rule in THEME) beside the rest of the word in blackletter, "MEDIAEVAL GROOVEBOX" under them
+ * ACCENT, its rule in THEME) beside the rest of the word in blackletter, "MEDIÆVAL GROOVEBOX" under them
  * (estampie_art.h). In the saved palette (settings_init before it) */
 #define SPLASH_Y 70
 static void draw_splash(void)
@@ -1198,7 +1198,7 @@ static void draw_splash(void)
              ramp(T_THEME, T_BG));
     cv_blit(0, SPLASH_Y);
     lcd_sync();
-    draw_text_box(0, SPLASH_Y + ES_INIT_H + 22, 240, &AF_S, "MEDIAEVAL GROOVEBOX", T_MID, 1);
+    draw_text_box(0, SPLASH_Y + ES_INIT_H + 22, 240, &AF_S, "MEDI\xC6VAL GROOVEBOX", T_MID, 1);
     lcd_sync();
 }
 
@@ -1454,7 +1454,6 @@ static void ui_draw_page(uint32_t counting)
     draw_columns();
     felucca_dbg.stage = 5;
     draw_graph();
-    torch_tick();                                       /* GHOULBOX: the flames, between full redraws */
     if (ui.msg_t && !--ui.msg_t && ui.msg2[0]) {     /* the second message (ui_notices) */
         str_cpy(ui.msg, ui.msg2, sizeof ui.msg);
         ui.msg2[0] = 0;

@@ -1414,8 +1414,8 @@ static void draw(int s)
     if (s == S_SPLASH) {                          /* the power-on splash (main.c, before the UI): its lines, the version
                                                    * shown FELUCCA_VERSION (run_tests.sh: src/felucca.c's) */
         /* ESTAMPIE: its own splash (ui_draw.c draw_splash): the illuminated initial and the word (rows SPLASH_Y ..)
-         * inked, then MEDIAEVAL GROOVEBOX the only text */
-        static const char WANT[] = "MEDIAEVAL GROOVEBOX";
+         * inked, then MEDIÆVAL GROOVEBOX (\xC6: the ligature) the only text */
+        static const char WANT[] = "MEDI\xC6VAL GROOVEBOX";
         splash_seen[0] = 0;
         in_splash = 1;
         draw_splash();

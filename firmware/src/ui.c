@@ -151,7 +151,7 @@ static struct {
     uint32_t menu_sig, home_t0;  /* HOME press time (btn_hold) */
     uint8_t force;               /* full redraw pending */
     uint8_t msg_t;               /* transient message frames */
-    uint8_t torches, torch_f;    /* GHOULBOX: the stage shows torches; their flame frame */
+    uint8_t ornaments;           /* ESTAMPIE: the stage shows the marginal ornaments (GHOULBOX: its torches) */
     uint8_t bpm_t;               /* frames the BPM stays highlighted after a SELECT turn */
     uint8_t act;                 /* action pages: the column whose action OCT+ does, + 1; 0 = none (act_col) */
     uint32_t rec_t0;             /* REC press time: a tap arms (btn_hold, no hold: held, REC opens its layer) */

@@ -37,6 +37,7 @@ cp web/emu/vendor/libflac/libflac.min.wasm.js web/emu/vendor/libflac/libflac.min
 cp web/emu/vendor/mp3/WasmMediaEncoder.min.js web/emu/vendor/mp3/mp3.wasm build/emu/vendor/mp3/
 cp web/emu/vendor/README.md build/emu/vendor/
 cp LICENSES/MIT-libflac.js.txt LICENSES/BSD-3-Clause-libFLAC.txt LICENSES/MIT-wasm-media-encoders.txt LICENSES/LGPL-2.0-LAME.txt LICENSES/LAME-NOTICE.txt build/emu/licenses/
-python3 tools/gen_emu_art.py build/gen build/emu/art   # ESTAMPIE: the crest; GHOULBOX: the dungeon's pixel art (torch, wall, name)
+[ -x .venv/bin/python3 ] && PY=.venv/bin/python3 || PY=python3   # ESTAMPIE: the locked Python (uv sync)
+"$PY" tools/gen_emu_art.py build/gen build/emu/art   # ESTAMPIE: the crest; GHOULBOX: the dungeon's pixel art (torch, wall, name)
 cp web/emu/fonts/DotGothic16-subset.woff web/emu/fonts/OFL.txt build/emu/fonts/
 echo "emu: build/emu ($(wc -c < build/emu/felucca.wasm | tr -d ' ') B wasm, ESTAMPIE $ESVERSION on GHOULBOX $GBVERSION on Felucca $VERSION)"

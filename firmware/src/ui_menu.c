@@ -120,7 +120,7 @@ static int32_t menu_document(int32_t y, int draw)
     uint32_t i;
     if (draw) {
         cv_alpha(6, y + 2, ES_LOGO_S_W, ES_LOGO_S_H, ES_LOGO_S, ramp(T_THEME, T_BG));   /* ESTAMPIE's wordmark */
-        cv_text(6, y + 38, &AF_S, "Mediaeval groovebox", T_TEXT);
+        cv_text(6, y + 38, &AF_S, "Medi\xE6val groovebox", T_TEXT);
         cv_text(6, y + 58, &AF_M, ESTAMPIE_VERSION, T_THEME);
         cv_text_r(232, y + 61, &AF_S, __DATE__, T_MID, T_BG);
         cv_text(6, y + 82, &AF_S, "on GHOULBOX " GHOULBOX_VERSION, T_TEXT);

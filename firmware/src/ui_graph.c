@@ -7,7 +7,7 @@
  * graph_signature() changes. The look:
  * curves THEME (2 px), guides and empty marks RAISE, captions MID / DIM, the active thing ACCENT,
  * bars rounded; a list's selected row has the sword and ACCENT text (GHOULBOX). */
-static int32_t panel_x0 = 10, panel_w = 220;         /* GHOULBOX: the graphs' inner area (narrower beside torches) */
+static int32_t panel_x0 = 10, panel_w = 220;         /* GHOULBOX: the graphs' inner area (narrower beside the ornaments) */
 #define PANEL_X0 panel_x0                            /* the graphs' inner area: x 10..230, or 24..216 */
 #define PANEL_W panel_w
 #define GOY 11                                       /* graphs drawn on a 100 px scale sit at y 11..111 */
@@ -24,7 +24,7 @@ static void graph_adsr(const track_t *t, uint16_t c)
     int32_t a = 4 + t->p[pg->id[0]] * 50 / 127, d = 6 + t->p[pg->id[1]] * 50 / 127, r = 6 + t->p[pg->id[3]] * 60 / 127;
     int32_t top = 6 * graph_ht / 100, bot = 88 * graph_ht / 100, sus = t->p[pg->id[2]] * 1000 / 127;   /* 0..1000 */
     int32_t x0 = PANEL_X0 + 2, x1 = x0 + a, x3 = PANEL_X0 + PANEL_W - 4 - r, i, px, py;   /* (12 .. 226 at full width;
-                                                                       * GHOULBOX: inside the torches beside them) */
+                                                                       * GHOULBOX: inside the ornaments beside them) */
     int32_t e = 32768;                                                  /* exp(-4.6 u), Q15 */
 #define EGY(lvl) (bot - (lvl) * (bot - top) / 1000)
     cv_rect(PANEL_X0, bot + 2, PANEL_W, 1, T_RAISE);
@@ -2121,37 +2121,26 @@ static void graph_song(void)
                      i < 4u ? "[K3] ADD SECTION" : "[SAVE] PROJECT A-D", T_MID, T_SURF, x0 - 10 - SG_X0);
     }
 }
-/* GHOULBOX: a wall torch, 12 x 30: the flame (rows 0..11, frame f 0..3: its tip sways and the core rises), the
- * cup (12..17), the handle (18..29). Colours: ACCENT outer flame, THEME middle, TEXT core, EDGE wood */
-#define TORCH_LX 8
-#define TORCH_RX 220
-#define TORCH_Y 10
-static void torch_draw(int32_t x, int32_t y, uint32_t f)
+/* ESTAMPIE: a marginal ornament either side of the stage, 12 x 30, in GHOULBOX's wall torches' place: a crozier's curl
+ * and stem in ink (TEXT), a hanging ivy leaf in vermilion (THEME), a dot above and below in lapis (ACCENT); the right
+ * one mirrored, both facing the graph (estampie_art.h, tools/gen_estampie_art.py ornament). Still, as on a page */
+#define ORN_LX 8
+#define ORN_RX 220
+#define ORN_Y 10
+static void ornament_draw(int32_t x, int32_t y, int right)
 {
-    static const uint8_t OUTER[12] = {2, 2, 4, 4, 6, 6, 8, 8, 10, 10, 8, 6};
-    static const uint8_t MIDW[12] = {0, 0, 0, 2, 2, 4, 4, 6, 6, 6, 6, 4};
-    static const uint8_t CORE[12] = {0, 0, 0, 0, 0, 2, 2, 2, 4, 4, 2, 2};
-    static const int8_t SWAY[4] = {-1, 0, 1, 0};
-    int32_t j;
-    for (j = (int32_t)(f & 1u); j < 12; j++) {        /* (odd frames: one row shorter) */
-        int32_t dx = j < 5 ? SWAY[f & 3u] : 0, cx = x + 6 + dx;
-        cv_rect(cx - OUTER[j] / 2, y + j, OUTER[j], 1, T_ACCENT);
-        if (MIDW[j]) cv_rect(cx - MIDW[j] / 2, y + j, MIDW[j], 1, T_THEME);
-        if (CORE[j] && j + (int32_t)(f & 2u) / 2 < 12) cv_rect(cx - CORE[j] / 2, y + j, CORE[j], 1, T_TEXT);
-    }
-    for (j = 0; j < 6; j++)                            /* the cup: narrowing */
-        cv_rect(x + j / 2, y + 12 + j, 12 - (j / 2) * 2, 1, j == 0 ? T_THEME : T_EDGE);
-    cv_rect(x + 4, y + 18, 4, 12, T_EDGE);             /* the handle */
-    cv_rect(x + 5, y + 18, 1, 12, T_STONE);
-    GFX_HOOK_TEXT(x, y + cv_oy, x + 12, y + cv_oy + 30, "torch", 4u);   /* the lint: nothing may overlap it */
+    cv_alpha(x, y, ES_ORN_L_STEM_W, ES_ORN_L_STEM_H, right ? ES_ORN_R_STEM : ES_ORN_L_STEM, ramp(T_TEXT, T_SURF));
+    cv_alpha(x, y, ES_ORN_L_LEAF_W, ES_ORN_L_LEAF_H, right ? ES_ORN_R_LEAF : ES_ORN_L_LEAF, ramp(T_THEME, T_SURF));
+    cv_alpha(x, y, ES_ORN_L_DOT_W, ES_ORN_L_DOT_H, right ? ES_ORN_R_DOT : ES_ORN_L_DOT, ramp(T_ACCENT, T_SURF));
+    GFX_HOOK_TEXT(x, y + cv_oy, x + ES_ORN_L_STEM_W, y + cv_oy + ES_ORN_L_STEM_H, "ornament", 4u);   /* the lint: nothing may overlap it */
 }
-/* the pages whose stage has room for the torches: HOME's scope, the envelope, the LFO, FX, and an engine page
- * that shows the scope (draw_graph's default: not WHEEL's drawbars, a sample, FM6's or DIGITAL's charts) */
-static int torch_page(void)
+/* the pages whose stage has room for the ornaments (GHOULBOX: its torches): HOME's scope, the envelope, the LFO, FX,
+ * and an engine page that shows the scope (draw_graph's default: not WHEEL's drawbars, a sample, FM6's or DIGITAL's charts) */
+static int ornament_page(void)
 {
     const page_t *pg = cur_page();
     uint32_t e = TSEL->eng_req % NENGINES;
-    if (large_kind() == LK_TALL)                        /* MENU > LARGE's strip: too short for a 30 px torch */
+    if (large_kind() == LK_TALL)                        /* MENU > LARGE's strip: too short for a 30 px ornament */
         return 0;
     if (ui.home)
         return 1;
@@ -2166,22 +2155,6 @@ static int torch_page(void)
         return 0;
     }
 }
-static void torch_tick(void)                          /* only the two torch rectangles, every 8 UI frames */
-{
-    uint32_t f = (ui.frame >> 3) & 3u;
-    if (!ui.torches || f == ui.torch_f)
-        return;
-    ui.torch_f = (uint8_t)f;
-    cv_begin(12, 30, T_SURF);
-    cv_stone(0, 0, 12, 30, TORCH_LX, TORCH_Y);
-    torch_draw(0, 0, f);
-    cv_blit(TORCH_LX, graph_y() + TORCH_Y);
-    cv_begin(12, 30, T_SURF);
-    cv_stone(0, 0, 12, 30, TORCH_RX, TORCH_Y);
-    torch_draw(0, 0, f ^ 2u);                          /* (the other one out of step) */
-    cv_blit(TORCH_RX, graph_y() + TORCH_Y);
-}
-
 static void draw_graph(void)
 {
     const page_t *pg = cur_page();
@@ -2189,7 +2162,7 @@ static void draw_graph(void)
     uint16_t c = ACC;
     uint32_t sig;
     if (!ui.home && pg->graph == GR_TRK) {
-        ui.torches = 0;
+        ui.ornaments = 0;
         draw_tracks();
         return;
     }
@@ -2205,13 +2178,12 @@ static void draw_graph(void)
     cv_begin(240, graph_h(), T_BG);
     cv_window(3, 0, 234, graph_h(), 3);              /* the panel: GHOULBOX's stone window (MENU > LARGE: the strip) */
     cv_bg = T_SURF;                                  /* (text drawn with cv_text lands on it) */
-    ui.torches = (uint8_t)torch_page();              /* GHOULBOX: the torches, and the graphs' area beside them */
-    panel_x0 = ui.torches ? 24 : 10;
-    panel_w = ui.torches ? 192 : 220;
-    if (ui.torches) {
-        ui.torch_f = (uint8_t)((ui.frame >> 3) & 3u);
-        torch_draw(TORCH_LX, TORCH_Y, ui.torch_f);
-        torch_draw(TORCH_RX, TORCH_Y, ui.torch_f ^ 2u);
+    ui.ornaments = (uint8_t)ornament_page();         /* ESTAMPIE: the ornaments (GHOULBOX: torches), the graphs beside them */
+    panel_x0 = ui.ornaments ? 24 : 10;
+    panel_w = ui.ornaments ? 192 : 220;
+    if (ui.ornaments) {
+        ornament_draw(ORN_LX, ORN_Y, 0);
+        ornament_draw(ORN_RX, ORN_Y, 1);
     }
     cv_oy = GOY;                                     /* graphs on a 100 px scale */
     if (strip_kind() != SK_NONE) {                   /* MENU > LARGE: the strip */
