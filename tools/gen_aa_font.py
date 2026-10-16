@@ -4,7 +4,7 @@
 """Pre-rasterise TTF fonts into anti-aliased 4-bit alpha glyph tables for the UI (run by
 tools/build.py generate() with --preset inter-tight).
 
-  gen_aa_font.py OUT.h --preset standin|inter-tight|ghoulbox [--tracking EM] [--gamma G] [--kern-min N]
+  gen_aa_font.py OUT.h --preset standin|inter-tight|ghoulbox|estampie [--tracking EM] [--gamma G] [--kern-min N]
   gen_aa_font.py OUT.h --face NAME=FONT[#index]:PX:FIRST-LAST[+0xNN,...] ...   (explicit faces)
 
 Faces of the presets (S labels, M values/headers, L big numerals / titles):
@@ -12,6 +12,8 @@ Faces of the presets (S labels, M values/headers, L big numerals / titles):
               -2.5 % tracking: a stand-in for Inter Tight, for previews only.
   inter-tight assets/fonts/InterTight[wght].ttf (SIL OFL 1.1, Google Fonts) at weights 400 / 500 / 600.
   ghoulbox    assets/fonts/VT323-Regular.ttf (SIL OFL 1.1) at 16 / 20 / 32 px, crisp (GHOULBOX).
+  estampie    S as ghoulbox; M and L in Alagard (Hewett Tsoi; .toolchain/fonts/alagard.ttf, fetched by
+              tools/setup_toolchain.sh) at 16 and 32 px, crisp (ESTAMPIE).
 
 Output (a C header; the glyph / font types live in the renderer, firmware/src/gfx.c):
   AF_<N>_DATA   4-bit alpha, trimmed to the ink box, rows back to back, each glyph a byte-aligned bit stream
@@ -57,22 +59,29 @@ L_CHARS = " #+-./0123456789ABCDEFGHIJKLMNOPQRSTUVWXY"
 def preset(name):
     if name == "ghoulbox":                     # GHOULBOX: VT323 (SIL OFL 1.1), crisp, one phase, its capitals 1 row higher
         v = str(FONTS.parent / "assets" / "fonts" / "VT323-Regular.ttf")   # than drawn (CRISP_DY): on Inter Tight's rows
-        return [("S", v, 17, (32, 126), EXTRAS, 0.0, 1),   # (17: at 16 FreeType's hinting loses M's middle)
-                ("M", v, 20, (32, 126), EXTRAS, 0.0, 1),
-                ("L", v, 36, (32, 32), [ord(c) for c in L_CHARS[1:]], 0.0, 1)]   # (36: capitals 21 rows, as Inter's L)
+        return [("S", v, 17, (32, 126), EXTRAS, 0.0, 1, CRISP_DY, None),   # (17: at 16 FreeType's hinting loses M's middle)
+                ("M", v, 20, (32, 126), EXTRAS, 0.0, 1, CRISP_DY, None),
+                ("L", v, 36, (32, 32), [ord(c) for c in L_CHARS[1:]], 0.0, 1, CRISP_DY, None)]   # (36: capitals 21 rows, as Inter's L)
+    if name == "estampie":                     # ESTAMPIE: VT323's labels; Alagard, a mediæval pixel font, at its own
+        v = str(FONTS.parent / "assets" / "fonts" / "VT323-Regular.ttf")   # 16 px (M) and twice that (L), crisp
+        a = str(FONTS.parent / ".toolchain" / "fonts" / "alagard.ttf")     # (tools/setup_toolchain.sh: not in git)
+        return [("S", v, 17, (32, 126), EXTRAS, 0.0, 1, CRISP_DY, None),
+                ("M", a, 16, (32, 126), EXTRAS, 0.0, 1, -3, 1),       # (capitals on rows 4 and 7, as VT323's; J's tail
+                ("L", a, 32, (32, 32), [ord(c) for c in L_CHARS[1:]], 0.0, 1, -5, None)]   # cut 1 row under the line)
     if name == "inter-tight":
         v = str(FONTS.parent / "assets" / "fonts" / "InterTight[wght].ttf")   # SIL OFL 1.1, Google Fonts
-        return [("S", v + "@400", 12, (32, 126), EXTRAS, 0.0, PHASES),
-                ("M", v + "@500", 15, (32, 126), EXTRAS, 0.0, PHASES),
-                ("L", v + "@600", 28, (32, 32), [ord(c) for c in L_CHARS[1:]], 0.0, PHASES_L)]
+        return [("S", v + "@400", 12, (32, 126), EXTRAS, 0.0, PHASES, 0, None),
+                ("M", v + "@500", 15, (32, 126), EXTRAS, 0.0, PHASES, 0, None),
+                ("L", v + "@600", 28, (32, 32), [ord(c) for c in L_CHARS[1:]], 0.0, PHASES_L, 0, None)]
     if name == "standin":
         if os.path.exists(LOCAL_INTER):
             reg, med, semi = LOCAL_INTER + "#0", LOCAL_INTER + "#10", LOCAL_INTER + "#12"
         else:                                  # the repo's Inter 3.019 (only Regular + Light)
             reg = med = semi = str(FONTS / "Inter-Regular.ttf")
         t = -0.025                             # Inter Tight is Inter with tighter spacing
-        return [("S", reg, 12, (32, 126), EXTRAS, t, PHASES), ("M", med, 15, (32, 126), EXTRAS, t, PHASES),
-                ("L", semi, 28, (32, 32), [ord(c) for c in L_CHARS[1:]], t, PHASES_L)]
+        return [("S", reg, 12, (32, 126), EXTRAS, t, PHASES, 0, None),
+                ("M", med, 15, (32, 126), EXTRAS, t, PHASES, 0, None),
+                ("L", semi, 28, (32, 32), [ord(c) for c in L_CHARS[1:]], t, PHASES_L, 0, None)]
     raise SystemExit(f"unknown preset {name}")
 
 
@@ -84,18 +93,18 @@ def parse_face(s):
         rng, ex = rng.split("+", 1)
         extras = [int(x, 0) for x in ex.split(",") if x]
     a, b = rng.split("-")
-    return (name, font, int(px), (int(a), int(b)), extras, None, PHASES)
+    return (name, font, int(px), (int(a), int(b)), extras, None, PHASES, 0, None)
 
 
 HC_MAXLEN = 15
 
 
-def huff_symbols(v):
-    """a glyph's alpha values -> symbols (count - 1) << 4 | value: runs of 1..16 zeros or 15s, single others"""
+def huff_symbols(v, runs=(0, 15)):
+    """a glyph's alpha values -> symbols (count - 1) << 4 | value: runs of 1..16 of the runs values, single others"""
     out, i = [], 0
     while i < len(v):
         j = i + 1
-        if v[i] in (0, 15):
+        if v[i] in runs:
             while j < len(v) and v[j] == v[i] and j - i < 16:
                 j += 1
         out.append((j - i - 1) << 4 | v[i])
@@ -121,9 +130,10 @@ def huff_lengths(count):
     return length
 
 
-def huff_pack(glyph_values):
-    """[alpha values per glyph] -> (hc table bytes, [bytes per glyph]): canonical Huffman, MSB first"""
-    syms = [huff_symbols(v) for v in glyph_values]
+def huff_pack(glyph_values, runs=(0, 15)):
+    """[alpha values per glyph] -> (hc table bytes, [bytes per glyph]): canonical Huffman, MSB first; runs: the
+    values coded as runs (the decoder takes a run of any value)"""
+    syms = [huff_symbols(v, runs) for v in glyph_values]
     count = {}
     for g in syms:
         for s in g:
@@ -171,10 +181,10 @@ def huff_unpack(hc, data, n):
 
 
 def emit(face, tracking, gamma, kern_min, crisp=False):
-    name, font, px, (first, last), extras, ftrack, phases = face
+    name, font, px, (first, last), extras, ftrack, phases, dy, cap_drop = face
     chars = [chr(c) for c in range(first, last + 1)] + [chr(c) for c in extras]
-    r = ar.raster_font(font, px, chars, tracking if ftrack is None else ftrack, gamma, True, kern_min, phases, crisp=crisp,
-                       crisp_dy=CRISP_DY if crisp else 0)
+    r = ar.raster_font(font, px, chars, tracking if ftrack is None else ftrack, gamma, True, kern_min, phases, crisp=crisp, dy=dy,
+                       cap_drop=cap_drop)
     data, table, lines = bytearray(), [], []
     for ch in chars:
         adv16, ph = r["glyphs"][ch]
@@ -241,7 +251,7 @@ def emit(face, tracking, gamma, kern_min, crisp=False):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("out")
-    ap.add_argument("--preset", choices=["standin", "inter-tight", "ghoulbox"])
+    ap.add_argument("--preset", choices=["standin", "inter-tight", "ghoulbox", "estampie"])
     ap.add_argument("--face", action="append", default=[])
     ap.add_argument("--tracking", type=float, default=0.0, help="extra advance per glyph in em")
     ap.add_argument("--gamma", type=float, default=1.0, help="coverage curve; <1 thickens light-on-dark text")
@@ -252,9 +262,11 @@ def main():
     faces = ([parse_face(s) for s in a.face] if a.face else []) or (preset(a.preset) if a.preset else None)
     if not faces:
         ap.error("--preset or --face is required")
-    crisp = a.preset == "ghoulbox"
-    credit = ("VT323, SIL OFL 1.1, Copyright 2011 The VT323 Project Authors; see LICENSES/OFL-VT323.txt" if crisp else
-              "Inter Tight, SIL OFL 1.1, Copyright 2022 The Inter Project Authors; see assets/fonts/OFL.txt")
+    crisp = a.preset in ("ghoulbox", "estampie")
+    credit = {"ghoulbox": "VT323, SIL OFL 1.1, Copyright 2011 The VT323 Project Authors; see LICENSES/OFL-VT323.txt",
+              "estampie": "VT323, SIL OFL 1.1, Copyright 2011 The VT323 Project Authors; see LICENSES/OFL-VT323.txt; "
+                          "Alagard by Hewett Tsoi (Pix3M), free with credit; see LICENSING.md"}.get(
+        a.preset, "Inter Tight, SIL OFL 1.1, Copyright 2022 The Inter Project Authors; see assets/fonts/OFL.txt")
     out = [f"/* generated by tools/gen_aa_font.py: 4-bit alpha glyphs ({credit}) */",
            "#pragma once", "#include <stdint.h>", ""]
     total = 0

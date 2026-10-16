@@ -17,6 +17,7 @@ static void name_draw(void);
 /* --------------------------------------------------------- drawing --- */
 #define COL_W CARD_W                                  /* a card: 57 x 44 at x 3 + 59 c, y 28 */
 #define COL_H CARD_H
+#define LBL_R (COL_W - 3)                             /* a card label ends inside the window's 3 px border */
 
 static int32_t batt_level(void)                         /* thresholds 531 / 561 / 591 on ADC ch3 */
 {
@@ -655,17 +656,17 @@ static void draw_column(uint32_t c, const char *label, const char *val, const ch
              * capitals rows 5..15, the icon on them when it fits too), else in S as without LARGE.
              * GHOULBOX: the label row stops above the value strip (VT323's Q dips into its first row, which a roll
              * repaints alone: cut here, a roll and a redraw show the same; the lint: cut on purpose) */
-            const aafont_t *lf = kind == LK_LABEL && 5 + text_w(&AF_M, label) <= COL_W - 2 ? &AF_M : &AF_S;
+            const aafont_t *lf = kind == LK_LABEL && 5 + text_w(&AF_M, label) <= LBL_R ? &AF_M : &AF_S;
             int32_t lw = text_w(lf, label), ix = 5, ly = lf == &AF_M ? 1 : 3;
             int32_t cy = ly + (lf == &AF_M ? AF_M_CAP_Y : AF_S_CAP_Y), chh = lf == &AF_M ? AF_M_CAP_H : AF_S_CAP_H;
             uint32_t ic = mot ? ICON_X_MOTION : icon;
             cv_cy1 = ROLL_Y;
             cv_scroll = 1;
-            if (mot && ix + ICON_CELL + ICON_GAP + lw > COL_W - 2)
-                ix = COL_W - 2 - lw - ICON_GAP - ICON_CELL;   /* a long label: MOTION's icon moves left */
-            if (hot && 4 + 14 + 2 + lw <= COL_W - 2)    /* GHOULBOX: the knob just turned: the sword on the label's line */
+            if (mot && ix + ICON_CELL + ICON_GAP + lw > LBL_R)
+                ix = LBL_R - lw - ICON_GAP - ICON_CELL;   /* a long label: MOTION's icon moves left */
+            if (hot && 4 + 14 + 2 + lw <= LBL_R)    /* GHOULBOX: the knob just turned: the sword on the label's line */
                 lx = 4 + cv_sword(4, cy + HALF_UP(chh - 7)) + 2;   /* (a long label: none; it is in the accent) */
-            else if (FELUCCA_ICONS && ic != ICON_NONE && ix >= 1 && ix + ICON_CELL + ICON_GAP + lw <= COL_W - 2) {
+            else if (FELUCCA_ICONS && ic != ICON_NONE && ix >= 3 && ix + ICON_CELL + ICON_GAP + lw <= LBL_R) {
                 GFX_HOOK_ALIGN(ix, cy, ix, cy + chh, AL_V, "card icon on its label's line");
                 lx = ix + cv_icon_in(ix, cy, 0, chh, ICON_CELL, ic,   /* its ink on the label's line */
                                      mot ? (hot ? T_ACCENT : T_THEME) : lc, T_SURF) + ICON_GAP;
@@ -680,9 +681,9 @@ static void draw_column(uint32_t c, const char *label, const char *val, const ch
                 cv_rrect(lx + b[0] - 2, cy - 3, w, lf == &AF_M ? chh + 5 : 15, 3, T_ACCENT, T_SURF);
                 GFX_HOOK_ALIGN(lx + b[0] - 2, cy - 3, lx + b[0] - 2 + w, lf == &AF_M ? cy + chh + 2 : 18, AL_HV,
                                "card label chip (MONO hot)");
-                cv_text_fit(lx, ly, lf, label, T_INK, T_ACCENT, COL_W - 2 - lx);
+                cv_text_fit(lx, ly, lf, label, T_INK, T_ACCENT, LBL_R - lx);
             } else
-                cv_text_fit(lx, ly, lf, label, lc, T_SURF, COL_W - 2 - lx);
+                cv_text_fit(lx, ly, lf, label, lc, T_SURF, LBL_R - lx);
             cv_cy1 = (int16_t)cv_h;
             cv_scroll = 0;
         }

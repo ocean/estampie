@@ -34,10 +34,10 @@ UPPER = ["CUTOFF", "RESO", "LEVEL", "DECAY", "RELEASE", "SOUND", "OCOE", "COCO",
          "FELUCCA", "PRESETS", "ANALOG", "DIGITAL", "PITCH", "SWING", "AV AW LT TA YO"]
 RULE = ["gfx"]   # "gfx": src/gfx.c cv_text; "rounded": the earlier rule (each glyph at the rounded pen, 1 phase)
 LIMIT = {"S": 0.25, "M": 0.25, "L": 0.5}
-# GHOULBOX's faces are crisp (tools/aa_raster.py crisp: whole-pixel pens, no phases): a glyph can sit up to a pixel
-# from its fractional place, so their limit is one pixel; the reference is shaped without ligatures (VT323 has "ff",
-# the firmware draws letters one by one)
-CRISP_LIMIT = 1.0
+# one-phase faces (ESTAMPIE's, to fit the flash; GHOULBOX's crisp VT323): whole-pixel pens and only kerning of a
+# whole pixel or more, so a glyph can sit up to a pixel from its fractional place: their limit is one pixel; the
+# reference is shaped without ligatures (the firmware draws letters one by one)
+CRISP_LIMIT = {"S": 1.0, "M": 1.0, "L": 1.5}   # (L, twice the size: more, as in LIMIT)
 NOLIGA = ["-liga"]
 
 
@@ -127,8 +127,8 @@ def centroid(cols):
     return sum((i + 0.5) * c for i, c in enumerate(cols)) / m if m else None
 
 
-def measure(f, font_hi, s):
-    """[(pair, gap error px)] of one string"""
+def measure(f, font_hi, s, track=0.0):
+    """[(pair, gap error px)] of one string; track: the face's tracking in px a glyph"""
     x0 = 4
     placed = place(f, s)
     d = []
@@ -136,7 +136,7 @@ def measure(f, font_hi, s):
         if ch == " " or not e[4]:
             d.append(None)
             continue
-        pen = (font_hi.getlength(s[:i + 1], features=NOLIGA) - font_hi.getlength(s[i])) / SS
+        pen = (font_hi.getlength(s[:i + 1], features=NOLIGA) - font_hi.getlength(s[i])) / SS + track * i
         w = int(pen + font_hi.getlength(s[i]) / SS) + 3 * f["h"]
         img = ar.render_cell(font_hi, ch, (w * SS, 3 * f["h"] * SS), round((x0 + pen) * SS), 2 * f["h"] * SS)
         a = img.reduce(SS)                               # box-filtered coverage on the pixel grid
@@ -179,19 +179,19 @@ def main():
     a = ap.parse_args()
     RULE[0] = a.rule
     faces = parse(a.header)
-    spec = {n: (font, px) for n, font, px, *_ in gf.preset("ghoulbox")}   # GHOULBOX: the build's faces (tools/build.py)
+    spec = {n: (font, px, tr) for n, font, px, _, _, tr, *_ in gf.preset("estampie")}   # the build's faces (tools/build.py)
     bad = 0
     for name, f in faces.items():
-        font, px = spec[name]
+        font, px, tr = spec[name]
         font_hi = ar.open_font(font, px * SS)
         words = LOWER if f["last"] >= ord("z") else UPPER
         # a sparse face (L): the words it can draw (the firmware draws no others in it)
         words = [w for w in words if all(glyph_at(f, ord(ch.upper())) is not None for ch in w)]
-        pairs = [p for s in words for p in measure(f, font_hi, s)]
+        pairs = [p for s in words for p in measure(f, font_hi, s, tr * px)]
         e = sorted(pairs, key=lambda p: -abs(p[1]))
         mx = abs(e[0][1])
         rms = (sum(v * v for _, v in pairs) / len(pairs)) ** 0.5
-        lim = CRISP_LIMIT if f["psh"] == 0 else LIMIT[name]   # (one phase: a crisp face)
+        lim = CRISP_LIMIT[name] if f["psh"] == 0 else LIMIT[name]   # (one phase)
         over = sum(abs(v) > lim for _, v in pairs)
         ok = mx <= lim + 1e-9
         bad += not ok

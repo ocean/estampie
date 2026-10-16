@@ -8,14 +8,15 @@
 #   .toolchain/node        Node, the binary only (no npm, npx or corepack), for the web tests
 #   .toolchain/zig         Zig, whose zig cc builds the browser emulator (web/emu/); its cache in .toolchain/zig-cache
 #   .toolchain/bin         osv-scanner (tools/osv_scan.sh)
+#   .toolchain/fonts       fonts whose terms don't clearly allow passing the file on (Alagard): fetched, not kept in git
 #   .venv                  Python 3.14 with the packages in uv.lock (uv sync --frozen)
 #   .toolchain/emulators   with --hw: the pi32v2 hardware emulator for tools/hw_check.sh (needs cargo)
 # A step is skipped when its folder already holds the pinned version; change a pin and run it again to update.
-# --only takes a comma-separated list of steps (jieli, ac79-sdk, node, python, zig, osv-scanner, hw): CI fetches
+# --only takes a comma-separated list of steps (jieli, ac79-sdk, node, python, zig, osv-scanner, fonts, hw): CI fetches
 # just what a job needs through the same checks.
 #   tools/setup_toolchain.sh [--hw] [--only STEP,...]
 set -eu
-STEPS=jieli,ac79-sdk,node,python,zig,osv-scanner
+STEPS=jieli,ac79-sdk,node,python,zig,osv-scanner,fonts
 USAGE="usage: tools/setup_toolchain.sh [--hw] [--only STEP,...]"
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -148,6 +149,19 @@ if want osv-scanner; then
         cp "$file" $TC/bin/osv-scanner
         chmod 755 $TC/bin/osv-scanner
         echo "$2" > $TC/bin/osv-scanner.pin
+    fi
+fi
+
+# Fonts: Alagard (Hewett Tsoi; DaFont's "100% Free", credit given), the UI's medium and large text
+# (tools/gen_aa_font.py --preset estampie). Only the font file is taken from the zip.
+if want fonts; then
+    set -- $(pin alagard)
+    if [ "$(cat $TC/fonts/alagard.pin 2>/dev/null)" != "$2" ]; then
+        mkdir -p $TC/fonts
+        file=$(fetch "$3" "$2") || exit 1
+        python3 -I -c 'import sys, zipfile; open(sys.argv[2], "wb").write(zipfile.ZipFile(sys.argv[1]).read("alagard.ttf"))' \
+            "$file" $TC/fonts/alagard.ttf
+        echo "$2" > $TC/fonts/alagard.pin
     fi
 fi
 

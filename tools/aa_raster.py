@@ -106,7 +106,7 @@ FIXED = "0123456789."       # one phase, at the rounded pen: src/ui_draw.c roll_
 WHOLE = "0123456789."       # with tabular, their advance in whole pixels too: a number keeps an even pitch
 
 
-def raster_font(spec, px, chars, tracking=0.0, gamma=1.0, tabular=True, kern_min=1, phases=1, crisp=False, crisp_dy=0):
+def raster_font(spec, px, chars, tracking=0.0, gamma=1.0, tabular=True, kern_min=1, phases=1, crisp=False, dy=0, cap_drop=None):
     """-> dict(h, asc, phases, glyphs{ch: (adv16, [(bx, by, bw, bh, bytes) per phase, or one])}, kern{(a,b): d16})
 
     Advances, kerning and the outlines come from the instanced weight at 16 x the size (unhinted): advances in
@@ -120,8 +120,9 @@ def raster_font(spec, px, chars, tracking=0.0, gamma=1.0, tabular=True, kern_min
     tabular: digits share one advance (the widest, OpenType tnum), each centred in it, so values do not jiggle.
     kern_min: keep kerning pairs of at least this many 1/16 px.
     crisp: a pixel font: each glyph drawn by FreeType in monochrome (hinted, alpha 0 / 15) at the size itself,
-    advances in whole pixels, no kerning (one phase). crisp_dy: its glyphs that many rows higher in the line (a pixel
-    font's capitals on the rows another face's sit on, where the layout was made for that face).
+    advances in whole pixels, no kerning (one phase). dy: the glyphs that many rows higher in the line (negative:
+    lower), so a face's capitals sit on the rows the layout was made for (Inter Tight's). cap_drop: a capital's ink
+    cut that many rows below the baseline (a Q's long tail kept inside a list row).
     """
     assert phases in (1, 2, 4, 8)
     font = open_font(spec, px)                 # the line metrics only (ascent / descent rounded to pixels)
@@ -130,7 +131,7 @@ def raster_font(spec, px, chars, tracking=0.0, gamma=1.0, tabular=True, kern_min
     pad = px                                   # canvas margin around the glyph (overhang, accents)
     cw, chh = px * 3, asc + desc + 2 * pad
     base = pad + asc                           # baseline row of the canvas
-    feats = ["tnum"] if tabular else None
+    feats = ["tnum", "lnum"] if tabular else None   # (lining figures: Alegreya Sans defaults to old-style ones)
     glyphs, adv, nat = {}, {}, {}
     for ch in chars:
         f = feats if ch.isdigit() else None
@@ -152,9 +153,11 @@ def raster_font(spec, px, chars, tracking=0.0, gamma=1.0, tabular=True, kern_min
         ph = []
         for p in range(1 if ch in FIXED else phases):
             if crisp:                                  # a pixel font: FreeType's monochrome, hinted (keeps M's middle)
-                nib = None if ch == " " else _mono(font, ch, cw, chh, pad + int(round(shift)), base - crisp_dy)
+                nib = None if ch == " " else _mono(font, ch, cw, chh, pad + int(round(shift)), base - dy)
             else:
-                nib = None if ch == " " else _phase(font_hi, ch, cw, chh, (pad + shift + p / phases) * SS, base, f, gamma)
+                nib = None if ch == " " else _phase(font_hi, ch, cw, chh, (pad + shift + p / phases) * SS, base - dy, f, gamma)
+            if nib is not None and cap_drop is not None and "A" <= ch <= "Z":
+                nib.paste(0, (0, base - dy + cap_drop, cw, chh))
             bb = nib and nib.getbbox()
             if not bb:
                 ph.append((0, 0, 0, 0, b""))
@@ -176,8 +179,7 @@ def raster_font(spec, px, chars, tracking=0.0, gamma=1.0, tabular=True, kern_min
             d16 = int(round(d * 16))
             if abs(d16) >= kern_min:
                 kern[(a, b)] = max(-127, min(127, d16))
-    if crisp:
-        asc -= crisp_dy                        # (the baseline moved up with the glyphs: a unit "on its value's baseline")
+    asc -= dy                                  # (the baseline moved with the glyphs: a unit "on its value's baseline")
     return {"h": h, "asc": asc, "glyphs": glyphs, "kern": kern, "px": px, "phases": phases}
 
 

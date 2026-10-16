@@ -18,7 +18,8 @@ Inspired by the idea of teenage engineering's EP-1320 *medieval*; not affiliated
 sounds are used.
 
 **Status: 0.1, early work.** So far: the VELLUM look (parchment, iron-gall ink, vermilion rubrics, lapis), the
-illuminated boot screen and the browser emulator page. The sounds are still GHOULBOX's. See [ROADMAP.md](ROADMAP.md).
+screen's type (Hewett Tsoi's [Alagard](https://www.dafont.com/alagard.font) pixel font, with GHOULBOX's VT323 for the
+small labels), the illuminated boot screen and the browser emulator page. The sounds are still GHOULBOX's. See [ROADMAP.md](ROADMAP.md).
 
 ## Building
 

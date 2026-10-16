@@ -2202,7 +2202,7 @@ static void graph_song(void)
     } else {                                           /* + ADD: how */
         for (i = 0; i < 4u && !graph_project_used(i); i++)
             ;
-        cv_free_hint(SG_X0, ly + AF_M_CAP_Y + AF_M_CAP_H - AF_S_CAP_Y - AF_S_CAP_H,   /* (a key hint: S) */
+        cv_free_hint(SG_X0, SG_IY - KC_H,             /* (a key hint: S, its keycap ending a row under the line's capitals) */
                      i < 4u ? "[K3] ADD SECTION" : "[SAVE] PROJECT A-D", T_MID, T_SURF, x0 - 10 - SG_X0);
     }
 }

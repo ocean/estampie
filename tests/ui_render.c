@@ -1869,18 +1869,24 @@ static void align_sweeps(void)
 }
 
 /* the keycaps' labels in their pills (tools/gen_aa_keycaps.py), from the data: the label's ink (nibbles 6..15) in the
- * pill (KC_H rows, its width) */
+ * pill (KC_H rows, its width), decoded onto the canvas with the nibbles as the colours */
 static void al_keycaps(void)
 {
+    static const uint16_t NIB[16] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+    int32_t oy = cv_oy, cy0 = cv_cy0, cy1 = cv_cy1;
     uint32_t id;
     cur_name = "keycap data";
+    cv_oy = 0;
+    cv_cy0 = 0;
+    cv_cy1 = KC_H;
     for (id = 0; id < KC_COUNT; id++) {
         const kc_t *k = &KC[id];
         int32_t x, y, x0 = 999, y0 = 999, x1 = -1, y1 = -1, w = k->w;
-        uint32_t i = 0;
+        memset(cv_px, 0, sizeof cv_px[0] * cv_w * KC_H);
+        cv_alpha_hc(0, 0, (uint32_t)w, KC_H, KC_DATA + k->off, KC_HC, NIB);
         for (y = 0; y < KC_H; y++)
-            for (x = 0; x < w; x++, i++)
-                if (((KC_DATA[k->off + (i >> 1)] >> ((i & 1u) ? 0 : 4)) & 15u) >= 6u) {
+            for (x = 0; x < w; x++)
+                if (cv_px[(uint32_t)y * cv_w + (uint32_t)x] >= 6u) {
                     if (x < x0) x0 = x;
                     if (y < y0) y0 = y;
                     if (x + 1 > x1) x1 = x + 1;
@@ -1889,7 +1895,10 @@ static void al_keycaps(void)
         al_record("keycap label in its pill", (x0 + x1) - w, (y0 + y1) - KC_H, k->label, 0, 0, w, KC_H, x0, y0, x1, y1);
         if (al_rep) fprintf(al_rep, "keycap %-8s w %2d  ink x %2d..%2d y %d..%d  across %+.1f up/down %+.1f\n", k->label, w, x0, x1, y0, y1,
                             ((x0 + x1) - w) / 2.0, ((y0 + y1) - KC_H) / 2.0);
-    }
+     }
+    cv_oy = oy;
+    cv_cy0 = cy0;
+    cv_cy1 = cy1;
 }
 static void al_table(void)
 {
