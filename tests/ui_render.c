@@ -657,6 +657,8 @@ static void state(void)                          /* a playing song with steps on
 {
     uint32_t i;
     ui_power_on();
+    memset(live_held, 0, sizeof live_held);         /* (ESTAMPIE: HOME's readout: nothing played) */
+    memset(live_last, 0, sizeof live_last);
     if (large_on) ui_prefs |= PREF_LARGE;
     song.playing = 1;
     song.g[G_BPM] = 124;
@@ -758,7 +760,8 @@ enum { S_HOME, S_HOME_IDLE, S_MESSAGE, S_MESSAGE_KEY, S_MESSAGE_NOFILE, S_PRESET
        S_COUNTIN, S_COUNTIN2, S_MENU_AUDIO, S_HEAD_PLAY_REC, S_HEAD_REC_OTHER, S_HEAD_BPM_TURN, S_HEAD_BPM_LOCK,
        S_HEAD_BPM_LOCKED, S_HEAD_GLO_TURN, S_HEAD_DOWNBEAT, S_HEAD_BEAT_2,
        S_SONG_LANES, S_SONG_LANES_PLAYING, S_SONG_LANES_SILENT, S_SONG_PICTURES, S_HEAD_SLOT, S_HEAD_SLOT_EDITED, S_HEAD_SLOT_SONG,
-       S_MENU_TUNE, S_MENU_INFO, S_HOME_TRACKS, S_HOME_TRACKS_STOPPED, S_HOME_TRACKS_HOT, S_MENU_HOME, S_COUNT };
+       S_MENU_TUNE, S_MENU_INFO, S_HOME_TRACKS, S_HOME_TRACKS_STOPPED, S_HOME_TRACKS_HOT, S_MENU_HOME,
+       S_HOME_CHORD, S_HOME_SLASH_GONE, S_HOME_NOTES, S_HOME_NOTE, S_HOME_WIDE, S_COUNT };
 static const char *const S_NAME[S_COUNT] = {"home", "home_idle", "message", "message_key", "message_nofile", "presets", "presets_nofav", "user",
     "phrases", "project", "tools", "song_empty", "song", "step", "auto_steps", "auto_add_chance", "automation", "drum",
     "drum_hand", "drum_cym", "mixer", "mixer_from_home", "mixer_pan", "env", "env_dest", "lfo", "mod", "fx", "slicer", "dly", "scl", "chord", "chord_wide", "chord_off", "chord_kit", "arp",
@@ -780,7 +783,8 @@ static const char *const S_NAME[S_COUNT] = {"home", "home_idle", "message", "mes
     "countin", "countin_2bars", "menu_audio", "head_play_rec", "head_rec_other", "head_bpm_turn", "head_bpm_lock",
     "head_bpm_locked", "head_glo_turn", "head_downbeat", "head_beat_2",
     "song_lanes", "song_lanes_playing", "song_lanes_silent", "song_pictures", "head_slot", "head_slot_edited", "head_slot_song",
-    "menu_tune", "menu_info", "home_tracks", "home_tracks_stopped", "home_tracks_hot", "menu_home"};
+    "menu_tune", "menu_info", "home_tracks", "home_tracks_stopped", "home_tracks_hot", "menu_home",
+    "home_chord", "home_slash_gone", "home_notes", "home_note", "home_wide"};
 
 /* the STEP page's piano roll (ui_graph.c graph_roll) on track 1, stopped unless said: an empty pattern; ACID in
  * A minor; POLY chords (Am7 F C G, tied); a line with ties, slides and accents in C major; LEN 32 on its second
@@ -900,6 +904,16 @@ static void tracks_scene(int playing)
     if (!playing) { song.playing = 0; song.sel = 0; ui.cursor = 20; ui.bank = 1; }
     go_home();
     ui_home_view = HV_TRACKS;
+}
+
+/* ESTAMPIE: notes played live on track k (0-terminated), held or let go (seq.c live_held, live_last) */
+static void live_on(uint32_t k, const uint8_t *nn, int held)
+{
+    for (; *nn; nn++) {
+        live_last[k][*nn >> 5] |= 1u << (*nn & 31u);
+        if (held)
+            live_held[k][*nn >> 5] |= 1u << (*nn & 31u);
+    }
 }
 
 static void setup(int s)
@@ -1063,6 +1077,13 @@ static void setup(int s)
     case S_HOME_TRACKS_STOPPED: tracks_scene(0); break;
     case S_HOME_TRACKS_HOT: tracks_scene(1); ui.hot_col = 1; ui.hot_t = 30; break;
     case S_MENU_HOME: ui.menu = 1; ui.menu_sel = MI_HOME; ui_home_view = HV_TRACKS; break;
+    /* ESTAMPIE: HOME's readout (ui_graph.c graph_played): F#m7b5 held; C/G let go (faded); a cluster's notes; one note
+     * large; nine notes of a wide chord (the last left out: " ..") */
+    case S_HOME_CHORD: live_on(song.sel % NTRK, (const uint8_t[]){54, 57, 60, 64, 0}, 1); break;
+    case S_HOME_SLASH_GONE: live_on(song.sel % NTRK, (const uint8_t[]){55, 60, 64, 67, 0}, 0); break;
+    case S_HOME_NOTES: live_on(song.sel % NTRK, (const uint8_t[]){60, 61, 62, 0}, 1); break;
+    case S_HOME_NOTE: live_on(song.sel % NTRK, (const uint8_t[]){69, 0}, 1); break;
+    case S_HOME_WIDE: live_on(song.sel % NTRK, (const uint8_t[]){36, 43, 48, 52, 55, 59, 62, 66, 69, 0}, 1); break;
     case S_MENU_INFO:
         ui.menu = 3; ui.menu_sel = MI_INFO; song.cpu_q8 = 87u;   /* (34 %; USB: the host has none, OFF) */
         info.t = fm1_ms - INFO_CPU_MS;

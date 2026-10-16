@@ -1805,11 +1805,17 @@ static void draw_home_tracks(void)
 }
 /* oscilloscope of the output, triggered on a rising zero crossing: a RAISE centre line, the trace 2 px (in silence
  * a flat line on it; MENU > SCREEN OFF keeps it from staying on the panel for hours) */
+static void graph_scope_at(uint16_t c, int32_t cy, int32_t a);
 static void graph_scope(uint16_t c)
+{
+    graph_scope_at(c, (int32_t)cv_h / 2, cv_h == H_GRAPH ? 46 : (int32_t)cv_h / 2 - 6);   /* (LARGE: the strip) */
+}
+/* .. on row cy, a px each way at its peak */
+static void graph_scope_at(uint16_t c, int32_t cy, int32_t a)
 {
     static int16_t snap[SCOPE_N];
     uint32_t w = scope_w, i, trig = 0;
-    int32_t cy = (int32_t)cv_h / 2, py = cy, x, peak = 1500, a = cv_h == H_GRAPH ? 46 : cy - 6;   /* (LARGE: the strip) */
+    int32_t py = cy, x, peak = 1500;
     for (i = 0; i < SCOPE_N; i++) {
         snap[i] = scope_buf[(w + i) & (SCOPE_N - 1u)];
         if (snap[i] > peak)
@@ -1829,6 +1835,86 @@ static void graph_scope(uint16_t c)
             cv_line_t(PANEL_X0 - 1 + x, py, PANEL_X0 + x, y, c, 2);
         py = y;
     }
+}
+
+/* the lowest of n notes (note[] holds the first 8) that fit in w px of font f, "C4 E4 G4", " .." when some are left
+ * out (Melodee's, Kerem Kilic); returns how many are shown */
+static uint32_t notes_fit(char *b, const uint8_t *note, uint32_t n, const aafont_t *f, int32_t w)
+{
+    uint32_t m, i;
+    for (m = n < 8u ? n : 8u; m > 1u; m--) {
+        b[0] = 0;
+        for (i = 0; i < m; i++) {
+            if (i)
+                str_cpy(b + str_len(b), " ", 2);
+            note_name(b + str_len(b), note[i]);
+        }
+        if (m < n)
+            str_cpy(b + str_len(b), " ..", 4);
+        if (text_w(f, b) <= w)
+            return m;
+    }
+    note_name(b, note[0]);
+    return 1;
+}
+/* ESTAMPIE (Melodee's, Kerem Kilic): HOME's readout, a faint scope under it: the chord the selected track is played live
+ * (seq.c live_last), its root and bass large and its kind beside it in M on their baseline ("A" "m7" "/G"), the notes
+ * under it in the track's colour; no chord (a note, an interval, a cluster): the notes alone, large when they fit.
+ * Held: in ink; let go: faded, until the next. 0 = nothing played yet (or a kit, NOTE NAMES OFF): the scope alone */
+/* HOME's panel is the readout's (not HOME TRACKS, MENU > LARGE's strip, a kit; MENU > CONTROL > NOTE NAMES ON) */
+static int home_readout(void)
+{
+    return ui.home && !home_tracks() && strip_kind() == SK_NONE && !drum_track(TSEL) && !(ui_prefs2 & (PREF_NAMES_OFF >> 16));
+}
+static int graph_played(uint16_t c)
+{
+    uint32_t bits[4], i, n = 0, pcs = 0, root = 0, bass, held = 0, k = song.sel % NTRK;
+    uint8_t note[8];
+    char b[48];
+    const char *q;
+    uint16_t ink, col;
+    int32_t x = PANEL_X0 + 2, y = 8, xr = PANEL_X0 + PANEL_W - 2;
+    if (!home_readout())
+        return 0;
+    fm1_irq_off();                                   /* (one snapshot of the ISR's bits) */
+    for (i = 0; i < 4u; i++) {
+        bits[i] = live_last[k][i];
+        held |= live_held[k][i];
+    }
+    fm1_irq_on();
+    for (i = 0; i < 128u; i++)
+        if ((bits[i >> 5] >> (i & 31u)) & 1u) {
+            pcs |= 1u << (i % 12u);
+            if (n < sizeof note)
+                note[n] = (uint8_t)i;
+            n++;
+        }
+    if (!n)
+        return 0;
+    graph_scope_at(ux_mix(T_SURF, c, 45), 94, 18);   /* (under the text: rows 76..112) */
+    ink = held ? T_TEXT : ux_mix(T_SURF, T_TEXT, 45);
+    col = held ? c : ux_mix(T_SURF, c, 45);
+    bass = note[0] % 12u;
+    q = chord_of(pcs, bass, &root);
+    if (q) {
+        x = cv_text(x, y, &AF_L, N_NOTE[root], ink);
+        GFX_HOOK_ALIGN(0, 0, 0, y + AF_L.asc, AL_B, "chord kind on the root's baseline");
+        x = cv_text(x + 1, y + AF_L.asc - AF_M.asc, &AF_M, q, ink);
+        if (root != bass) {
+            x = cv_text(x + 3, y, &AF_L, "/", ink);
+            cv_text(x + 1, y, &AF_L, N_NOTE[bass], ink);
+        }
+        notes_fit(b, note, n, &AF_M, xr - PANEL_X0 - 2);
+        cv_text(PANEL_X0 + 2, y + AF_L.h, &AF_M, b, col);
+    } else {
+        if (notes_fit(b, note, n, &AF_L, xr - x) == n && text_w(&AF_L, b) <= xr - x)
+            cv_text(x, y, &AF_L, b, col);           /* (all of them, large) */
+        else {
+            notes_fit(b, note, n, &AF_M, xr - x);
+            cv_text(x, y + AF_L.asc - AF_M.asc, &AF_M, b, col);
+        }
+    }
+    return 1;
 }
 
 /* SONG is a playing order of the four stored project patterns. Letters match
@@ -2129,10 +2215,12 @@ static void graph_song(void)
 #define ORN_Y 10
 static void ornament_draw(int32_t x, int32_t y, int right)
 {
-    cv_alpha(x, y, ES_ORN_L_STEM_W, ES_ORN_L_STEM_H, right ? ES_ORN_R_STEM : ES_ORN_L_STEM, ramp(T_TEXT, T_SURF));
-    cv_alpha(x, y, ES_ORN_L_LEAF_W, ES_ORN_L_LEAF_H, right ? ES_ORN_R_LEAF : ES_ORN_L_LEAF, ramp(T_THEME, T_SURF));
-    cv_alpha(x, y, ES_ORN_L_DOT_W, ES_ORN_L_DOT_H, right ? ES_ORN_R_DOT : ES_ORN_L_DOT, ramp(T_ACCENT, T_SURF));
-    GFX_HOOK_TEXT(x, y + cv_oy, x + ES_ORN_L_STEM_W, y + cv_oy + ES_ORN_L_STEM_H, "ornament", 4u);   /* the lint: nothing may overlap it */
+    cv_flip = (uint8_t)right;                           /* (the right one: the left mirrored, both facing the graph) */
+    cv_alpha_hc(x, y, ES_ORN_STEM_W, ES_ORN_STEM_H, ES_ORN_STEM, ES_HC, ramp(T_TEXT, T_SURF));
+    cv_alpha_hc(x, y, ES_ORN_LEAF_W, ES_ORN_LEAF_H, ES_ORN_LEAF, ES_HC, ramp(T_THEME, T_SURF));
+    cv_alpha_hc(x, y, ES_ORN_DOT_W, ES_ORN_DOT_H, ES_ORN_DOT, ES_HC, ramp(T_ACCENT, T_SURF));
+    cv_flip = 0;
+    GFX_HOOK_TEXT(x, y + cv_oy, x + ES_ORN_STEM_W, y + cv_oy + ES_ORN_STEM_H, "ornament", 4u);   /* the lint: nothing may overlap it */
 }
 /* the pages whose stage has room for the ornaments (GHOULBOX: its torches): HOME's scope, the envelope, the LFO, FX,
  * and an engine page that shows the scope (draw_graph's default: not WHEEL's drawbars, a sample, FM6's or DIGITAL's charts) */
@@ -2197,7 +2285,8 @@ static void draw_graph(void)
         graph_ht = 100;
     } else if (ui.home) {
         cv_oy = 0;
-        graph_scope(c);
+        if (!graph_played(c))
+            graph_scope(c);
     } else {
         switch (pg->graph) {
         case GR_ADSR:

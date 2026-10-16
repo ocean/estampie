@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-only
- * Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments */
+ * Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments
+ * Portions (chord_of, its CHORDS table) Copyright (C) 2026 Kerem Kilic (Ellic Studio), from Melodee */
 /* Chord keys (SCL > CHORD: P_CHRD, P_VOIC): one key, MIDI note or arp input plays a chord. Included by seq.c
  * after kb_map; runs in the audio ISR with the rest of the note input.
  *   CHRD OFF; DIA3 / DIA7: the triad / seventh of the track's scale (ROOT, SCALE) built on the key, every tone
@@ -180,6 +181,47 @@ static void chord_name(char *b, uint32_t root, uint32_t mask)
         q = "5";
     str_cpy(b + str_len(b), q, 12 - str_len(b));
     str_cpy(b + str_len(b), x, 12 - str_len(b));
+}
+
+/* HOME's readout (ui_graph.c graph_played): any notes played, named. From Melodee (Kerem Kilic, ui_graph.c), with the
+ * open fifth added for ESTAMPIE's drones, its altered, 11th and 13th chords left out (the flash is full; their notes are
+ * shown instead). iv bit i: i semitones over the root */
+static const struct {
+    uint16_t iv;
+    char q[8];
+} CHORDS[] = {                                       /* simplest first: a chord off its bass takes the first that fits */
+    {0x091, ""}, {0x089, "m"}, {0x049, "dim"}, {0x111, "aug"}, {0x0A1, "sus4"}, {0x085, "sus2"}, {0x081, "5"},
+    {0x491, "7"}, {0x891, "maj7"}, {0x489, "m7"}, {0x449, "m7b5"}, {0x249, "dim7"}, {0x4A1, "7sus4"},
+    {0x291, "6"}, {0x289, "m6"}, {0x095, "add9"}, {0x08D, "madd9"}, {0x0B1, "add11"}, {0x0A9, "madd11"},
+    {0x889, "mM7"}, {0x495, "9"}, {0x895, "maj9"}, {0x48D, "m9"}, {0x4A5, "9sus4"}, {0x295, "6/9"},
+    /* 7ths and 9ths without the 5th */
+    {0x411, "7"}, {0x811, "maj7"}, {0x409, "m7"}, {0x415, "9"}, {0x815, "maj9"}, {0x40D, "m9"},
+};
+#define NCHORDS (sizeof CHORDS / sizeof CHORDS[0])
+
+/* the chord the pitch classes pcs (bit i: pitch class i) make, *root its root: on the bass when it makes one, else
+ * the simplest on another of its notes (shown "/bass"); two notes only a fifth over the bass (D5: a fourth, D G, is
+ * no chord); 0 = no chord (a note alone, another interval, a cluster). HOME's readout and the header's NOTE NAMES
+ * (ui_input.c names_of) */
+static const char *chord_of(uint32_t pcs, uint32_t bass, uint32_t *root)
+{
+    uint32_t i, k, best = NCHORDS, n = 0;
+    for (i = 0; i < 12u; i++)
+        n += (pcs >> i) & 1u;
+    for (i = 0; i < (n < 3u ? 1u : 12u); i++) {
+        uint32_t r = (bass + i) % 12u, iv = ((pcs >> r) | (pcs << (12u - r))) & 0xFFFu;
+        if (!((pcs >> r) & 1u))
+            continue;
+        for (k = 0; k < best; k++)
+            if (CHORDS[k].iv == iv) {
+                best = k;
+                *root = r;
+                break;
+            }
+        if (!i && best < NCHORDS)
+            break;                                   /* on the bass: no slash */
+    }
+    return best < NCHORDS ? CHORDS[best].q : 0;
 }
 
 /* the MIDI note (ch, src) of track id - 1 that plays a chord, 0 = none */

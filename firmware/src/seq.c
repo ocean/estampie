@@ -65,6 +65,25 @@ static uint32_t trk_midi_ch(uint32_t i) { return (midi_base() > 0 ? (uint32_t)mi
 
 static int drum_track(const track_t *t) { return ENGINES[eng_idx(t->eng_req)] == &ENG_DRUM; }
 
+/* ESTAMPIE (after Melodee's Stage, Kerem Kilic): the notes each track is played live, after the scale and the chord
+ * (bit n: MIDI note n), for HOME's readout (ui_graph.c graph_played). The ISR owns them; live_last keeps the last
+ * voicing after it is let go, so a quick tap between two frames is still shown. Not the sequencer's notes, nor a kit's */
+static uint32_t live_held[NTRK][4], live_last[NTRK][4];
+static void live_note_on(const track_t *t, uint32_t note)
+{
+    uint32_t i, k = trk_index(t);
+    if (drum_track(t) || note > 127u)
+        return;
+    live_held[k][note >> 5] |= 1u << (note & 31u);
+    for (i = 0; i < 4u; i++)
+        live_last[k][i] = live_held[k][i];
+}
+static void live_note_off(const track_t *t, uint32_t note)
+{
+    if (note < 128u)
+        live_held[trk_index(t)][note >> 5] &= ~(1u << (note & 31u));
+}
+
 /* the 27 keys from F: black or white, and the key's place among the keys of its colour (white 0..15, black
  * 0..10). The DRUM grid: white keys are steps, black keys 1..8 lanes, 9 ACC, 10 / 11 the page */
 static int key_black(uint32_t k) { return (int)((0x54Au >> ((k + 5u) % 12u)) & 1u); }
@@ -578,6 +597,7 @@ static void input_on(track_t *t, uint32_t note, uint32_t vel)
         l->m[note >> 5] |= 1u << (note & 31u);
     }
     last_note = (uint8_t)note;
+    live_note_on(t, note);
     if (cin_left)
         cin_keep(t, note, vel);
     if (rec_on(t) && !t->p[P_AMODE])               /* (ARP on: arp_tick records its notes) */
@@ -597,6 +617,7 @@ static void input_off(track_t *t, uint32_t note)
         l->stop = 0;                             /* (every key up: the next press plays) */
     if (midi_note_held(t, note))
         return;
+    live_note_off(t, note);
     if (cin_left) {                                 /* a kept note let go before step 1: recorded, then let go */
         uint32_t i = trk_index(t), k;
         for (k = 0; k < cin_n[i]; k++)

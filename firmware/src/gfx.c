@@ -25,7 +25,7 @@ typedef struct { uint16_t off; uint8_t w; const char *label; } kc_t;
 #include "ui_fonts.h"                   /* AF_S 12 px / 400, AF_M 15 px / 500, AF_L 28 px / 600 */
 #include "ui_palettes.h"
 #include "ui_keycaps.h"                 /* KC_*: the keycaps / badges (tools/gen_aa_keycaps.py), KNOB_* arcs */
-#include "estampie_art.h"               /* ES_INIT, ES_INIT_RULE, ES_WORD, ES_LOGO_S (tools/gen_estampie_art.py) */
+#include "estampie_art.h"               /* ES_INIT, ES_INIT_RULE, ES_WORD, ES_LOGO_S, ES_ORN_*: Huffman-coded, ES_HC (tools/gen_estampie_art.py) */
 #define ELLIPSIS '\x85'                 /* the ellipsis glyph of AF_S and AF_M */
 
 /* host tests hook in here (layout lint, draw cost); nothing in the firmware */
@@ -472,7 +472,7 @@ static void cv_alpha(int32_t x, int32_t y, uint32_t w, uint32_t h, const uint8_t
  * its repeat count ((count - 1) << 4 | value: runs of zeros and 15s). Codes of up to 8 bits come from a
  * 256-entry table made once per font in RAM (symbol | length << 8; 0 = a longer code: bit by bit). The
  * stream is read in order, so rows outside the clip are decoded and dropped; a run spans rows */
-#define HC_FONTS 3                       /* the codes: the faces M and L (gen_aa_font.py HUFF), the icons (AI_HC) */
+#define HC_FONTS 4                       /* the codes: the faces M and L (gen_aa_font.py HUFF), the icons (AI_HC), ESTAMPIE's art (ES_HC) */
 static struct { const uint8_t *hc; uint16_t lut[256]; } hc_tab[HC_FONTS];
 static const uint16_t *hc_lut(const uint8_t *hc)
 {

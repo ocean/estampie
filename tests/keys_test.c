@@ -11,7 +11,7 @@
  * 6. the SEQ pages (step entry): the keys play the selected track only.
  * 7. the project: KEYS saved and loaded (FUN10's tail, PROJ_KEYS_OFF); a project without them (the word 0): OFF.
  * 8. NOTE NAMES (2.1, ui_input.c names_notice): the names of notes and chords, in the header while keys are held, never
- *    over another message, none with MENU > CONTROL > NOTE NAMES OFF. */
+ *    over another message, none with MENU > CONTROL > NOTE NAMES OFF; ESTAMPIE: not on HOME, whose readout names them. */
 #define UI_TEST_NO_MAIN 1
 #include "ui_test.c"
 
@@ -170,6 +170,11 @@ int main(void)
     }
     k_reset();
     keys(1u << 7 | 1u << 11 | 1u << 14); names_notice();          /* C4 E4 G4 */
+    bad += check("  ESTAMPIE: on HOME, its readout names them (ui_graph.c graph_played): the header stays quiet",
+                 ui.home && home_readout() && !ui.msg_t);
+    keys(0);
+    go_page(GR_ADSR);                                   /* (a page with no readout: the header names them) */
+    keys(1u << 7 | 1u << 11 | 1u << 14); names_notice();
     bad += check("  held keys: their chord in the header (C)", ui.msg_t && str_eq(ui.msg, "C"));
     keys(1u << 7 | 1u << 11 | 1u << 14 | 1u << 17); names_notice();   /* + A#4 */
     bad += check("  a key added: the name follows (C7)", str_eq(ui.msg, "C7"));

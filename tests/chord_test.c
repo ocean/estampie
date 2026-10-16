@@ -5,7 +5,8 @@
  * fixed shapes, the voicings, at most 4 notes, the names, MONO plays the root, a key's or a MIDI note's release
  * ends exactly the notes it started (CHRD / VOIC changed while held too), shared notes, live recording writes the
  * chord into one step, the ARP gets the chord as held notes, QNT WHITE maps the key first, a kit (the DRUM engine,
- * SAMPLE PERC) ignores CHRD, MIDI OUT of the keys, and OFF plays exactly as before.
+ * SAMPLE PERC) ignores CHRD, MIDI OUT of the keys, and OFF plays exactly as before; ESTAMPIE: the notes HOME's readout
+ * names (seq.c live_held, live_last) and chord_of's names.
  * Run by tests/run_tests.sh (needs build/gen from one firmware build). */
 #define UI_TEST_NO_MAIN 1
 #include "ui_test.c"
@@ -318,9 +319,74 @@ static int kits(void)
     return bad;
 }
 
+/* ESTAMPIE: HOME's readout (after Melodee's): the notes played live kept per track (seq.c live_held, live_last), and
+ * chord_of's names of them: on the bass, or the simplest on another note with a slash; a note, an interval, a cluster
+ * no chord */
+static int pcs_is(const uint8_t *nn, const char *want, uint32_t want_root)
+{
+    uint32_t pcs = 0, root = 99, i;
+    const char *q;
+    for (i = 0; nn[i]; i++)
+        pcs |= 1u << (nn[i] % 12u);
+    q = chord_of(pcs, nn[0] % 12u, &root);
+    if (!want)
+        return !q;
+    if (!q || !str_eq(q, want) || root != want_root)
+        printf("  chord of %u..: %s on %u, want %s on %u\n", nn[0], q ? q : "(none)", root, want, want_root);
+    return q && str_eq(q, want) && root == want_root;
+}
+static uint32_t live_count(const uint32_t *m)
+{
+    uint32_t i, n = 0;
+    for (i = 0; i < 128u; i++)
+        n += (m[i >> 5] >> (i & 31u)) & 1u;
+    return n;
+}
+static int readout(void)
+{
+    int bad = 0;
+    track_t *t = &trk[0];
+    reset();
+    memset(live_held, 0, sizeof live_held);
+    memset(live_last, 0, sizeof live_last);
+    bad += check("names: C E G \"\" on C; E G C (first inversion) on C over E; A C E G m7; A E (a drone) 5",
+                 pcs_is((const uint8_t[]){60, 64, 67, 0}, "", 0) && pcs_is((const uint8_t[]){64, 67, 72, 0}, "", 0) &&
+                 pcs_is((const uint8_t[]){57, 60, 64, 67, 0}, "m7", 9) && pcs_is((const uint8_t[]){45, 52, 57, 0}, "5", 9));
+    bad += check("  D F A C on the bass m7 (not F6/D); B D F dim; C F G sus4; one note, C D E, C C# none",
+                 pcs_is((const uint8_t[]){62, 65, 69, 72, 0}, "m7", 2) && pcs_is((const uint8_t[]){59, 62, 65, 0}, "dim", 11) &&
+                 pcs_is((const uint8_t[]){60, 65, 67, 0}, "sus4", 0) && pcs_is((const uint8_t[]){60, 0}, 0, 0) &&
+                 pcs_is((const uint8_t[]){60, 62, 64, 0}, 0, 0) && pcs_is((const uint8_t[]){60, 61, 0}, 0, 0));
+    t->p[P_CHRD] = CH_DIA3;
+    key_down(K_D4);
+    bad += check("a chord key: its three notes held and last (D F A)", live_count(live_held[0]) == 3u &&
+                 live_count(live_last[0]) == 3u && ((live_last[0][62 >> 5] >> (62 & 31)) & 1u));
+    key_up(K_D4);
+    bad += check("  let go: none held, the last voicing kept", !live_count(live_held[0]) && live_count(live_last[0]) == 3u);
+    t->p[P_CHRD] = CH_OFF;
+    key_down(K_C4);
+    key_down(K_E4);
+    bad += check("  a new press starts the next voicing (C4, then C4 E4)", live_count(live_last[0]) == 2u);
+    key_up(K_C4);
+    key_up(K_E4);
+    midi(0x90, 69, 100);
+    midi(0x90, 72, 100);
+    midi(0x90, 76, 100);
+    bad += check("MIDI IN: its notes too (A C E)", live_count(live_held[0]) == 3u && live_count(live_last[0]) == 3u);
+    midi(0x80, 69, 0);
+    midi(0x80, 72, 0);
+    midi(0x80, 76, 0);
+    bad += check("  released", !live_count(live_held[0]) && live_count(live_last[0]) == 3u);
+    song.sel = 3;
+    key_down(K_C4);
+    bad += check("DRUM: a hit is not a note played (nothing kept)", !live_count(live_last[3]));
+    key_up(K_C4);
+    song.sel = 0;
+    return bad;
+}
+
 int main(void)
 {
-    int bad = theory() + shapes_voicings() + keys() + arp_rec() + midi_in() + kits();
+    int bad = theory() + shapes_voicings() + keys() + arp_rec() + midi_in() + kits() + readout();
     printf("%s\n", bad ? "CHORD TEST FAILED" : "chord keys test passed");
     return bad != 0;
 }

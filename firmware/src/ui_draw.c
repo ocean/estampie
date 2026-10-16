@@ -1192,9 +1192,9 @@ static void draw_splash(void)
     int32_t x = (240 - (int32_t)(ES_INIT_W + 2u + ES_WORD_W)) / 2;
     lcd_fill(0, 0, 240, 240, T_BG);
     cv_begin(240, ES_INIT_H, T_BG);
-    cv_alpha(x, 0, ES_INIT_W, ES_INIT_H, ES_INIT, ramp(T_ACCENT, T_BG));
-    cv_alpha(x, 0, ES_INIT_RULE_W, ES_INIT_RULE_H, ES_INIT_RULE, ramp(T_THEME, T_BG));
-    cv_alpha(x + (int32_t)ES_INIT_W + 2, (int32_t)(ES_INIT_H - ES_WORD_H) - 6, ES_WORD_W, ES_WORD_H, ES_WORD,
+    cv_alpha_hc(x, 0, ES_INIT_W, ES_INIT_H, ES_INIT, ES_HC, ramp(T_ACCENT, T_BG));
+    cv_alpha_hc(x, 0, ES_INIT_RULE_W, ES_INIT_RULE_H, ES_INIT_RULE, ES_HC, ramp(T_THEME, T_BG));
+    cv_alpha_hc(x + (int32_t)ES_INIT_W + 2, (int32_t)(ES_INIT_H - ES_WORD_H) - 6, ES_WORD_W, ES_WORD_H, ES_WORD, ES_HC,
              ramp(T_THEME, T_BG));
     cv_blit(0, SPLASH_Y);
     lcd_sync();

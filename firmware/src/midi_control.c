@@ -181,6 +181,7 @@ static void __attribute__((noinline)) midi_forget_track(uint32_t track)
     }
     midi_owners[track] = 0;
     mchord_forget(track);
+    memset(live_held[track], 0, sizeof live_held[track]);   /* (live_last stays: what was played last) */
     midi_bend_q8[track] = midi_bend_target[track] = 0;
 }
 

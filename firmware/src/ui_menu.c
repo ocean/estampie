@@ -122,7 +122,7 @@ static int32_t menu_document(int32_t y, int draw)
 {
     uint32_t i;
     if (draw) {
-        cv_alpha(6, y + 2, ES_LOGO_S_W, ES_LOGO_S_H, ES_LOGO_S, ramp(T_THEME, T_BG));   /* ESTAMPIE's wordmark */
+        cv_alpha_hc(6, y + 2, ES_LOGO_S_W, ES_LOGO_S_H, ES_LOGO_S, ES_HC, ramp(T_THEME, T_BG));   /* ESTAMPIE's wordmark */
         cv_text(6 + ES_LOGO_S_W + 8, y + 12, &AF_M, ESTAMPIE_VERSION, T_THEME);   /* the version, in roman beside the blackletter */
         cv_text(6, y + 40, &AF_S, "Medi\xE6val groovebox", T_TEXT);
         cv_text(6, y + 58, &AF_S, "Drew Robinson", T_TEXT);

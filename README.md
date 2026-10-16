@@ -10,7 +10,9 @@ dungeon-synth firmware, which is itself a fork of [Felucca](https://github.com/h
 (Hügelton Instruments). Nearly everything here is their work: Felucca's engines, sequencer, effects, editor,
 installer and tests, and GHOULBOX's hurdy-gurdy, medieval tunings, drone latch, dungeon sounds and browser synth.
 Thank you both. The browser emulator follows the design of Charles Vestal's
-[X0X](https://github.com/charlesvestal/fm1-x0x). The full history of both projects is kept in this repository.
+[X0X](https://github.com/charlesvestal/fm1-x0x), and HOME's chord readout (the chord or notes you are playing) is
+ported from Kerem Kilic's [Melodee](https://github.com/keremimo/melodee), another Felucca fork. The full history of
+both projects is kept in this repository.
 
 Inspired by the idea of teenage engineering's EP-1320 *medieval*; not affiliated with them, and none of their
 sounds are used.

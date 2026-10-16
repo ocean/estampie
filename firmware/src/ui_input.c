@@ -1234,13 +1234,9 @@ static void sample_notice(void)
  * message than any other: never over one; it fades as messages do once the keys are up). One note: its name and
  * octave (D4); two a fifth apart: a power chord (D5), other twos and shapes it does not know: their names (D F#);
  * three or more: the chord (Dm, Bb, A7, Gsus4), its root the bass when it can be, another bass after a slash (C/E).
- * The keys' own notes and their chords (kb_chord, LAYER's kb_chord2), whichever track plays them */
+ * The keys' own notes and their chords (kb_chord, LAYER's kb_chord2), whichever track plays them. ESTAMPIE: the chords
+ * are chord.c chord_of's (HOME's readout's, after Melodee's); on HOME, while its readout names them, not here too */
 static const char *const NN_NAME[12] = {"C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"};
-static const struct { uint16_t mask; char name[5]; } NN_CHORD[] = {   /* intervals from the root, bit i = i semitones */
-    {0x091, ""}, {0x089, "m"}, {0x049, "dim"}, {0x111, "aug"}, {0x085, "sus2"}, {0x0A1, "sus4"},
-    {0x491, "7"}, {0x891, "maj7"}, {0x489, "m7"}, {0x249, "dim7"}, {0x449, "m7b5"}, {0x291, "6"}, {0x289, "m6"},
-    {0x095, "add9"}, {0x4A1, "7sus"},
-};
 static uint32_t names_mask(uint32_t *bass)
 {
     uint32_t k, i, m = 0, lo = 128;
@@ -1261,7 +1257,8 @@ static uint32_t names_mask(uint32_t *bass)
 }
 static void names_of(uint32_t m, uint32_t bass, char *out)
 {
-    uint32_t n = 0, r, c, i, b = bass % 12u;
+    uint32_t n = 0, r = 0, c, i, b = bass % 12u;
+    const char *q;
     for (i = 0; i < 12u; i++)
         n += (m >> i) & 1u;
     out[0] = 0;
@@ -1270,25 +1267,14 @@ static void names_of(uint32_t m, uint32_t bass, char *out)
         fmt_int(out + str_len(out), (int32_t)bass / 12 - 1);
         return;
     }
-    if (n == 2u && (m >> ((b + 7u) % 12u)) & 1u) {      /* a fifth over the bass: a power chord */
-        str_cpy(out, NN_NAME[b], 4);
-        str_cpy(out + str_len(out), "5", 2);
+    if ((q = chord_of(m, b, &r)) != 0) {               /* (a power chord, D5, too) */
+        str_cpy(out, NN_NAME[r], 4);
+        str_cpy(out + str_len(out), q, 8);
+        if (r != b) {                                   /* another bass: a slash chord */
+            str_cpy(out + str_len(out), "/", 2);
+            str_cpy(out + str_len(out), NN_NAME[b], 4);
+        }
         return;
-    }
-    for (c = 0; n >= 3u && c < 12u; c++) {             /* the bass as the root first, then the others */
-        r = (b + c) % 12u;
-        if (!((m >> r) & 1u))
-            continue;
-        for (i = 0; i < NELEM(NN_CHORD); i++)
-            if (((m >> r | m << (12u - r)) & 0xFFFu) == NN_CHORD[i].mask) {
-                str_cpy(out, NN_NAME[r], 4);
-                str_cpy(out + str_len(out), NN_CHORD[i].name, 6);
-                if (r != b) {                           /* another bass: a slash chord */
-                    str_cpy(out + str_len(out), "/", 2);
-                    str_cpy(out + str_len(out), NN_NAME[b], 4);
-                }
-                return;
-            }
     }
     for (c = 0; c < 12u && str_len(out) < 15u; c++)    /* a shape it does not know: the names, from the bass */
         if ((m >> ((b + c) % 12u)) & 1u) {
@@ -1302,6 +1288,8 @@ static void names_notice(void)
     char n[16];
     uint32_t bass, m;
     if (ui_prefs2 & (PREF_NAMES_OFF >> 16))           /* (a bit of ui_prefs2, as CHORD ENTRY's) */
+        return;
+    if (home_readout())                                 /* ESTAMPIE: HOME names them, large (ui_graph.c graph_played) */
         return;
     m = names_mask(&bass);
     if (!m)                                             /* the keys up: the name fades as a message does (still this
