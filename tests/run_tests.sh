@@ -147,7 +147,8 @@ OUT=build/host
 mkdir -p "$OUT"
 CC="${CC:-cc} -O1 -Wall -Wno-unused-function"
 fail=0
-run() { echo "== $1"; shift; "$@" || fail=1; }
+failed=""                                # the steps that failed, named again at the end
+run() { echo "== $1"; n=$1; shift; "$@" || { fail=1; failed="$failed\n  $n"; }; }
 
 $CC -o "$OUT/storage_test" tests/storage_test.c
 run "flash storage (A/B, torn writes)" "$OUT/storage_test"
@@ -322,7 +323,7 @@ if [ -f build/gen/felucca_tables.h ]; then
         "$OUT/union_test" tests/union_golden.txt
     $CC -w -Ibuild/gen -Ifirmware/src -o "$OUT/descdump" tests/descdump.c -lm
     echo "== parameter and engine tables as JSON (for the editor mock test)"
-    "$OUT/descdump" > "$OUT/desc.json" || fail=1
+    "$OUT/descdump" > "$OUT/desc.json" || { fail=1; failed="$failed\n  descdump"; }
     $CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/phys_test" tests/phys_test.c -lm
     mkdir -p build/phys_demo
     run "PHYS: stability C-1..G9 over the parameter corners, worst-case cost against PHASE WIRE, demos" "$OUT/phys_test" build/phys_demo
@@ -356,7 +357,7 @@ if [ -f build/gen/felucca_tables.h ]; then
             build/slice_demo/loop build/slice_demo
     else
         echo "== SLICE: build/ was made with FELUCCA_SLICE=0 (no BREAK); run ./build.sh without it first"
-        fail=1
+        fail=1; failed="$failed\n  SLICE (no BREAK)"
     fi
     # SAMPLE's PIANO (1.2): the lo-fi material, SLICE's own middle C, the 1.0 .. 1.1.5 PIANO as a user slot (PIANO HD)
     if grep -q '^    {"PIANO", 0, 2},' build/gen/felucca_samples.h; then
@@ -438,4 +439,4 @@ else
         node web/emu/emu_test.mjs build/emu/felucca.wasm "$OUT/emu_native.f32"
 fi
 
-[ $fail -eq 0 ] && echo "ALL HOST TESTS PASSED" || { echo "HOST TESTS FAILED"; exit 1; }
+[ $fail -eq 0 ] && echo "ALL HOST TESTS PASSED" || { printf "HOST TESTS FAILED:%b\n" "$failed"; exit 1; }
