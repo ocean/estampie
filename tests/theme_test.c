@@ -145,9 +145,9 @@ int main(int argc, char **argv)
     palette_set(6);
     cv_begin(3, 1, T_BG); cv_text(0, 0, &probe, "A", T_THEME);
     assert(swap16(cv_px[1]) != green);
-    /* fonts: VT323 S 17 px, M 20 px, L 36 px (GHOULBOX; Felucca: Inter Tight 12 / 15 / 28); tabular digits; the
-     * ellipsis; L has capitals only */
-    assert(AF_S.h == 18 && AF_S.asc == 13 && AF_M.h == 20 && AF_M.asc == 15 && AF_L.h == 37 && AF_L.asc == 28);
+    /* fonts: VT323 S 17 px, Alagard M 16 px and L 32 px (ESTAMPIE; GHOULBOX: VT323 throughout; Felucca: Inter Tight
+     * 12 / 15 / 28); tabular digits; the ellipsis; L has capitals only */
+    assert(AF_S.h == 18 && AF_S.asc == 13 && AF_M.h == 18 && AF_M.asc == 15 && AF_L.h == 33 && AF_L.asc == 29);
     assert(text_w(&AF_M, "0000") == text_w(&AF_M, "1111") && text_w(&AF_S, "1.25") == text_w(&AF_S, "8.75"));
     assert(glyph(&AF_S, (uint8_t)ELLIPSIS) != glyph(&AF_S, '?') && glyph(&AF_M, (uint8_t)ELLIPSIS) != glyph(&AF_M, '?'));
     assert(text_w(&AF_L, "abc") == text_w(&AF_L, "ABC"));

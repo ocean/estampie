@@ -1248,7 +1248,7 @@ static void track_defaults(track_t *t)
     track_defaults_steps(t);
 }
 
-/* GHOULBOX: power-on scene s (engines.c GB_SCENES; one out of range, from a later version, plays DUNGEON): the globals'
+/* GHOULBOX: power-on scene s (engines.c GB_SCENES; one out of range, from a later version, plays the first): the globals'
  * defaults, each part's sound and pattern at 1/8, the scene's tempo, HALL and TAPE (main.c felucca_init) */
 static void gb_scene_load(uint32_t s)
 {

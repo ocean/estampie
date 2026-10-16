@@ -2174,7 +2174,7 @@ static int test_roll(void)
     turn(EN_K4, 1); frame(); frame(); frame();
     memcpy(roll_shot, host_screen, sizeof roll_shot);
     ui.force = 1; ui_draw();                       /* (snaps: the static render) */
-    ok = roll_diff(STRIP(3), 0) == 0 && roll_diff(STRIP(3), 1) > 20u && !ui.roll[3].from[0];
+    ok = roll_diff(STRIP(3), 0) == 0 && roll_diff(STRIP(3), 1) > 10u && !ui.roll[3].from[0];   /* (the 1 moving: 18 px in Alagard) */
     bad += check("roll: a mid-roll frame differs from the static render inside the value strip only", ok);
 
     /* BPM 120 -> 121 (SELECT): the header rolls, the digits 1 and 2 stay; the BPM card too (no unit:
@@ -9625,48 +9625,52 @@ static int test_sample_values(void)
 static int test_scenes(void)
 {
     static const char *const WANT[GB_NSCENE][NTRK] = {
-        {"HURDY GURDY", "CRYPT PAD", "MONKS", "DRONE WHEEL"},
+        {"TROTTO GURDY", "LUTE", "TENOR RECORD", "DANCE KIT"},
         {"LOW DRONE", "CRYPT CHOIR", "CAVE WIND", "TOMB DRUMS"},
         {"DANCE GURDY", "DUNGEON HARP", "LUTE", "CRYPT KIT"},
         {"CATHEDRAL", "MONKS", "TENOR RECORD", "VIELLE"},
         {"HURDY GURDY", "CRYPT PAD", "MONKS", "DRONE WHEEL"},
+        {"HURDY GURDY", "CRYPT PAD", "MONKS", "DRONE WHEEL"},
     };
+    /* PATTERNS parts at 1/8; TROTTO's are ESTAMPIE phrases (ES_PHR) at their own division, BLANK has none */
     static const char *const PAT[GB_NSCENE][NTRK] = {
-        {"BALLAD", "DIRGE", "CHANT", "PEDAL"}, {"PEDAL", "DIRGE", "PEDAL", "TOMBBEAT"},
-        {"BALLAD", "ARPEGGIO", "MARCH", "TOMBBEAT"}, {"DIRGE", "CHANT", "LAMENT", "ANTIPHON"}, {0, 0, 0, 0},
+        {0, 0, 0, 0}, {"PEDAL", "DIRGE", "PEDAL", "TOMBBEAT"}, {"BALLAD", "ARPEGGIO", "MARCH", "TOMBBEAT"},
+        {"DIRGE", "CHANT", "LAMENT", "ANTIPHON"}, {0, 0, 0, 0}, {"BALLAD", "DIRGE", "CHANT", "PEDAL"},
     };
-    static const int16_t BPM[GB_NSCENE] = {72, 60, 96, 66, 72};
+    static const int16_t BPM[GB_NSCENE] = {112, 60, 96, 66, 72, 72};
     int bad = 0, ok = 1;
     uint32_t s, i, k, row = MI_SCENE;
     for (s = 0; s < GB_NSCENE; s++) {
         ui_power_on();
         gb_scene_load(s);
-        ok &= song.g[G_BPM] == BPM[s] && song.g[G_RTYPE] == 2 && ui.home;
+        ok &= song.g[G_BPM] == BPM[s] && song.g[G_RTYPE] == (s == 0u ? 0 : 2) && ui.home;   /* (TROTTO: ROOM) */
         for (i = 0; i < NTRK; i++) {
             const track_t *t = &trk[i];
+            uint32_t notes = 0;
             ok &= t->engine == t->eng_req && !strcmp(ENGINES[t->engine]->presets[t->preset].name, WANT[s][i]) &&
-                  t->p[P_SDIV] == 1;
+                  t->p[P_SDIV] == (s == 0u ? 4 : 1);
+            for (k = 0; k < NSTEP; k++)
+                notes += t->step[k].n || t->step[k].hit;
             if (PAT[s][i])
                 ok &= pat_last[i] && !strcmp(PATTERNS[pat_last[i] - 1u].name, PAT[s][i]) && pat_sig[i] == steps_sig(t);
             else
-                for (k = 0; k < NSTEP; k++)
-                    ok &= !t->step[k].n && !t->step[k].hit;
+                ok &= s == 0u ? notes > 0u : notes == 0u;     /* (TROTTO: its phrase; BLANK: nothing) */
         }
     }
-    bad += check("1.3 SCENE: DUNGEON CRYPT TAVERN CHAPEL BLANK load their sounds, patterns (BLANK: none), tempo, HALL", ok);
+    bad += check("1.3 SCENE: TROTTO CRYPT TAVERN CHAPEL BLANK DUNGEON load their sounds, phrases or patterns, tempo, reverb", ok);
     ui_power_on();
     ok = MI_TAB[row] == MTAB_SYSTEM && MI_TAB[row + 1u] == MTAB_SYSTEM && row + 1u == MI_SERIAL &&
          menu_n(row) == GB_NSCENE && str_eq(MI_NAME[row], "SCENE") && menu_get(row) == 0 &&
-         str_eq(menu_vname(row, 0), "DUNGEON") && str_eq(menu_vname(row, 4), "BLANK");
+         str_eq(menu_vname(row, 0), "TROTTO") && str_eq(menu_vname(row, 4), "BLANK") && str_eq(menu_vname(row, 5), "DUNGEON");
     menu_put(row, 2);
     ok &= menu_get(row) == 2 && ui_scene == 2 && menu_step(row, 1) == 3 && menu_step(row, -1) == 1;
-    menu_put(row, 4);
-    ok &= menu_step(row, 1) == 4;                              /* (stops at the end) */
-    ui_scene = 200;                                            /* a value from a later version: DUNGEON */
+    menu_put(row, 5);
+    ok &= menu_step(row, 1) == 5;                              /* (stops at the end) */
+    ui_scene = 200;                                            /* a value from a later version: the first, TROTTO */
     ok &= menu_get(row) == 0;
     gb_scene_load(ui_scene);
-    ok &= !strcmp(ENGINES[trk[0].engine]->presets[trk[0].preset].name, "HURDY GURDY") && song.g[G_BPM] == 72;
-    bad += check("1.3 SCENE: MENU > SYSTEM row (5 names, stops at the ends); a later version's value plays DUNGEON", ok);
+    ok &= !strcmp(ENGINES[trk[0].engine]->presets[trk[0].preset].name, "TROTTO GURDY") && song.g[G_BPM] == 112;
+    bad += check("1.3 SCENE: MENU > SYSTEM row (6 names, stops at the ends); a later version's value plays TROTTO", ok);
     {   /* the row redraws at once when its value changes (ui_menu.c: the menu signature holds ui_scene) */
         static uint16_t before[240 * 240];
         ui_power_on();
