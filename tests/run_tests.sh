@@ -75,11 +75,11 @@
 #                   settings and levels), no offset, level, stereo, echo density / ringing / flutter against ROOM, SPRING
 #                   and COMB8 (8 combs + 4 allpasses, host only, for comparison), model changes both ways, cost; the
 #                   listening set in build/reverb_demo/ (drums, pluck, piano: dry and each model at SIZE 40 / 90 / 127).
-# SLICE (tests/slice_test.c): slice tables, AUTO onsets of a user-slot loop, reverse, keys, modes, the MAN slices
+# SLICE (tests/slice_test.c, built with FELUCCA_SLICE=1: kept in the tree, not in ESTAMPIE's firmware): slice tables, AUTO onsets of a user-slot loop, reverse, keys, modes, the MAN slices
 #                   (SLICES page) and their store in the slot (src/slice_store.c); the presets and the loop;
 #                   demos in build/slice_demo/.
 # SAMPLE (tests/sample_test.c, 1.2): PIANO's lo-fi material (2 zones at 11,025 Hz, split at 60): pitch over the keyboard
-#                   (YIN), 1.6 s at a root, the aliases, GRAIN SRC 0; SLICE's PIANO keeps 1.0.4's middle C; the PIANO of
+#                   (YIN), 1.6 s at a root, the aliases (SAX's: FLUTE), GRAIN SRC 0; SLICE's PIANO (FELUCCA_SLICE=1) keeps 1.0.4's middle C; the PIANO of
 #                   1.0 .. 1.1.5 as a user slot (gen_samples.py --user-slot: build/piano_hd/PIANO_HD): valid, in tune.
 # INPUT (tests/input_test.c): the key / button debounce of hal/fm1_input.h against the TIMER5 scan and bouncing
 #                   contacts: a press within 2 scans (<= 2.3 ms), one note per bouncy press, no early or hanging
@@ -347,16 +347,18 @@ if [ -f build/gen/felucca_tables.h ]; then
     $CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/fm6_test" tests/fm6_test.c -lm
     mkdir -p build/fm6_demo
     run "FM6: algorithms, envelopes, retrigger, DC, clipping, macros, patch formats, voices, cost, demos" "$OUT/fm6_test" build/fm6_demo
-    # SLICE is in the standard build (firmware/src/core.h): its test always runs (after #22 by andreahaku)
-    if grep -q '^#define SLC_BREAK_BPM ' build/gen/felucca_samples.h; then
-        mkdir -p build/slice_demo
+    # SLICE is kept in the tree but not built (ESTAMPIE: firmware/src/core.h FELUCCA_SLICE 0): its tests build it
+    # with FELUCCA_SLICE=1 against a sample header of its own (build/gen_slice/: the sets and its BREAK and PIANO)
+    mkdir -p build/gen_slice build/slice_demo
+    FELUCCA_SLICE=1 python3 tools/gen_samples.py build/gen_slice/felucca_samples.h >/dev/null
+    if grep -q '^#define SLC_BREAK_BPM ' build/gen_slice/felucca_samples.h; then
         python3 tests/slice_loop.py build/slice_demo/loop
         python3 tools/fm1_sample_upload.py build LOOP build/slice_demo/loop build/slice_demo/loop.wav:60 >/dev/null
-        $CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/slice_test" tests/slice_test.c -lm
-        run "SLICE: tables, onsets, reverse, keys, modes, MAN slices and their store, demos" "$OUT/slice_test" \
-            build/slice_demo/loop build/slice_demo
+        $CC -O2 -w -DFELUCCA_SLICE=1 -Ibuild/gen_slice -Ibuild/gen -Ifirmware/src -o "$OUT/slice_test" tests/slice_test.c -lm
+        run "SLICE (kept in the tree, built here with FELUCCA_SLICE=1): tables, onsets, reverse, keys, modes, MAN slices and their store, demos" \
+            "$OUT/slice_test" build/slice_demo/loop build/slice_demo
     else
-        echo "== SLICE: build/ was made with FELUCCA_SLICE=0 (no BREAK); run ./build.sh without it first"
+        echo "== SLICE: no BREAK in build/gen_slice/felucca_samples.h"
         fail=1; failed="$failed\n  SLICE (no BREAK)"
     fi
     # SAMPLE's PIANO (1.2): the lo-fi material, SLICE's own middle C, the 1.0 .. 1.1.5 PIANO as a user slot (PIANO HD)
@@ -364,7 +366,10 @@ if [ -f build/gen/felucca_tables.h ]; then
         mkdir -p build/sample_demo build/piano_hd
         python3 tools/gen_samples.py --user-slot PIANO "PIANO HD" build/piano_hd/PIANO_HD >/dev/null
         $CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/sample_test" tests/sample_test.c -lm
-        run "SAMPLE: PIANO (2 zones at 11,025 Hz: split, pitch, length, GRAIN), SLICE's PIANO, the PIANO HD slot" "$OUT/sample_test" \
+        run "SAMPLE: PIANO (2 zones at 11,025 Hz: split, pitch, length, GRAIN), FLUTE's alias, the PIANO HD slot" "$OUT/sample_test" \
+            build/piano_hd/PIANO_HD build/sample_demo
+        $CC -O2 -w -DFELUCCA_SLICE=1 -Ibuild/gen_slice -Ibuild/gen -Ifirmware/src -o "$OUT/sample_test_slice" tests/sample_test.c -lm
+        run "SAMPLE with FELUCCA_SLICE=1: SLICE's PIANO keeps 1.0.4's middle C, PIANO HD's is the same" "$OUT/sample_test_slice" \
             build/piano_hd/PIANO_HD build/sample_demo
     else
         echo "== skip SAMPLE's PIANO (no CC0 library: assets/samples-cc0, tools/fetch_cc0.py)"

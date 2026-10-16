@@ -135,7 +135,6 @@ static const struct { uint8_t e; const char *name; } GB_HIDDEN[] = {
     {0, "SAW LEAD"}, {0, "SQR BASS"}, {0, "ACID"}, {0, "SINE KEY"}, {0, "RAVE"}, {0, "PLUCK"}, {0, "BRASS"},
     {2, "BRASS"}, {2, "ORGAN"}, {2, "RESO"}, {2, "BELL"}, {2, "WIRE"},
     {3, "PULSE LD"}, {3, "WAVE BASS"}, {3, "ARP 8BIT"}, {3, "WAVE LEAD"}, {3, "STEP LEAD"},
-    {4, "PIANO"}, {4, "FLUTE"}, {4, "SAX"},
     {5, "VOX LEAD"}, {5, "WOW BASS"}, {5, "WHISPER"},
     {6, "FAT BASS"}, {6, "ARP LEAD"}, {6, "SYNC LEAD"}, {6, "RING BELL"},
     {7, "JAZZ PERC"}, {7, "GOSPEL"}, {7, "ROCK DRIVE"},
@@ -145,7 +144,9 @@ static const struct { uint8_t e; const char *name; } GB_HIDDEN[] = {
     {10, "DRUM KIT"},
     {11, "WIND"}, {11, "RAIN"}, {11, "ARCADE"}, {11, "METAL"},
     {12, "TINE EP"}, {12, "FM BASS"}, {12, "BRASS"}, {12, "MARIMBA"}, {12, "ORGAN"}, {12, "PLUCK"},
+#if FELUCCA_SLICE
     {13, "CHOP"}, {13, "STUTTER"},
+#endif
 };
 
 /* the engines one can pick (engine 1 only with FELUCCA_FM4), in ENGINE_ORDER: eng_ok(e), the n-th of them

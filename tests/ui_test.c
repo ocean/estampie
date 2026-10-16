@@ -488,9 +488,10 @@ static int test_sound_loads(void)
     project_load(1);
     bad += check("a project load drops the copy and takes none", undo.trk == 0 && undo_depth == 0);
     ui_power_on();
-    bad += check("SAMPLE factory presets: 1.0's four (PIANO .. SAX), PERC's alias, then GHOULBOX's four (BOWED PSALT .. FOLK HARP)",
+    bad += check("SAMPLE factory presets: 1.0's four (PIANO .. FLUTE's alias, once SAX), PERC's alias, then GHOULBOX's four",
                  ENGINES[4]->npresets == 9u && str_eq(ENGINES[4]->presets[0].name, "PIANO") &&
-                 str_eq(ENGINES[4]->presets[3].name, "SAX") && str_eq(ENGINES[4]->presets[5].name, "BOWED PSALT") &&
+                 str_eq(ENGINES[4]->presets[3].name, "FLUTE") && preset_hidden(ENGINES[4], 3) &&
+                 !preset_hidden(ENGINES[4], 0) && !preset_hidden(ENGINES[4], 2) && str_eq(ENGINES[4]->presets[5].name, "BOWED PSALT") &&
                  str_eq(ENGINES[4]->presets[8].name, "FOLK HARP") && preset_hidden(ENGINES[4], 4));
     {   /* TRANH (SET 1, preset 1) is gone: both are PIANO aliases, kept for old data, never offered */
         const param_desc_t *sd = &ENGINES[4]->edit[0];
@@ -507,13 +508,13 @@ static int test_sound_loads(void)
         apply_preset_to(TSEL, 1);
         bad += check("SAMPLE: old SET 1 / preset 1 (TRANH) play PIANO; browsing and knobs skip them",
                      SMP_SETS[1].z0 == SMP_SETS[0].z0 && SMP_SETS[1].nz == SMP_SETS[0].nz && pos == pos0 &&
-                     shown == 4u && TSEL->preset == 0u && TSEL->p[P_E0] == 0 &&   /* (GHOULBOX 1.1: its four CC0 presets) */
+                     shown == 6u && TSEL->preset == 0u && TSEL->p[P_E0] == 0 &&   /* (PIANO, FLUTE and GHOULBOX 1.1's four CC0 sets) */
                      str_eq(sd->names[1], "PIANO") && enum_step(sd, 0, 1) == 2 && enum_step(sd, 2, 1) == 0 &&
                      enum_step(sd, 1, 2) == 2 && enum_orig(sd, 1) == 0 && enum_orig(sd, 5) == 5 &&
                      enum_orig(&ENGINES[8]->edit[0], 1) == 0);
         bad += check("SAMPLE / GRAIN SET 4 (PERC, retired): a PIANO alias, knobs skip it, USR1..3 stay 5..7",
                      str_eq(sd->names[SMP_SET_PERC], "PIANO") && enum_orig(sd, SMP_SET_PERC) == 0 &&
-                     enum_step(sd, 3, 4) == 5 && enum_step(sd, 5, 4) == 3 && str_eq(sd->names[5], "USR1") &&
+                     enum_step(sd, 3, 4) == 5 && enum_step(sd, 5, 4) == 2 && enum_orig(sd, 3) == 2 && str_eq(sd->names[5], "USR1") &&
                      str_eq(sd->names[7], "USR3") && sd->max == 11 &&
                      enum_orig(&ENGINES[8]->edit[0], SMP_SET_PERC) == 0 && SMP_SETS[SMP_SET_PERC].z0 == SMP_SETS[0].z0);
     }
@@ -4124,17 +4125,17 @@ static int test_quick_layers(void)
         set_engine_of(TSEL, ENGI_SAMPLE); go_home(); frame();
         eng_list_pos(&tot);
         btn_down(B_EDIT); frame();
-        c0 = eng_list_pos(&tot);                        /* (GHOULBOX 1.1: SAMPLE's kept presets are its four CC0 sets) */
-        ok = c0 == 0u && tot == 4u && TSEL->preset == 5u;
-        for (n = 0; n < 8u; n++) {                      /* round both ways: the four, never the aliases (1, 4) */
-            turn(EN_K2, n < 4u ? 1 : -1);
+        c0 = eng_list_pos(&tot);                        /* (SAMPLE's kept presets: PIANO, FLUTE, the four CC0 sets) */
+        ok = c0 == 0u && tot == 6u && TSEL->preset == 0u;
+        for (n = 0; n < 12u; n++) {                     /* round both ways: the six, never the aliases (1, 3, 4) */
+            turn(EN_K2, n < 6u ? 1 : -1);
             seen |= 1u << TSEL->preset;
-            alias |= TSEL->preset == 1u || TSEL->preset == 4u;
+            alias |= TSEL->preset == 1u || TSEL->preset == 3u || TSEL->preset == 4u;
         }
         (void)c1; (void)c2;
-        ok &= !alias && seen == (0xFu << 5) && TSEL->eng_req == ENGI_SAMPLE;
+        ok &= !alias && seen == (0x5u | 0xFu << 5) && TSEL->eng_req == ENGI_SAMPLE;
         btn_up(B_EDIT); frame();
-        bad += check("  #124 SAMPLE (GHOULBOX 1.1): KNOB 2 steps its four CC0 presets both ways, never an alias", ok);
+        bad += check("  #124 SAMPLE: KNOB 2 steps its six presets both ways, never an alias (1, 3: once SAX, 4)", ok);
     }
     song.playing = 0;
     lay_combo(B_EDIT, white(LY_INIT));
@@ -9478,8 +9479,9 @@ static int test_edit_quick_actions(void)
     return bad;
 }
 
-/* GHOULBOX: the presets the owner retired (engines.c GB_HIDDEN, by name) and the engines left without any (SAMPLE,
- * DRUM, SLICE): not browsed, not picked, but every stored number still loads its sound */
+/* GHOULBOX: the presets the owner retired (engines.c GB_HIDDEN, by name) and the engines left without any (DRUM,
+ * SLICE): not browsed, not picked, but every stored number still loads its sound. ESTAMPIE offers PIANO and FLUTE
+ * again (SAX is FLUTE's alias) */
 static int test_hidden_presets(void)
 {
     static const char *const KEEP[] = {"CRYPT PAD", "MONKS", "HURDY GURDY", "FRENCH HORN", "SOFT PAD", "FULL ORGAN",
@@ -9493,26 +9495,26 @@ static int test_hidden_presets(void)
             ;
         if (k == en->npresets) { printf("  no %s preset %s\n", en->name, GB_HIDDEN[i].name); ok = 0; }
     }
-    bad += check("hidden presets: 54 names (PIANO covers SAMPLE's two), each one a real preset",
-                 ok && NELEM(GB_HIDDEN) == 54u);
+    bad += check("hidden presets: 49 names (+ SLICE's 2 with FELUCCA_SLICE=1), each one a real preset",
+                 ok && NELEM(GB_HIDDEN) == 49u + 2u * FELUCCA_SLICE);
     preset_all_pos(&total);
-    ok = total == 62u + (FELUCCA_FM4 ? ENGINES[ENGI_DIGITAL]->npresets : 0u);   /* (+ DIGITAL's, built in; 1.1: + 4 CC0, BAGPIPE) */
+    ok = total == 64u + (FELUCCA_FM4 ? ENGINES[ENGI_DIGITAL]->npresets : 0u);   /* (+ DIGITAL's, built in; 1.1: + 4 CC0, BAGPIPE) */
     for (i = 0; i < total; i++) {
         e = preset_all_at(i, &k);
         ok &= e < NENGINES && !preset_hidden(ENGINES[e], k);
         for (uint32_t j = 0; j < NELEM(KEEP); j++)
             shown += str_eq(ENGINES[e]->presets[k].name, KEEP[j]);
     }
-    bad += check("hidden presets: the PRESETS list holds the 62 kept (ESTAMPIE: + TROTTO GURDY, DANCE KIT, PROCESSION), none hidden", ok && shown >= NELEM(KEEP));
-    ok = NENG_SHOWN == 13u + FELUCCA_FM4 && eng_ok(ENGI_SLICE);
+    bad += check("hidden presets: the PRESETS list holds the 64 kept (ESTAMPIE: + TROTTO GURDY, DANCE KIT, PROCESSION, PIANO, FLUTE), none hidden", ok && shown >= NELEM(KEEP));
+    ok = NENG_SHOWN == 13u + FELUCCA_FM4 && eng_ok(ENGI_SLICE) == FELUCCA_SLICE;
     for (i = 0, k = 0; i < NENG_SHOWN; i++) {
         ok &= eng_vis(i) != ENGI_SLICE;
         k |= eng_vis(i) == ENGI_SAMPLE;
     }
-    bad += check("hidden engines: SLICE not offered, still playable; SAMPLE (1.1) and DRUM (1.2) offered again (13 engines)", ok && k);
+    bad += check("hidden engines: SLICE not offered (ESTAMPIE: not built either); SAMPLE (1.1) and DRUM (1.2) offered again (13 engines)", ok && k);
     select_engine(ENGI_SAMPLE);
-    bad += check("1.1: picking SAMPLE loads BOWED PSALT (its first kept preset), SET 8",
-                 str_eq(ENGINES[ENGI_SAMPLE]->presets[TSEL->preset].name, "BOWED PSALT") && TSEL->p[P_E0] == 8);
+    bad += check("picking SAMPLE loads PIANO (its first kept preset: ESTAMPIE offers it again), SET 0",
+                 str_eq(ENGINES[ENGI_SAMPLE]->presets[TSEL->preset].name, "PIANO") && TSEL->p[P_E0] == 0);
     {
         const param_desc_t *sd = &ENGINES[ENGI_SAMPLE]->edit[0];
         int32_t v = 8, seen[6], n;
@@ -9524,9 +9526,9 @@ static int test_hidden_presets(void)
         bad += check("1.1: GURDY has BAGPIPE, browsable", k < ENGINES[ENGI_GURDY]->npresets && !preset_hidden(ENGINES[ENGI_GURDY], k));
         {   /* review: an old GRAIN sound on SRC 1 or 4 (aliases, at the order's end): a turn either way leaves it */
             const param_desc_t *gd = &ENGINES[8]->edit[0];
-            bad += check("1.1: GRAIN SRC on an alias (1, 4): turning right or left moves to a real set",
-                         param_turn(gd, 1, 1) == 3 && param_turn(gd, 4, 1) == 3 && param_turn(gd, 1, -1) == 3 &&
-                         param_turn(gd, 4, -1) == 3);
+            bad += check("1.1: GRAIN SRC on an alias (1, 3, 4): turning right or left moves to a real set",
+                         param_turn(gd, 1, 1) == 2 && param_turn(gd, 4, 1) == 2 && param_turn(gd, 1, -1) == 2 &&
+                         param_turn(gd, 4, -1) == 2);
         }
         {   /* 1.2: LOW DRONE (VOICE) and SHAWM (TRIO), browsable */
             uint32_t a2, b2;
@@ -9566,7 +9568,8 @@ static int test_hidden_presets(void)
         bad += check("1.2: patterns 18..21 MARCH LAMENT ARPEGGIO ANTIPHON, after 1.0's (none renumbered)", NPATTERNS >= 21u &&
                      str_eq(PATTERNS[13].name, "DIRGE") && str_eq(PATTERNS[16].name, "PEDAL") && str_eq(PATTERNS[17].name, "MARCH") &&
                      str_eq(PATTERNS[18].name, "LAMENT") && str_eq(PATTERNS[19].name, "ARPEGGIO") && str_eq(PATTERNS[20].name, "ANTIPHON"));
-        bad += check("1.1: the SET knob never stops on an alias (1, 4)", param_turn(sd, 3, 1) == 3 && param_turn(sd, 3, 2) == 3 &&
+        bad += check("1.1: the SET knob never stops on an alias (1, 3, 4)", param_turn(sd, 2, 1) == 2 && param_turn(sd, 2, 2) == 2 &&
+                     param_turn(sd, 3, 1) == 2 &&
                      param_turn(sd, 0, 1) == 2 && param_turn(sd, 2, -1) == 0);
     }
     select_engine(0);

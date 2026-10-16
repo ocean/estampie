@@ -36,8 +36,6 @@ dv_cym_run 67
 dv_out 35
 dv_metal_mix 16
 slicer_track 632
-slice_render 453
-slc_rev 120
 fm1_alnk0_irq 41327
 fm1_timer5_irq 618
 usb_poll 26037

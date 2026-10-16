@@ -81,8 +81,9 @@ int main(void)
     }
     printf("sets: the four use %u B of flash\n", bytes);
     check("the four fit their budget (<= 130 KB)", bytes <= 130u * 1024u);
-    check("1.0's values unchanged: PIANO 0, FLUTE 2, SAX 3, USR1 5",
-          str_eq(SMP_ALL_NAMES[0], "PIANO") && str_eq(SMP_ALL_NAMES[2], "FLUTE") && str_eq(SMP_ALL_NAMES[3], "SAX") &&
+    check("1.0's values unchanged: PIANO 0, FLUTE 2, 3 (once SAX) FLUTE's alias, USR1 5",
+          str_eq(SMP_ALL_NAMES[0], "PIANO") && str_eq(SMP_ALL_NAMES[2], "FLUTE") && str_eq(SMP_ALL_NAMES[3], "FLUTE") &&
+          SMP_SET_ORIG[3] == 2u &&
           str_eq(SMP_ALL_NAMES[5], "USR1") && smp_set_at(2) == 2u);
     puts(bad ? "SAMPLE SETS TEST FAILED" : "sample sets passed");
     return bad != 0;

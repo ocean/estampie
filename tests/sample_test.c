@@ -5,9 +5,11 @@
  * 1. PIANO (SET 0; 1 and 4 its aliases) is PIANO_LO (tools/gen_samples.py): two one-shot zones at 11,025 Hz (roots
  *    48 and 72, split at 60), 1.6 s each; SAMPLE plays the right zone, at the note's pitch (YIN on the render) over
  *    the keyboard, for 1.6 s at a root; GRAIN's SRC 0 plays it. Renders into DEMO_DIR.
- * 2. SLICE's PIANO keeps the middle C zone of 1.0.4 (a copy of its own: PIANO_LO has none).
+ *    SAX (SET 3) is an alias of FLUTE since ESTAMPIE retired it.
+ * 2. SLICE's PIANO keeps the middle C zone of 1.0.4 (a copy of its own: PIANO_LO has none). Only with FELUCCA_SLICE=1
+ *    (run_tests.sh builds this test both ways; ESTAMPIE's firmware has no SLICE).
  * 3. PIANO HD (PIANO_HD.hdr / .bin: gen_samples.py --user-slot PIANO "PIANO HD"), the 5-zone PIANO of 1.0 .. 1.1.5 as
- *    a user slot: valid in USR1, its middle C zone the same ADPCM as SLICE's PIANO (1.0.4's), at the note's pitch.
+ *    a user slot: valid in USR1, at the note's pitch; with SLICE, its middle C zone the same ADPCM as SLICE's PIANO.
  *    (gen_samples.py --user-slot checks every zone against the set as built from its own files; with that set built
  *    in, a USR1 of it rendered bit for bit as SET 0.) */
 #include <stdint.h>
@@ -173,11 +175,11 @@ int main(int argc, char **argv)
         const smp_set_t *s = &SMP_SETS[0];
         const smp_zone_t *z = &SMP_ZONES[s->z0];
         uint32_t bytes = (z[0].n + 1u) / 2u + (z[1].n + 1u) / 2u;
-        check("PIANO: SET 0, its aliases 1 and 4 the same zones; FLUTE 2, SAX 3, USR1..3 5..7; GHOULBOX's 4 sets 8..11",
+        check("PIANO: SET 0, its aliases 1 and 4 the same zones; FLUTE 2, its alias 3 (once SAX); USR1..3 5..7; 4 sets 8..11",
               SMP_NSETS == 9u && str_eq(SMP_SETS[0].name, "PIANO") && SMP_SETS[1].z0 == s->z0 && SMP_SETS[4].z0 == s->z0 &&
               SMP_SETS[1].nz == s->nz && SMP_SETS[4].nz == s->nz && str_eq(SMP_SETS[2].name, "FLUTE") &&
-              str_eq(SMP_SETS[3].name, "SAX") && str_eq(SMP_ALL_NAMES[5], "USR1") && str_eq(SMP_SETS[5].name, "PSALTERY") &&
-              ENG_SAMPLE.edit[0].max == 11);
+              str_eq(SMP_SETS[3].name, "FLUTE") && SMP_SETS[3].z0 == SMP_SETS[2].z0 && SMP_SET_ORIG[3] == 2u &&
+              str_eq(SMP_ALL_NAMES[5], "USR1") && str_eq(SMP_SETS[5].name, "PSALTERY") && ENG_SAMPLE.edit[0].max == 11);
         snprintf(m, sizeof m, "PIANO: 2 one-shot zones at 11,025 Hz, roots 48 / 72, keys 0-59 / 60-127, 1.6 s (%u B ADPCM)",
                  bytes);
         check(m, s->nz == 2u && z[0].rate == 16384u && z[1].rate == 16384u && z[0].root16 == 48 * 16 &&
@@ -203,9 +205,11 @@ int main(int argc, char **argv)
               zone == 1 && rms(FS / 2u, FS) > 100.0);
     }
 
+#if FELUCCA_SLICE
     /* 2: SLICE's PIANO, the 1.0.4 middle C zone, a copy of its own */
     check("SLICE PIANO: the 1.0.4 middle C zone (16537 samples at 22,050 Hz), data of its own after the sets",
           SLC_PIANO.len == 16537u && SLC_PIANO.rate == 32768u && SLC_PIANO.seg[0].off >= SMP_ZONES[7].off + SMP_ZONES[7].n / 2u);
+#endif
 
     /* 3: PIANO HD, the 5-zone PIANO of 1.0 .. 1.1.5 as a user slot */
     snprintf(path, sizeof path, "%s.hdr", argv[1]);
@@ -222,8 +226,10 @@ int main(int argc, char **argv)
         check("PIANO HD: USR1 holds 5 zones (roots 36 .. 84, 22,050 Hz, 0.75 s), 41 KB of a 79.5 KB slot",
               usr_nz[0] == 5u && usr_zone[0][0].root16 == 36 * 16 && usr_zone[0][4].root16 == 84 * 16 &&
               z->root16 == 60 * 16 && z->rate == 32768u && z->n == 16537u);
+#if FELUCCA_SLICE
         check("PIANO HD: its middle C zone is the ADPCM of SLICE's PIANO (1.0.4's), byte for byte",
               z->n == SLC_PIANO.len && !memcmp(&SMP_DATA[z->off], &SMP_DATA[SLC_PIANO.seg[0].off], (z->n + 1u) / 2u));
+#endif
         for (i = 0; i < sizeof NOTES; i++) {
             render(ENGI_SAMPLE, (int16_t)SMP_USR_V0, NOTES[i], 0, 0);   /* (GHOULBOX: USR1 is 5, its sets after USR3) */
             pitch_ok("PIANO HD (USR1)", NOTES[i]);

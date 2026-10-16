@@ -52,7 +52,7 @@ async function editorMock() {
   inp.onmidimessage = (e) => link.receive(e.data);
   const rq = async (r, o) => link.request(r, o);
   const info = E.parse[E.CMD.INFO](await rq(E.req.info()));
-  ok(info.nengines === 15 && info.engines[1] === "-" && info.engines[12] === "FM6" && info.engines[13] === "SLICE" && info.engines[14] === "GURDY"
+  ok(info.nengines === 15 && info.engines[1] === "-" && info.engines[12] === "FM6" && info.engines[13] === "-" && info.engines[14] === "GURDY"
  && info.engines[5] === "VOICE" && info.engines[6] === "TRIO" && info.engines[7] === "WHEEL" && info.engines[8] === "GRAIN" && info.engines[9] === "PHYS" && info.engines[10] === "DRUM" && info.engines[11] === "NOISE" && info.pcount === 112 && info.pe0 === 104 && info.engines[4] === "SAMPLE",
     "editor: INFO");
   let descs = 0;
@@ -161,7 +161,7 @@ async function editorMock() {
        E.engineOrder(info.engines)[1] === 12 && E.engineOrder(info.engines)[10] === 14 && E.engineOrder(info.engines)[12] === 10,
        "editor: engines listed FM6 second, DRUM last; SLICE not offered (indices kept)");
     ok(E.engineOrder(["ANALOG", "X", "-", "NOISE", "FM6"]).join() === "0,4,3,1", "editor: an unknown engine follows the known ones");
-    ok(E.engineOrder(["ANALOG", "DRUM", "SAMPLE", "SLICE"]).join() === "0,2,1", "editor: the engine GHOULBOX retired (SLICE) is not listed");
+    ok(E.engineOrder(["ANALOG", "DRUM", "SAMPLE", "-"]).join() === "0,2,1", "editor: a reserved engine (ESTAMPIE: SLICE, 13) is not listed");
     m.state.favorites[10][0] = m.state.favorites[12][0] = true;
     await rq(E.req.uiSet(3, 0));
     prefs = await E.readDevicePreferences(rq, info, names, prefs);
@@ -311,11 +311,11 @@ async function editorSamplePresets() {
   const names = E.parse[C.NAMES](await rq(E.req.names(4)));
   await rq(E.req.preset(4, 0));
   const set = E.parse[C.DESC](await rq(E.req.desc(0, info.pe0)));
-  ok(eq(names.names, ["PIANO", "PIANO", "FLUTE", "SAX", "PIANO", "BOWED PSALT", "REN ORGAN", "TENOR RECORD", "FOLK HARP"])
-    && eq(set.names.slice(0, 4), ["PIANO", "PIANO", "FLUTE", "SAX"]) && set.names[4] === "PIANO"
+  ok(eq(names.names, ["PIANO", "PIANO", "FLUTE", "FLUTE", "PIANO", "BOWED PSALT", "REN ORGAN", "TENOR RECORD", "FOLK HARP"])
+    && eq(set.names.slice(0, 4), ["PIANO", "PIANO", "FLUTE", "FLUTE"]) && set.names[4] === "PIANO"
     && eq(set.names.slice(5, 8), ["USR1", "USR2", "USR3"]) && eq(set.names.slice(8), ["PSALTERY", "RENORGAN", "RECORDER", "FOLKHARP"]),
-    "SAMPLE: TRANH and PERC removed, SET 1 and 4 kept as PIANO aliases, USR1..3 at 5..7; GHOULBOX 1.1's sets after them");
-  ok(E.aliasOf(names.names, 1) === 0 && E.aliasOf(names.names, 2) === 2 && E.aliasOf(set.names, 5) === 5 &&
+    "SAMPLE: TRANH and PERC removed, SET 1 and 4 kept as PIANO aliases, SAX's 3 as FLUTE's, USR1..3 at 5..7; GHOULBOX 1.1's sets after them");
+  ok(E.aliasOf(names.names, 1) === 0 && E.aliasOf(names.names, 2) === 2 && E.aliasOf(names.names, 3) === 2 && E.aliasOf(set.names, 5) === 5 &&
      E.aliasOf(set.names, 4) === 0, "SAMPLE: an entry named like an earlier one is an alias of it");
   const alias = E.parse[C.PRESET](await rq(E.req.preset(4, 1)));
   const setAlias = E.parse[C.SET](await rq(E.req.set(0, info.pe0, 1)));

@@ -10,7 +10,8 @@ The ADPCM state at the loop start is stored so loops restart exactly.
 
 Libraries:
   cc0        assets/samples-cc0/ (tools/fetch_cc0.py, Versilian Studios, CC0):
-             PIANO, FLUTE, SAX (set 1, once TRANH, and set 4, once PERC, are aliases of PIANO).
+             PIANO, FLUTE (set 1, once TRANH, and set 4, once PERC, are aliases of PIANO; set 3, once SAX,
+             is an alias of FLUTE: ESTAMPIE retired it for ~31 KB of flash).
              PIANO is reduced material since 1.2 (PIANO_LO: two of its recordings at 11,025 Hz,
              8-bit resolution, 1.6 s); the 5-zone PIANO of 1.0 .. 1.1.5 is a user-slot file now
              (--user-slot below: PIANO HD, installed into USR1..3 from the web editor)
@@ -66,11 +67,12 @@ CC0 = SRC / "assets" / "samples-cc0"
 TR = 22050                                   # stored sample rate
 
 # CC0 library: set -> kind ("oneshot" decaying, "sus" looped sustain, "kit" one sample per key)
-# Built-in sets (piano, flute, sax); the other slots of the 8 are for the user (USR1-3, loaded
+# Built-in sets (piano, flute); the other slots of the 8 are for the user (USR1-3, loaded
 # from the web editor). TRANH was removed (66 KB of flash); its index 1 stays, an alias of PIANO
 # ("alias": the set named). PERC (the GM kit) was removed (66 KB); its index 4 stays, an alias of
-# PIANO too (PERC_SLOT; its sounds load as the DRUM engine)
-CC0_SETS = [("PIANO", "oneshot"), ("PIANO", "alias"), ("FLUTE", "sus"), ("SAX", "sus"), ("PIANO", "alias"),
+# PIANO too (PERC_SLOT; its sounds load as the DRUM engine). ESTAMPIE removed SAX (31 KB); its
+# index 3 stays, an alias of FLUTE (the nearer sustained sound)
+CC0_SETS = [("PIANO", "oneshot"), ("PIANO", "alias"), ("FLUTE", "sus"), ("FLUTE", "alias"), ("PIANO", "alias"),
             # GHOULBOX 1.1: appended (data sets 5..8); their SET values follow USR1..3 (8..11: eng_sample.c smp_set_at)
             ("PSALTERY", "sus"), ("RENORGAN", "sus"), ("RECORDER", "sus"), ("FOLKHARP", "oneshot")]
 USR_V0 = 5                                   # eng_sample.c SMP_USR_V0: the SET value of USR1 (1.0's, fixed)
@@ -484,8 +486,9 @@ class Builder:
 
 
 def slice_on():
-    """the SLICE engine is built (src/core.h: on unless FELUCCA_SLICE=0)"""
-    return os.environ.get("FELUCCA_SLICE", "1") != "0"
+    """the SLICE engine is built (src/core.h: ESTAMPIE builds it only with FELUCCA_SLICE=1; tests/run_tests.sh
+    makes such a header in build/gen_slice/ for the SLICE tests)"""
+    return os.environ.get("FELUCCA_SLICE", "0") == "1"
 
 
 def input_key(have_cc0):
@@ -510,8 +513,9 @@ def main(out):
     if not have_cc0:
         print("samples: CC0 library not fetched (tools/fetch_cc0.py) - no SAMPLE sets")
     key = input_key(have_cc0)
+    cache = CACHE.with_suffix(".slice.cache") if slice_on() else CACHE   # one each: the tests build both
     try:
-        ck, summary, text = CACHE.read_text().split("\n", 2)
+        ck, summary, text = cache.read_text().split("\n", 2)
         if ck == key:
             Path(out).write_text(text)
             print(summary + " (cached)")
@@ -532,8 +536,8 @@ def main(out):
         b.slice_piano()                             # (the PIANO set's zone, or with PIANO_LO a copy after BREAK)
     text = b.header()
     Path(out).write_text(text)
-    CACHE.parent.mkdir(parents=True, exist_ok=True)
-    CACHE.write_text(f"{key}\n{b.summary()}\n{text}")
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    cache.write_text(f"{key}\n{b.summary()}\n{text}")
     print(b.summary())
 
 

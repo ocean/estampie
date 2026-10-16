@@ -16,7 +16,9 @@
  * the lanes start from rest as at power-on instead of running on (noise and phases: level within 0.5 dB, every band
  * within 1 dB; build/union_demo/drum_grain_drum_old.wav / _new.wav).
  * ESTAMPIE: the 66 sequences that reach DRUM's presets 3 and 4 (past its list before: DANCE KIT and PROCESSION now,
- * appended) recorded again; nothing else differs.
+ * appended) recorded again; nothing else differs. ESTAMPIE builds without SLICE: its sequences are left out, the
+ * others matched by name. Recorded again when SAX became FLUTE's alias: the 300 that play SAMPLE's preset 3 or
+ * GRAIN's GLITCH (SRC 3); nothing else differed.
  * env: GOLDEN_UPDATE=1 rewrites GOLDEN_FILE (only with a reason: a switch is to sound as it did). */
 #define main hostsim_main
 #include "hostsim.c"
@@ -66,6 +68,7 @@ static const uint32_t UE[] = {0 /* ANALOG */, ENGI_SAMPLE, 7 /* WHEEL */, 8 /* G
                               ENGI_GURDY                 /* (GHOULBOX: state outside the region) */
 };
 #define UNE (sizeof UE / sizeof UE[0])
+#define UNE_ALL 9u                               /* UE with SLICE: part 3's engine counts in it (never SLICE: k <= 2) */
 
 static uint64_t useq(const uint32_t *e, uint32_t n, uint32_t pi, uint32_t wait_ms)
 {
@@ -80,7 +83,7 @@ static uint64_t useq(const uint32_t *e, uint32_t n, uint32_t pi, uint32_t wait_m
         uh = 0xcbf29ce484222325ull;
         for (k = 0; k < n; k++) {
             uplay(&trk[0], e[k], pi + k, 60, wait_ms);
-            uplay(&trk[2], UE[(k + 3u) % UNE], pi, 55, 10);   /* another part busy alongside */
+            uplay(&trk[2], UE[(k + 3u) % UNE_ALL], pi, 55, 10);   /* another part busy alongside (UE[3..5]) */
         }
         urun(1000);
         if (write(fd[1], &uh, 8) != 8)
@@ -131,15 +134,20 @@ int main(int argc, char **argv)
         printf("union_test: no %s\n", gf);
         return 1;
     }
-    for (i = 0; i < n; i++) {
-        char ln[96];
-        if (!fgets(ln, sizeof ln, f))
-            ln[0] = 0;
-        ln[strcspn(ln, "\n")] = 0;
-        if (strcmp(ln, got[i])) {
-            if (bad < 20u)
-                printf("union_test: FAIL %s (expected %s)\n", got[i], ln);
-            bad++;
+    {   /* by name, not line: a build without an engine (ESTAMPIE: SLICE) checks the others against the same hashes */
+        static char want[4096][64];
+        uint32_t nw = 0, k;
+        while (nw < 4096u && fgets(want[nw], sizeof want[nw], f))
+            want[nw][strcspn(want[nw], "\n")] = 0, nw++;
+        for (i = 0; i < n; i++) {
+            size_t key = strrchr(got[i], ' ') - got[i] + 1u;    /* "A-B pP wW " */
+            for (k = 0; k < nw && strncmp(want[k], got[i], key); k++)
+                ;
+            if (k == nw || strcmp(want[k], got[i])) {
+                if (bad < 20u)
+                    printf("union_test: FAIL %s (expected %s)\n", got[i], k < nw ? want[k] : "none");
+                bad++;
+            }
         }
     }
     fclose(f);
