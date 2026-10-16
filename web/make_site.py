@@ -5,11 +5,12 @@
 
   CNAME                       GHOULBOX: the site's domain (GitHub Pages' custom domain; a publish must keep it)
   index.html                  redirect to the emulator (GHOULBOX; the installer when there is none)
+  favicon.ico                 ESTAMPIE: the pages' icon (also in webapp/art/, with the home-screen icons)
   firmware/felucca-VER.fwsc   the package (+ LICENSE, LICENSING.md, LICENSES/: the package holds
                               JieLi SDK files under Apache-2.0, see LICENSING.md)
   webapp/installer/index.html index_pkg.html, self-contained (fm1pkg.js, fm1ota.js, metadata inlined)
   webapp/editor/index.html    editor.html (+ fukiai.ttf, FUKIAI-LICENSE.txt)
-  webapp/art/                 ESTAMPIE: the crest the installer and editor show (tools/gen_emu_art.py, from build/gen)
+  webapp/art/                 ESTAMPIE: the crest the installer and editor show, and the icons (tools/gen_emu_art.py)
   webapp/emu/                 GHOULBOX: the browser emulator, build/emu as web/emu/build.sh made it (when it is there)
   src/                        not touched
 
@@ -95,9 +96,11 @@ def main(pkg, version, out):
     (out / "CNAME").write_text(DOMAIN, encoding="utf-8")   # (as GitHub writes it: no newline)
     home = "webapp/emu/" if (out / "webapp/emu/index.html").exists() else "webapp/installer/"   # GHOULBOX: the emulator
     (out / "index.html").write_text(                                                          # first, when it is there
-        '<!doctype html><meta charset="utf-8"><title>GHOULBOX</title>'
+        '<!doctype html><meta charset="utf-8"><title>ESTAMPIE</title>'
+        '<link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">'
         f'<meta http-equiv="refresh" content="0; url={home}">'
-        f'<a href="{home}">GHOULBOX</a>\n', encoding="utf-8")
+        f'<a href="{home}">ESTAMPIE</a>\n', encoding="utf-8")
+    shutil.copy(out / "webapp/art/favicon.ico", out / "favicon.ico")   # ESTAMPIE: where a browser looks for it first
     print(f"site: {out}: webapp/installer ({len(html)} B), webapp/editor, firmware/{name} ({len(raw)} B, {product})")
 
 
