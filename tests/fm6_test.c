@@ -192,7 +192,7 @@ static void envelopes(void)
         op_set(base, i, Z, LZ, 0, 1);
     setup(base, 0);
     trk_note_on(&trk[0], 60, 100);
-    n = (fm6_note_t *)ENG_MEM(0);
+    n = fm6_note_of(&trk[0], &trk[0].v[0]);
     e = &n->env[5];
     for (i = 0; i < FS * 2u / CTL; i++) {
         static int32_t b[CTL];
@@ -224,7 +224,7 @@ static void envelopes(void)
             op_set(base, 1, RR, L, 99, 1);
             setup(base, 0);
             trk_note_on(&trk[0], 60, 100);
-            for (tl[r] = 0; tl[r] < 2000u && ((fm6_note_t *)ENG_MEM(0))->env[5].ix == 0u; tl[r]++) {
+            for (tl[r] = 0; tl[r] < 2000u && fm6_note_of(&trk[0], &trk[0].v[0])->env[5].ix == 0u; tl[r]++) {
                 static int32_t b[CTL];
                 track_render(&trk[0], b, CTL);
             }

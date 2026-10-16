@@ -49,7 +49,7 @@ int main(void)
     }
     {   /* GHOULBOX 1.5 set RESTORE LAST OFF once (factory[15][28] bit 1); 2.1 sets it back ON once (bit 2), after it */
         persist_t q = original;
-        uint8_t all = GB_MIG_SERIAL | GB_MIG_RESTORE | GB_MIG_RESTORE_ON;
+        uint8_t all = GB_MIG_SERIAL | GB_MIG_RESTORE | GB_MIG_RESTORE_ON | GB_MIG_LEARN;   /* (ESTAMPIE: + MIDI LEARN's row) */
         q.favorites.factory[15][30] = 0;  q.favorites.factory[15][28] = GB_MIG_SERIAL;   /* GHOULBOX 1.4: ON, unmarked */
         assert(settings_import(&q, sizeof q) == 1 && !(favorites.factory[15][30] & GB_RESTORE_OFF) &&
                favorites.factory[15][28] == all);
@@ -64,6 +64,19 @@ int main(void)
         settings_fresh();                                                               /* a device never saved: ON */
         assert(!(favorites.factory[15][30] & GB_RESTORE_OFF) && favorites.factory[15][28] == all);
         puts("settings: GHOULBOX RESTORE LAST ON once in 2.1 (1.4 ON; 1.5..2.0 OFF -> ON; OFF chosen since kept; fresh ON)");
+    }
+    {   /* ESTAMPIE (the Felucca 1.6.1 merge): MIDI LEARN's table is favorites.factory[ML_ROW] (SLICE's row): a record
+         * without the GB_MIG_LEARN mark gets the row cleared once (stray favourite bits are no learned CCs); marked, the
+         * row is kept as saved (what was learned) */
+        persist_t q = original;
+        q.favorites.factory[15][28] = GB_MIG_SERIAL | GB_MIG_RESTORE | GB_MIG_RESTORE_ON;
+        memset(q.favorites.factory[ML_ROW], 0xA5, sizeof q.favorites.factory[ML_ROW]);
+        assert(settings_import(&q, sizeof q) == 1 && (favorites.factory[15][28] & GB_MIG_LEARN) &&
+               !favorites.factory[ML_ROW][0] && !memcmp(favorites.factory[ML_ROW], favorites.factory[ML_ROW] + 1, 31));
+        q = original; q.favorites.factory[15][28] = GB_MIG_SERIAL | GB_MIG_RESTORE | GB_MIG_RESTORE_ON | GB_MIG_LEARN;
+        q.favorites.factory[ML_ROW][0] = 0x14; q.favorites.factory[ML_ROW][1] = 0x2A;
+        assert(settings_import(&q, sizeof q) == 1 && favorites.factory[ML_ROW][0] == 0x14 && favorites.factory[ML_ROW][1] == 0x2A);
+        puts("settings: MIDI LEARN's row (SLICE's) cleared once in older records, kept once marked");
     }
     p = original;
     assert(settings_import(&p, sizeof p) == 1); settings_init();
@@ -224,8 +237,28 @@ int main(void)
         for (i = 14; i < 24u; i++) assert(favorites.factory[15][i] == (uint8_t)(i * 37u + 5u));
         p = original; assert(settings_import(&p, sizeof p) == 1);
     }
+    {   /* 1.5 MIDI LEARN's map (midi_control.c, favorites.factory[ML_ROW]: ESTAMPIE's row 13, SLICE's; Felucca's 14 is GURDY's here): 0 = nothing learned in every older
+         * record; kept as saved, byte for byte (an entry of a later firmware too), the rows around it untouched; an
+         * export / import round trip and importing twice change nothing */
+        persist_t q;
+        uint32_t i;
+        p = original; p.magic = 0x50455233u;
+        assert(settings_import(&p, sizeof p - sizeof p.favorites) == 2);
+        for (i = 0; i < 32u; i++) assert(favorites.factory[ML_ROW][i] == 0u);
+        p = original;
+        p.favorites.factory[15][28] |= GB_MIG_SERIAL | GB_MIG_RESTORE | GB_MIG_RESTORE_ON | GB_MIG_LEARN;   /* (marked: kept) */
+        for (i = 0; i < 32u; i++) p.favorites.factory[ML_ROW][i] = (uint8_t)(i * 29u + 3u);
+        assert(settings_import(&p, sizeof p) == 1);
+        for (i = 0; i < 32u; i++) assert(favorites.factory[ML_ROW][i] == (uint8_t)(i * 29u + 3u));
+        assert(!memcmp(favorites.factory[ML_ROW - 1u], original.favorites.factory[ML_ROW - 1u], 32) &&
+               !memcmp(favorites.factory[ML_ROW + 1u], original.favorites.factory[ML_ROW + 1u], 32));
+        memset(&q, 0, sizeof q); settings_export(&q); assert(!memcmp(&q.favorites, &p.favorites, sizeof q.favorites));
+        assert(settings_import(&q, sizeof q) == 1 && settings_import(&q, sizeof q) == 1);
+        for (i = 0; i < 32u; i++) assert(favorites.factory[ML_ROW][i] == (uint8_t)(i * 29u + 3u));
+        p = original; assert(settings_import(&p, sizeof p) == 1);
+    }
 #endif
     assert(settings_import(&p, 3) == 0 && settings_import(&p, -1) == 0);
     assert(settings_import(&p, sizeof p - 1) == 0);
-    puts("Settings: PER1/PER2/PER3 migration, palette ids, calibration, HOLD, LEDS, CLICK / COUNT-IN, the FX key map and independent feature preservation passed.");
+    puts("Settings: PER1/PER2/PER3 migration, palette ids, calibration, HOLD, LEDS, CLICK / COUNT-IN, the FX key map, MIDI LEARN's map and independent feature preservation passed.");
 }

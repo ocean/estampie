@@ -30,8 +30,8 @@
  * matrix's CUT), SHP the feedback, PIT the pitch (bend, glide, tune: the voice's pitch and fine factor).
  * Six voices per part at most (engine_t.poly).
  *
- * State: per voice an fm6_note_t (fm6_note, 244 bytes, a side array as PHYS's slots: voice_t.s[] is too
- * small), per part the patch, the patch through the macros (fm6_eff, rebuilt in the audio ISR when either
+ * State: per voice an fm6_note_t (in the part's engine memory as PHYS's slots, engines.c eng_mem; fm6_note_of:
+ * voice_t.s[] is too small), per part the patch, the patch through the macros (fm6_eff, rebuilt in the audio ISR when either
  * changes) and the LFO (once a block). */
 #include "fm6_core.c"
 #include "felucca_fm6.h"         /* tools/gen_fm6_patches.py: FM6_INIT, FM6_FACTORY[] */
@@ -46,7 +46,7 @@
 static uint8_t fm6_patch[NTRK][FP_SIZE + 1u];   /* the tracks' patches (main loop writes, then fm6_pgen) */
 static volatile uint8_t fm6_pgen[NTRK];          /* +1 after each write of fm6_patch[t] */
 static uint8_t fm6_slot[NTRK];                   /* the SLOT value last loaded (main loop); 0xFF = none */
-static uint8_t fm6_own[NTRK][FM6_PACKED];        /* the own patch while SLOT shows a factory one (fm6_poll) */
+static uint8_t fm6_own[NTRK][FM6_PACKED] __attribute__((section(".pool")));   /* the own patch while SLOT shows a factory one (fm6_poll) */
 static uint8_t fm6_own_ok;                       /* bit tr: fm6_own[tr] holds it */
 static struct {                                  /* the patch through the macros: the audio ISR's copy */
     uint8_t p[FP_SIZE + 1u];

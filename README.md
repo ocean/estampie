@@ -9,10 +9,14 @@ It is a fork of [GHOULBOX](https://github.com/jasonpersinger/ghoulbox-fm1-dungeo
 dungeon-synth firmware, which is itself a fork of [Felucca](https://github.com/hugelton/Felucca) by Leo Kuroshita
 (Hügelton Instruments). Nearly everything here is their work: Felucca's engines, sequencer, effects, editor,
 installer and tests, and GHOULBOX's hurdy-gurdy, medieval tunings, drone latch, dungeon sounds and browser synth.
-Thank you both. The browser emulator follows the design of Charles Vestal's
-[X0X](https://github.com/charlesvestal/fm1-x0x), and HOME's chord readout (the chord or notes you are playing) is
-ported from Kerem Kilic's [Melodee](https://github.com/keremimo/melodee), another Felucca fork. The full history of
-both projects is kept in this repository.
+Thank you both. ESTAMPIE is on Felucca 1.6.1 (Felucca's last feature release: Leo has stepped back from active
+development), with Felucca's ANALOG, LOFI, TRIO, WHEEL and NOISE engines from
+[Felucca-Engines](https://github.com/hugelton/Felucca-Engines) (MIT) in `firmware/engines/`. The browser emulator
+follows the design of Charles Vestal's [X0X](https://github.com/charlesvestal/fm1-x0x), and HOME's chord readout (the
+chord or notes you are playing) is ported from Kerem Kilic's [Melodee](https://github.com/keremimo/melodee), another
+Felucca fork. Felucca's second-core renderer (MENU > SYSTEM > 2ND CORE, a beta, off by default) was contributed by
+gospodindilly-ops and builds on X0X, Melodee and zednaked's [Jangada](https://github.com/zednaked/jangada). The full
+history of both projects is kept in this repository.
 
 Inspired by the idea of teenage engineering's EP-1320 *medieval*; not affiliated with them, and none of their
 sounds are used.
@@ -54,7 +58,8 @@ Then a real FM-1. M-VAVE's own updater returns it to stock firmware.
 
 ## Licence
 
-GPL-3.0-only, as GHOULBOX and Felucca. See [LICENSING.md](LICENSING.md) for the parts under other licences.
+GPL-3.0-only, as GHOULBOX and Felucca. The engines in `firmware/engines/` are MIT (Felucca-Engines) and the Hügelton
+Sample Pack is CC0 1.0. See [LICENSING.md](LICENSING.md) for the parts under other licences.
 GHOULBOX's own README is kept at [docs/GHOULBOX-README.md](docs/GHOULBOX-README.md).
 
 M-VAVE and FM-1 are trademarks of their respective owners. ESTAMPIE, GHOULBOX and Felucca are not affiliated with

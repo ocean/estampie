@@ -196,6 +196,10 @@ static uint32_t param_icon(const param_desc_t *d, int32_t v)
         return ICON_DIVISION;                 /* arp / SLICER RATE is a note division, not Hz */
     if (d->names == N_TRIO_MODE)
         return ICON_CUTOFF;                   /* TRIO's MODE is the filter type, not the arp mode */
+    if (d == &TP[P_FTYPE])
+        return ICON_CUTOFF;                   /* ANALOG's filter TYPE (1.5): "TYPE" is also the reverb's */
+    if (d == &TP[P_ESYNC])
+        return ICON_TEMPO;                    /* ENV SYNC (1.5): as LFO 2's SYNC */
     if (d->names == N_NOISE_MODE)
         return ICON_NOISE;                    /* NOISE's MODE is the source; its CLK the register clock */
     if (d == &NOISE_CLK)
@@ -226,6 +230,8 @@ static uint32_t mod_dst_icon(const track_t *t, int32_t d)
     d = clamp(d, 0, MD_N - 1);
     if (d == MD_DEPTH)
         return ICON_LFO_WAVE;
+    if (d >= MD_VEL)                                   /* (1.5.6: VEL, TIME) */
+        return d == MD_VEL ? ICON_ACCENT : ICON_TIME;
     if (d < MD_E1)
         return I[d];
     id = P_E0 + (uint32_t)(d - MD_E1);

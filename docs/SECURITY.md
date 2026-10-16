@@ -39,6 +39,7 @@ specific to this firmware.
 | --- | --- | --- | --- | --- |
 | JieLi toolchain (clang 4.0.1, pi32v2) | `tools/toolchain.lock` | SHA-256 (first use) | distroless container, offline, read-only | closed source: not scannable |
 | AC79 SDK (3 files used) | `tools/toolchain.lock` | git commit | data only (not run) | – |
+| Felucca-Engines (5 engines, MIT) | `firmware/engines/VENDORED.md` | git commit; copied into the repository (not a submodule), so every built line is reviewed in git | compiled into the firmware | source only: no package dependencies |
 | Build container `cc-debian13:nonroot` | `tools/toolchain.lock` | image digest | see above | `osv_scan.sh build-image` |
 | Python 3.14 and packages | `uv.lock` | SHA-256 per file (uv) | `.venv` in the repo | `osv_scan.sh python` |
 | Node (binary only, for the tests) | `tools/toolchain.lock` | SHA-256 from GPG-signed `SHASUMS256.txt` | npm, npx and corepack deleted | `osv_scan.sh node` (Node security releases) |

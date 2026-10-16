@@ -8,6 +8,16 @@ The build makes three files in `build/`:
 | `loader/ota.bin` | the update loader |
 | `felucca.fwsc` | the installable package (app + loader) |
 
+## Get the source
+
+```
+git clone https://github.com/ocean/estampie.git
+```
+
+Felucca keeps five engines in a git submodule; ESTAMPIE has them in the repository (`firmware/engines/`,
+[Felucca-Engines](https://github.com/hugelton/Felucca-Engines), MIT, vendored at the commit Felucca 1.6.1 pins: see
+`firmware/engines/VENDORED.md`), so a plain clone or source archive is complete.
+
 ## Prerequisites (macOS)
 
 ESTAMPIE: one command fetches everything into the repository (`.toolchain/`, `.venv/`, both git-ignored), each
@@ -61,6 +71,8 @@ Build options (environment, `0` or `1`; defaults in `firmware/src/felucca.c`, `c
 | `FELUCCA_CDC_DEFAULT` | 1 | `0`: the console is built in but left out of USB from boot (as MENU > USB SERIAL OFF) |
 | `FELUCCA_UAC` | 1 | USB audio input (the master output, stereo, 44.1 or 48 kHz) |
 | `FELUCCA_UAC_48K` | 1 | `0`: the USB audio input at 44.1 kHz only, as up to 1.0.5.2 (`firmware/src/usb.c`) |
+| `FELUCCA_UAC_AS_FIRST` | 1 | the audio control header lists the audio streaming interface before the MIDI one, so the USB audio driver of older macOS (up to 15) finds it; `0`: 1.0 to 1.5's order, byte for byte (`firmware/src/usb.c`) |
+| `FELUCCA_CPU2` | 1 | the second core is built in (MENU > SYSTEM > 2ND CORE, OFF by default); `0`: none of it, 1.6's one-core code and RAM (`firmware/hal/fm1_cpu1.h`, `firmware/src/fx.c`) |
 | `FELUCCA_UART` | 1 | TRS MIDI IN |
 | `FELUCCA_SLICE` | 0 | the SLICE engine and its BREAK and PIANO samples (~70 KB; kept in the tree, its tests build it) |
 | `FELUCCA_ICONS` | 1 | parameter icons on the knob cards |
@@ -106,7 +118,9 @@ drawing code against stubs: every screen in every palette is rendered and checke
 overlapping text; PNGs land in `build/ui_new/`), every engine (DRUM, NOISE, PHYS, FM6, SLICE, the
 DIGITAL conversion), the chord keys, the modulation matrix, the FX layer, the reverbs, the SLICER
 and swing. With `DAISYSP` pointing at a DaisySP checkout, the PHYS models are also compared with
-their floating-point originals; without it that test is skipped.
+their floating-point originals; without it that test is skipped. Felucca-Engines' own test
+(`firmware/engines/tests/run.sh`) runs too, and its standalone host is built once more with Felucca's tables
+against the same golden renders.
 
 The regression suite (`tests/regress.c`) renders every engine and preset and compares a
 hash of each render with `tests/golden.txt`; it also checks levels, voices and the CPU

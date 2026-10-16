@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: GPL-3.0-only
+/* SPDX-License-Identifier: MIT
  * Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments */
 /* NOISE: from analog-style noise to shift-register noise, through a resonant filter.
  *
@@ -246,10 +246,10 @@ static const preset_t NOISE_PRESETS[] = {
      * a pitched chip-style buzz */
     {"ARCADE", {NZ_LFSR, 0, 127, 0, 127, 112, 0, 84}, {0, 80, 0, 50}, 0, 0, FX(0, 0, 10, 20), PAT(3)},
     {"METAL", {NZ_META, 0, 100, 40, 100, 32, 0, 0}, {0, 75, 40, 60}, 10, 0, FX(0, 20, 30, 45), PAT(7)},
-    /* GHOULBOX presets (tools/ghoulbox_presets.py) */
-    {"CAVE WIND", {0, 40, 50, 90, 0, 0, 90, 0}, {110, 90, 120, 120}, 0, 0, FX(0, 40, 20, 120), PAT(5)},
-    {"TORCH", {1, 30, 100, 60, 0, 60, 30, 0}, {20, 90, 127, 80}, 0, 0, FX(0, 0, 0, 70), PAT(5)},
-    /* GHOULBOX end */
+
+#ifdef ESTAMPIE_NOISE_PRESETS   /* ESTAMPIE: the host's own presets after these (firmware/src/engine_presets.h) */
+    ESTAMPIE_NOISE_PRESETS
+#endif
 };
 
 static const engine_t ENG_NOISE = {

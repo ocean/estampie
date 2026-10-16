@@ -30,4 +30,8 @@ Pull requests are welcome, including AI-assisted ones, with the same bar for all
 
 By contributing you agree that your contribution is licensed under GPL-3.0-only.
 
+The ANALOG, LOFI, TRIO, WHEEL and NOISE engines and the code they share (`firmware/engines/`, vendored) come from
+[Felucca-Engines](https://github.com/hugelton/Felucca-Engines), under the MIT licence: keep them as published there
+but for ESTAMPIE's marked hooks (`firmware/engines/VENDORED.md`); new presets go in `firmware/src/engine_presets.h`.
+
 The web editor and installer live in [Felucca-WebApp](https://github.com/hugelton/Felucca-WebApp).

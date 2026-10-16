@@ -13,6 +13,7 @@ static void draw_menu(void);
 static int name_on(void);                              /* NAME (ui_name.c) */
 static uint64_t lock_held(void);                       /* parameter locks: the steps held on STEP (ui_input.c) */
 static void name_draw(void);
+#include "ui_help.c"                                   /* 1.5: HELP's hints (draw_foot, ui_layer.c draw_layer) */
 
 /* --------------------------------------------------------- drawing --- */
 #define COL_W CARD_W                                  /* a card: 57 x 44 at x 3 + 59 c, y 28 */
@@ -149,8 +150,8 @@ static int32_t roll_text(uint32_t k, int32_t x, int32_t y, const char *s, uint16
 /* the header (y 0..24), three calm slots (1.2):
  *   left    the selected track's cushion (ink 4..20), the PROJECT slot letter of its pattern ("1 A", head_slot), the REC
  *           mark attached (filled: it is armed; outlined: another). A message centred hides the letter (its room)
- *   centre  the play state (stop, play, the song's disc), the metronome and the BPM, its ink centred on x 120 (BPM
- *           LOCK ON: a lock right of it). The metronome swings on the click's beats (seq.c click_beat_now): mirrored
+ *   centre  the play state (stop, play, the song's disc), the metronome and the BPM (BPM LOCK ON: a lock right of
+ *           it), the group's ink centred on x 120 (head_geo). The metronome swings on the click's beats (seq.c click_beat_now): mirrored
  *           on the bar's 2nd and 4th, the accent's on its 1st; stopped, still and MID
  *   right   the octave, or the song row while a song plays (ending at 208), and the battery (ink 216..236; its bolt
  *           says USB power: no separate USB icon)
@@ -170,26 +171,54 @@ static int32_t roll_text(uint32_t k, int32_t x, int32_t y, const char *s, uint16
 #define HEAD_MSG_W 166                                 /* a message centred on x 120: 37..203 (after the REC mark) */
 #define HEAD_GAP 4                                     /* ink to ink: the metronome -> the BPM -> the lock */
 #define HEAD_PLAY_GAP 6                                /* the play state -> the metronome */
-/* the header's centre: the pen of the BPM, its ink, the metronome's ink (x0 .. x1), the BPM's rolling strip (sx0 ..
- * sx1: between the metronome's cell, either way round, and the lock's). Placed by as many 0s as the BPM has digits
- * (tabular figures: the same advance), so nothing moves while the tempo changes, only with a digit more or less; the
- * BPM's ink then sits within a pixel or so of x 120 */
-typedef struct { int32_t bx, b[4], mx0, mx1, sx0, sx1; } head_geo_t;
+/* the header's centre (1.5.6): the play state, the metronome and the BPM (BPM LOCK ON: its lock) as one group, its
+ * ink (gx0 .. gx1, past it) centred on x 120 (before: the BPM's alone, the rest hanging off to the left). The play
+ * state's slot (px0 .. px1) is as wide as the wider of stop and play, so the group stays put on PLAY / STOP (the
+ * narrower ink right-aligned in it, its gap to the metronome kept; a song's disc reaches a few px further left). The
+ * digits are placed by as many 0s as the BPM has digits (tabular figures: the same advance; the ink the widest any
+ * digit has there), so nothing moves while
+ * the tempo changes, only with a digit more or less (or BPM LOCK turned). bx: the pen of the BPM, b: its ink; the
+ * metronome's ink (mx0 .. mx1, past it); the BPM's rolling strip (sx0 .. sx1: between the metronome's cell, either
+ * way round, and the lock's) */
+typedef struct { int32_t bx, b[4], mx0, mx1, sx0, sx1, px0, px1, gx0, gx1; } head_geo_t;
 static void head_geo(head_geo_t *g, const char *bpm)
 {
-    int32_t ib[4], lb[4], c = 16;
+    int32_t ib[4], lb[4], pb[4], c = 16, pw, lw = 0;
     uint32_t sz = 16;
     char z[8] = "0000000";
-    z[str_len(bpm) < 7u ? str_len(bpm) : 7u] = 0;
-    g->bx = ink_in(&AF_M, z, 240);
+    uint32_t n = str_len(bpm) < 7u ? str_len(bpm) : 7u, d;
+    int32_t db[4];
+    z[n] = 0;
     text_ink(&AF_M, z, g->b);
+    for (d = 1; n && d < 10u; d++) {                   /* ESTAMPIE: every digit's ink, first and last (Alagard's 4 */
+        z[0] = (char)('0' + d);                        /* reaches past its 0): the group holds whatever the tempo */
+        text_ink(&AF_M, z, db);
+        if (db[0] < g->b[0]) g->b[0] = db[0];
+        z[0] = '0';
+        z[n - 1u] = (char)('0' + d);
+        text_ink(&AF_M, z, db);
+        if (db[2] > g->b[2]) g->b[2] = db[2];
+        z[n - 1u] = '0';
+    }
     icon_ink(16, ICON_TEMPO, ib);
     if (icon_cell(&sz, ICON_TEMPO) >= 0)
         c = (int32_t)sz;
-    g->mx1 = g->bx + g->b[0] - HEAD_GAP;
-    g->mx0 = g->mx1 - (ib[2] - ib[0]);
-    g->sx0 = g->mx1 + (ib[0] > c - ib[2] ? ib[0] : c - ib[2]);
+    icon_ink(16, ICON_X_STOP, pb);                     /* the play state's slot: the wider of stop and play */
+    pw = pb[2] - pb[0];
+    icon_ink(16, ICON_X_PLAY, pb);
+    if (pb[2] - pb[0] > pw)
+        pw = pb[2] - pb[0];
     icon_ink(16, ICON_X_LOCK, lb);
+    if (ui_prefs & PREF_BPM_LOCK)
+        lw = HEAD_GAP + lb[2] - lb[0];
+    g->gx0 = HALF_UP(240 - (pw + HEAD_PLAY_GAP + (ib[2] - ib[0]) + HEAD_GAP + (g->b[2] - g->b[0]) + lw));
+    g->px0 = g->gx0;
+    g->px1 = g->px0 + pw;
+    g->mx0 = g->px1 + HEAD_PLAY_GAP;
+    g->mx1 = g->mx0 + (ib[2] - ib[0]);
+    g->bx = g->mx1 + HEAD_GAP - g->b[0];
+    g->gx1 = g->bx + g->b[2] + lw;
+    g->sx0 = g->mx1 + (ib[0] > c - ib[2] ? ib[0] : c - ib[2]);
     g->sx1 = g->bx + g->b[2] + HEAD_GAP - lb[0];
 }
 /* the metronome with its ink at x0 (beat: click_beat_now; the 2nd and 4th mirrored, the same ink box; the 1st the
@@ -328,7 +357,7 @@ static void draw_head(void)
                    (ui.msg_t ? str_hash(7u, ui.msg) : ui.layer * 7919u + (uint32_t)layer_locked() * 3u) + (uint32_t)song.g[G_BPM] * 101u + (ui.bpm_t != 0) * 31u +
                    (uint32_t)seq_counting() * 7u + (ui_prefs & PREF_BPM_LOCK) * 4099u +
                    (uint32_t)batt_shown() * 7777u + (chain.running ? (chain.row + 1u) * 104729u : 0u) +
-                   (slot ? str_hash(11u, sl) : 0u);
+                   (slot ? str_hash(11u, sl) : 0u) + (uint32_t)midi_lit(song.sel) * 15485863u;   /* (1.5.5) */
     int msg = ui.msg_t || ui.layer;
     int centre = !msg || ui.bpm_t || ui.layer == LAYER_GLO;   /* the BPM being changed: it stays, the message right */
     int32_t rx = HEAD_REC_X;
@@ -364,7 +393,8 @@ static void draw_head(void)
     metro_x = -1;
     cv_begin(240, H_HEAD, T_SURF);
     cv_window(0, 0, 240, H_HEAD, 1);                   /* GHOULBOX: the header is a thin window */
-    cv_icon_mid(HEAD_TRK_X, H_HEAD / 2, 16, trk_icon(song.sel, 1), T_ACCENT, T_SURF);
+    cv_icon_mid(HEAD_TRK_X, H_HEAD / 2, 16, trk_icon(song.sel, 1), midi_lit(song.sel) ? T_TEXT : T_ACCENT, T_SURF);   /* (1.5.5:
+                                                       * a MIDI IN note into it, #208: lit) */
     if (slot && (centre || !msg)) {                    /* the slot letter (not under a message centred: its room) */
         char l[2] = {sl[0], 0};
         GFX_HOOK_ALIGN(0, 0, 0, H_HEAD, AL_V, "header text on its middle");
@@ -379,7 +409,7 @@ static void draw_head(void)
         uint32_t id = song.playing ? (chain.running ? ICON_X_SONG : ICON_X_PLAY) : seq_counting() ? ICON_X_PLAY : ICON_X_STOP;
         icon_ink(16, id, ib);                          /* the play state: the song's disc, play (counting in: the
                                                         * accent's, about to play), stop */
-        cv_icon_mid(g.mx0 - HEAD_PLAY_GAP - ib[2], H_HEAD / 2, 16, id,
+        cv_icon_mid(g.px1 - ib[2], H_HEAD / 2, 16, id, /* (right-aligned in its slot) */
                     song.playing ? T_THEME : seq_counting() ? T_ACCENT : T_MID, T_SURF);
         head_metro(g.mx0, beat);
         metro_x = (int16_t)g.mx0;
@@ -468,11 +498,83 @@ static void card_mot_of(const int16_t *vp)
     card_mot_next = (uint8_t)(id < P_COUNT && ((card_mot_mask[id / 32u] >> (id % 32u)) & 1u));
 }
 
+/* #251, MENU > LARGE: a tall card sets its value in one face over everything its knob can show (L where every value
+ * fits L, else M, else S), so turning it never changes the value's size. card_span (what the knob shows: fn's text
+ * of each value lo..hi) is set just before a draw_column (card_span_of / card_span_by) and taken by it; none: the
+ * value's own face. The face is worked out when what the card is of changes (span_face's key), not every frame. */
+typedef struct card_span {
+    void (*fn)(const struct card_span *sp, int32_t v, char *val);   /* value v as the card shows it (val: 16) */
+    const void *p;                                       /* fn's: a param_desc_t, a name list .. */
+    int32_t lo, hi, ctx;
+} card_span_t;
+static card_span_t card_span;
+static void span_param(const card_span_t *sp, int32_t v, char *val)
+{
+    const char *u;
+    uint8_t named = fmt_named;                           /* (param_format sets it: the card's own, kept) */
+    param_format((const param_desc_t *)sp->p, v, val, &u);
+    fmt_named = named;
+}
+static void span_names(const card_span_t *sp, int32_t v, char *val)
+{
+    str_cpy(val, ((const char *const *)sp->p)[v], 16);
+}
+static void span_mod_dst(const card_span_t *sp, int32_t v, char *val)   /* MOD's DST: the track's (its engine's) names */
+{
+    str_cpy(val, mod_dst_name((const track_t *)sp->p, v), 16);
+}
+static void span_fop(const card_span_t *sp, int32_t v, char *val)       /* FM6's operator pages: card ctx's byte = v */
+{
+    const char *l, *u;
+    int32_t r;
+    uint32_t ic;
+    (void)fop_card_at((uint32_t)sp->ctx, v, &l, val, &u, &r, &ic);
+}
+static void card_span_by(void (*fn)(const card_span_t *, int32_t, char *), const void *p, int32_t lo, int32_t hi, int32_t ctx)
+{
+    card_span.fn = fn;
+    card_span.p = p;
+    card_span.lo = lo;
+    card_span.hi = hi;
+    card_span.ctx = ctx;
+}
+static void card_span_of(const param_desc_t *d)          /* a parameter: its whole range */
+{
+    card_span_by(span_param, d, d->min, d->max, (int32_t)d->fmt);
+}
+/* the face of a tall card's value s (0 L, 1 M, 2 S): L where the sparse L face has its glyphs and it fits with 3 px
+ * either side, M where it fits with 2 (52 px: "THUMB"), else S (cut by cv_text_fit when even S is too wide) */
+static uint32_t tall_face(const char *s)
+{
+    return large_face_has(s) && ink_w(&AF_L, s) <= COL_W - 6 ? 0u : ink_w(&AF_M, s) <= COL_W - 4 ? 1u : 2u;
+}
+static uint32_t span_face(uint32_t c, const card_span_t *sp, const char *label)
+{
+    static uint32_t key[4], face[4] = {3u, 3u, 3u, 3u};   /* (3: none yet) */
+    uint32_t k = str_hash((uint32_t)(uintptr_t)sp->fn * 31u + (uint32_t)(uintptr_t)sp->p * 7u + (uint32_t)sp->lo * 131u +
+                          (uint32_t)sp->hi * 8191u + (uint32_t)sp->ctx * 524287u + song.sel + TSEL->eng_req * 4u, label);
+    int32_t v;
+    char t[16];
+    c &= 3u;
+    if (k == key[c] && face[c] <= 2u)
+        return face[c];
+    key[c] = k;
+    face[c] = 0;
+    for (v = sp->lo; v <= sp->hi && face[c] < 2u; v++) {   /* (a few hundred values at most, once) */
+        uint32_t f;
+        sp->fn(sp, v, t);
+        if ((f = tall_face(t)) > face[c])
+            face[c] = f;
+    }
+    return face[c];
+}
+
 /* MENU > LARGE, a tall card (ui.c LK_TALL; 57 x LG_CARD_H): which knob it is (a "K1" pill in M, the keycap's colours,
  * the accent while it turns, DIM when the knob does nothing here) and the icon at the right of it; the label in M
  * centred (S when M is too wide); the value centred in L, its figures twice the height of M (M, then S, when L is too
- * wide or the sparse L face lacks a glyph: gen_aa_font.py L_CHARS); the unit (S) centred under it; the gauge. The
- * value snaps (no rolling digits). MONO, the knob just turned: the label inverted as on the small cards. */
+ * wide or the sparse L face lacks a glyph: gen_aa_font.py L_CHARS; #251: for any value the knob shows, sp: one face
+ * for all of them, span_face); the unit (S) centred under it; the gauge. The value snaps (no rolling digits). MONO,
+ * the knob just turned: the label inverted as on the small cards. */
 #ifndef LARGE_HOOK
 #define LARGE_HOOK(s, why) ((void)0)                    /* host: a tall card's value and its face (0 L, 1 M: a glyph not
                                                          * in L, 2 M: L too wide, 3 S) */
@@ -484,7 +586,7 @@ static void card_mot_of(const int16_t *vp)
 #define LG_UY 73                                        /* the unit's line (S capitals rows 76..84) */
 #define LG_GY 92                                        /* the gauge, 3 px */
 static void draw_column_tall(uint32_t c, const char *label, const char *val, const char *unit, uint16_t vc, int32_t ratio,
-                             uint32_t icon, int hot, int mot, int32_t kid)
+                             uint32_t icon, int hot, int mot, int32_t kid, const card_span_t *sp)
 {
     uint16_t lc = hot ? T_ACCENT : mot ? T_THEME : T_MID;
     const aafont_t *lf = &AF_M, *vf = &AF_L;
@@ -530,11 +632,12 @@ static void draw_column_tall(uint32_t c, const char *label, const char *val, con
         cv_keycap(HALF_UP(COL_W - kc_w((uint32_t)kid)), LG_VB + HALF_UP(AF_L_CAP_H - KC_H), (uint32_t)kid,
                   vc == T_ACCENT || vc == T_DIM ? vc : T_KEY, T_INK, T_SURF);
     } else if (val[0]) {
-        int why = !large_face_has(val) ? 1 : ink_w(vf, val) > COL_W - 6 ? 2 : 0;
-        if (why)
-            vf = &AF_M;
-        if (vf == &AF_M && ink_w(vf, val) > COL_W - 6)
-            vf = &AF_S, why = 3;
+        uint32_t f = tall_face(val), fs = sp->fn ? span_face(c, sp, label) : 0u;
+        int why;
+        if (fs > f)
+            f = fs;                                     /* (the value's own where it needs a smaller one) */
+        vf = f == 0u ? &AF_L : f == 1u ? &AF_M : &AF_S;
+        why = f == 2u ? 3 : f == 1u ? (!large_face_has(val) ? 1 : 2) : 0;
         LARGE_HOOK(val, why);
         vy = vf == &AF_L ? LG_VB - AF_L_CAP_Y : vf == &AF_M ? LG_VB + HALF_UP(AF_L_CAP_H - AF_M_CAP_H) - AF_M_CAP_Y
                                                           : LG_VB + HALF_UP(AF_L_CAP_H - AF_S_CAP_H) - AF_S_CAP_Y;
@@ -577,6 +680,8 @@ static void draw_column(uint32_t c, const char *label, const char *val, const ch
     const aafont_t *vf = &AF_M;
     uint32_t n, kn;
     int32_t kid = kc_tag(val, &kn);
+    card_span_t sp = card_span;                         /* (#251: what the knob shows, this card only) */
+    card_span.fn = 0;
     fmt_named = 0;                                      /* (params.c: a name, for this card only) */
     card_mot_next = 0;                                  /* (the same: MOTION, this card only) */
     card_mot = (uint8_t)((card_mot & ~(1u << c)) | (uint32_t)mot << c);
@@ -644,7 +749,7 @@ static void draw_column(uint32_t c, const char *label, const char *val, const ch
             ui.roll[c].from[0] = 0;
         str_cpy(ui.col[c], key, sizeof ui.col[c]);
         if (kind == LK_TALL) {
-            draw_column_tall(c, label, val, unit, vc, ratio, icon, hot, mot, kid);
+            draw_column_tall(c, label, val, unit, vc, ratio, icon, hot, mot, kid, &sp);
             return;
         }
         cv_begin(COL_W, COL_H, T_BG);
@@ -756,12 +861,12 @@ static void sound_name(const track_t *t, char *b)
 
 static void draw_foot(void)
 {
-    char s[48], pn[16], ti[20];
+    char s[48], pn[16], ti[20], ln[24];
     const track_t *t = TSEL;
     uint32_t sig;
     const page_t *pg = cur_page();
     const engine_t *e = ENGINES[TSEL->eng_req % NENGINES];
-    const char *ename = e->name;
+    const char *ename = e->name, *help;
     int32_t x;
     sound_name(t, pn);
     if (ui.home)
@@ -786,12 +891,22 @@ static void draw_foot(void)
     }
     if (grid_on())
         sig += 0x51EDu + (uint32_t)black_held(GK_ACC) * 977u;
+    help = ui.help_t && !ui.ml.on ? help_page() : 0;   /* 1.5, HELP ON: the page's hint for ~2 s after it was entered
+                                                       * (not while MIDI LEARN shows its line) */
+    if (help)
+        sig = str_hash(sig + 0x4E1Bu, help);
+    if (ui.ml.on && !act_cols()) {                        /* MIDI LEARN (midi_learn.c): what is picked, its CC */
+        ml_line(ln);
+        sig += str_hash(0x1EA2u, ln);
+    }
     if (!ui.force && sig == ui.foot_sig)
         return;
     ui.foot_sig = sig;
     cv_begin(240, H_FOOT, T_SURF);
     cv_window(0, 0, 240, H_FOOT, 1);                 /* GHOULBOX: the footer is a thin window */
-    if (act_cols()) {                                 /* row 1: the OCT+ / OCT- hint in place of the steps */
+    if (help) {                                       /* row 1: the hint in place of the steps or the OCT+ / OCT- hint */
+        help_row(help, 2);
+    } else if (act_cols()) {                          /* row 1: the OCT+ / OCT- hint in place of the steps */
         char ha[16], hb[16];
         khint_t kh[3];
         uint32_t rn = foot_rename();
@@ -805,7 +920,12 @@ static void draw_foot(void)
         } else {
             cv_key_row(8, 232, 2, kh, 2, act_ready() ? 3u : 2u, T_SURF);
         }
-    } else if (grid_on()) {                           /* row 1: the page, and what the keys do */
+    } else if (ui.ml.on) {                               /* row 1: MIDI LEARN's line, OCT+ DONE at the right */
+        khint_t kh = {KC_OCTUP, "DONE"};
+        int32_t kw = kh_w(KC_OCTUP, "DONE");
+        cv_free_text(8, 2, &AF_S, ln, T_ACCENT, T_BG, 232 - kw - 8 - 8);
+        cv_key_row(232 - kw, 232, 2, &kh, 1, 1u, T_BG);
+    } else if (grid_on() && !detail_on()) {          /* row 1: the page, and what the keys do (DETAIL: the steps) */
         char b[16];
         uint32_t len = (uint32_t)t->p[P_SLEN];
         str_cpy(b, "PAGE ", sizeof b);
@@ -891,7 +1011,11 @@ static void draw_columns(void)
             const param_desc_t *d = home_param(c, &vp);
             param_format(d, *vp, val, &unit);
             card_mot_of(vp);
-            draw_column(c, d->label, val, unit, VAL(c), RATIO(d, enum_rank(d, *vp)), param_icon(d, *vp));
+            card_span_of(d);
+            if (home_levels())                         /* 1.5: T1..T4 LEVEL, the track's cushion, muted: DIM */
+                draw_column(c, "LEVEL", val, unit, trk[c].p[P_MUTE] ? T_DIM : VAL(c), RATIO(d, *vp), trk_icon(c, 1));
+            else
+                draw_column(c, d->label, val, unit, VAL(c), RATIO(d, enum_rank(d, *vp)), param_icon(d, *vp));
         }
         return;
     }
@@ -947,7 +1071,7 @@ static void draw_columns(void)
         }
         step = ev_step_of(c);
         id = k == EVK_REC ? MOTION_ID(&motion.event[c & 0xFFu]) : k == EVK_ADD ? ui.ev_id :
-             k == EVK_CHANCE ? EV_CHANCE : k == EVK_RATCH ? EV_RATCH : EV_NUDGE;
+             k == EVK_CHANCE ? EV_CHANCE : k == EVK_RATCH ? EV_RATCH : k == EVK_VEL ? EV_VEL : EV_NUDGE;
         draw_column(0, "ROW", val, "", VAL(0u), -1, ICON_AUTO);
         fmt_int(val, (int32_t)step + 1);
         draw_column(1, "STEP", val, "", k != EVK_ADD || step < (uint32_t)t->p[P_SLEN] ? VAL(1u) : T_DIM, -1, ICON_AUTO);
@@ -966,20 +1090,33 @@ static void draw_columns(void)
                         ICON_AUTO);
             return;
         }
+        if (id == EV_VEL) {                            /* a step's VEL (1.5): 1..127, DIM where it does not play; */
+            const step_t *cs = &t->step[step % NSTEP];  /* + ADD: the rows shown or not */
+            int32_t sv = ev_sval(cs, EVK_VEL);
+            if (k == EVK_ADD) {
+                draw_column(3, "ROWS", ui.ev_vel ? "SHOWN" : "HIDDEN", "", T_DIM, -1, ICON_AUTO);
+                return;
+            }
+            fmt_int(val, sv);
+            draw_column(3, "VALUE", val, "", ev_vel_plays(cs) ? VAL(3u) : T_DIM, sv * 1000 / 127, ICON_LEVEL);
+            return;
+        }
         if (id == EV_CHANCE || id == EV_RATCH) {       /* a step's CHANCE (the die) / RATCH; + ADD: what it adds */
             const step_t *cs = &t->step[step % NSTEP];
             uint32_t sk = ev_skind(id), sv = (uint32_t)(k == EVK_ADD ? ev_sadd(sk) : ev_sval(cs, sk));
             int plays = sk == EVK_CHANCE || (cs->time == ST_NOTE && (cs->n || cs->hit));   /* (RATCH does nothing on a
                                                                                             * REST, a TIE, empty: DIM) */
-            if (sk == EVK_CHANCE) {
-                fmt_int(val, (int32_t)sv);
+            const char *u = "";
+            if (sk == EVK_CHANCE) {                    /* (1.5.5: a condition, "1:4") */
+                u = ev_chance_fmt(val, (int32_t)sv);
             } else {
                 val[0] = 'x';                          /* x1 .. x4 */
                 val[1] = (char)('0' + sv);
                 val[2] = 0;
             }
-            draw_column(3, "VALUE", val, sk == EVK_CHANCE ? "%" : "", k != EVK_ADD && plays ? VAL(3u) : T_DIM,
-                        sk == EVK_CHANCE ? (int32_t)sv * 10 : ((int32_t)sv - 1) * 333, sk == EVK_CHANCE ? ICON_PROB : ICON_X_REPEAT);
+            draw_column(3, sk == EVK_CHANCE && sv > 100u ? "COND" : "VALUE", val, u, k != EVK_ADD && plays ? VAL(3u) : T_DIM,
+                        sk == EVK_CHANCE ? (sv > 100u ? (int32_t)(sv - 100u) * 1000 / (int32_t)NCOND : (int32_t)sv * 10) :
+                        ((int32_t)sv - 1) * 333, sk == EVK_CHANCE ? ICON_PROB : ICON_X_REPEAT);
             return;
         }
         v = k == EVK_REC ? motion.event[c & 0xFFu].value : motion_base_value(t, id);
@@ -992,7 +1129,8 @@ static void draw_columns(void)
     if (cur_page()->graph == GR_TOOLS) {
         static const char *const labels[] = {"PAT", "SOUND", "SEC", "SONG"};
         static const uint8_t icons[] = {ICON_AUTO, ICON_AUTO, ICON_X_SONG, ICON_X_SONG};   /* ROW, SONG: the song's */
-        for (c = 0; c < 4u; c++) draw_act_column(c, labels[c], VAL(c), icons[c]);
+        for (c = 0; c < 4u; c++)                       /* (1.5.5: KNOB 2 on past INIT, CLEAN) */
+            draw_act_column(c, c == 1u && ui.tl_clean && act_col() == 2u ? "CLEAN" : labels[c], VAL(c), icons[c]);
         return;
     }
     if (cur_page()->scope == SC_TRK) {                 /* LEVEL PAN REV MUTE of the selected track */
@@ -1000,12 +1138,15 @@ static void draw_columns(void)
         uint32_t lvl = trk_level(song.sel);
         param_format(&TP[P_LEVEL], (int32_t)lvl, val, &unit);   /* (0: OFF) */
         card_mot_of(&TSEL->p[P_LEVEL]);
+        card_span_of(&TP[P_LEVEL]);
         draw_column(0, "LEVEL", val, unit, lvl && !t->p[P_MUTE] ? VAL(0u) : T_DIM, (int32_t)lvl * 1000 / 127, ICON_AUTO);
         param_format(&TP[P_PAN], t->p[P_PAN], val, &unit);
         card_mot_of(&TSEL->p[P_PAN]);
+        card_span_of(&TP[P_PAN]);
         draw_column(1, "PAN", val, unit, VAL(1u), RATIO(&TP[P_PAN], t->p[P_PAN]), param_icon(&TP[P_PAN], t->p[P_PAN]));
         param_format(&TP[P_REV], t->p[P_REV], val, &unit);
         card_mot_of(&TSEL->p[P_REV]);
+        card_span_of(&TP[P_REV]);
         draw_column(2, "REV", val, unit, VAL(2u), RATIO(&TP[P_REV], t->p[P_REV]), ICON_AUTO);
         draw_column(3, "MUTE", t->p[P_MUTE] ? "ON" : "OFF", "", t->p[P_MUTE] ? T_ACCENT : VAL(3u), -1, ICON_AUTO);
         return;
@@ -1073,6 +1214,8 @@ static void draw_columns(void)
                 continue;
             }
             on = fop_card(c, &lb, val, &u, &r, &ic);
+            if (fop_field(c) != FO_OP && fop_field(c) != FO_STG)   /* (OP, STAGE: 1..6, 1..4) */
+                card_span_by(span_fop, 0, 0, (int32_t)fm6_max(fop_byte(fop_field(c))), (int32_t)c);
             draw_column(c, lb, val, u, on ? VAL(c) : T_DIM, r, ic);
         }
         return;
@@ -1083,10 +1226,44 @@ static void draw_columns(void)
         int32_t s = t->p[id], d = t->p[id + 1u], a = t->p[id + 2u];
         fmt_int(val, (int32_t)mod_ui_slot + 1);
         draw_column(0, "SLOT", val, "/4", VAL(0u), (int32_t)mod_ui_slot * 1000 / 3, mod_src_icon(MS_OFF));   /* (the mod icon) */
+        card_span_by(span_names, N_MSRC, 0, MS_N - 1, 0);
         draw_column(1, "SRC", N_MSRC[clamp(s, 0, MS_N - 1)], "", s ? VAL(1u) : T_DIM, -1, mod_src_icon(s));
+        card_span_by(span_mod_dst, t, 0, MD_N - 1, 0);
         draw_column(2, "DST", mod_dst_name(t, d), "", d ? VAL(2u) : T_DIM, -1, mod_dst_icon(t, d));
         param_format(&TP[id + 2u], a, val, &unit);
+        card_span_of(&TP[id + 2u]);
         draw_column(3, "AMT", val, unit, a ? VAL(3u) : T_DIM, RATIO(&TP[id + 2u], a), mod_src_icon(MS_OFF));
+        return;
+    }
+    if (detail_on()) {                                  /* DETAIL (1.5.1, #199): the cursor step's CHANCE RATCH NUDGE VEL;
+                                                         * DIM where they do not play (ui_input.c sd_turn) */
+        static const char *const SD_LABEL[4] = {"CHANCE", "RATCH", "NUDGE", "VEL"};
+        const step_t *st = &seq_steps(TSEL)[ui.cursor];
+        for (c = 0; c < 4u; c++) {
+            uint32_t k = SD_KIND[c];
+            int32_t v = ev_sval(st, k), r;
+            int on = sd_takes(st, k);
+            const char *u = "";
+            if (k == EVK_CHANCE) {                     /* (1.5.5: a condition, "1:4" "FILL", its card COND) */
+                u = ev_chance_fmt(val, v);
+                r = v > 100 ? (v - 100) * 1000 / (int32_t)NCOND : v * 10;
+            } else if (k == EVK_RATCH) {
+                val[0] = 'x';
+                fmt_int(val + 1, v);
+                r = (v - 1) * 1000 / 3;
+            } else if (k == EVK_NUDGE) {
+                ev_nudge_fmt(val, v);
+                u = v ? "/16" : "";
+                r = (v + 8) * 1000 / 15;
+                on &= ev_nudge_plays(TSEL, st);
+            } else {
+                fmt_int(val, v);
+                u = st->flags & SF_ACCENT ? "ACC" : "";
+                r = v * 1000 / 127;
+                on &= !(st->flags & SF_ACCENT);
+            }
+            draw_column(c, k == EVK_CHANCE && v > 100 ? "COND" : SD_LABEL[c], val, u, on ? VAL(c) : T_DIM, r, ICON_AUTO);
+        }
         return;
     }
     if (cur_page()->graph == GR_ROLL && lock_held()) {   /* a step held: what KNOB 1..4 lock (ui_input.c lock_turn) */
@@ -1155,7 +1332,12 @@ static void draw_columns(void)
             fmt_int(sl + 1, TSEL->p[P_SLEN]);
             draw_column(0, "STEP", sn, sl, VAL(0u), -1, ICON_AUTO);
             draw_column(1, "NOTE", val, u, step_on(st) ? VAL(1u) : T_DIM, -1, ICON_AUTO);
-            draw_column(2, "TIME", TIME_N[st->time % 3u], "", VAL(2u), -1, ICON_AUTO);
+            if (step_on(st)) {                            /* a note: its LEN (1.5, KNOB 3: the TIEs after it) */
+                fmt_int(sn, (int32_t)note_len(TSEL, ui.cursor));
+                draw_column(2, "LEN", sn, "", VAL(2u), -1, ICON_AUTO);
+            } else {
+                draw_column(2, "TIME", TIME_N[st->time % 3u], "", VAL(2u), -1, ICON_AUTO);
+            }
             draw_column(3, "FLAG", FLAG_N[(st->flags & SF_ACCENT ? 1u : 0u) | (st->flags & SF_SLIDE ? 2u : 0u)], "",
                         VAL(3u), -1, ICON_AUTO);
         }
@@ -1164,6 +1346,10 @@ static void draw_columns(void)
     for (c = 0; c < 4u; c++) {
         int16_t *vp;
         const param_desc_t *d = page_desc(cur_page(), c, &vp);
+        if (cur_page()->graph == GR_SLOTS && c == 1u) {   /* PROJECT: ERASE (1.5.5, #199) */
+            draw_act_column(1, "ERASE", graph_project_used((uint32_t)song.g[G_SLOT] - 1u) ? T_THEME : T_DIM, ICON_AUTO);
+            continue;
+        }
         if (!d || !d->label || d->label[0] == '-') {
             draw_column(c, "", "", "", T_THEME, -1, ICON_AUTO);
             continue;
@@ -1174,6 +1360,7 @@ static void draw_columns(void)
         }
         param_format(d, *vp, val, &unit);
         card_mot_of(vp);                                /* (a global: never) */
+        card_span_of(d);
         if (vp == &TSEL->p[P_LRATE] && TSEL->p[P_LSYNC]) {   /* LFO 2 SYNC on: RATE does nothing, DIM (1.2) */
             draw_column(c, d->label, val, unit, T_DIM, RATIO(d, *vp), param_icon(d, *vp));
             continue;
@@ -1306,6 +1493,10 @@ static void confirm_text(char *a, char *b)
     case CF_INIT_SOUND:
         str_cpy(a, "INITIALIZE SOUND?", 24);
         break;
+    case CF_CLEAN_SOUND:                             /* 1.5.5 (#190): the basic sound, nothing added */
+        str_cpy(a, "CLEAN INIT SOUND?", 24);
+        str_cpy(b, "NO FX, NO MOD", 24);
+        break;
     case CF_CLEAR_MOTION:
         str_cpy(a, "CLEAR T1 AUTOMATION?", 24); a[7] = (char)('1' + k % NTRK);
         break;
@@ -1314,6 +1505,11 @@ static void confirm_text(char *a, char *b)
         up_slot_label(a + str_len(a), k);
         str_cpy(a + str_len(a), "?", 2);
         up_name(k, b);                               /* the sound stored there */
+        break;
+    case CF_ERASE_PROJ:                              /* 1.5.5 (#199): the project's name under it */
+        str_cpy(a, "ERASE PROJECT A?", 24);
+        a[14] = (char)('A' + (k & 3u));
+        (void)project_name(k & 3u, b);
         break;
     case CF_ERASE_USER:
         str_cpy(a, "ERASE ", 24);
@@ -1375,7 +1571,7 @@ static void style_apply(void)
         ui_style = ui_style == 2u ? ST_LINE : ST_FLAT;
     if (ux.style != ui_style) {
         ux.style = ui_style;
-        palette_set(settings.palette);
+        palette_apply();
         ui.force = 1;
     }
 }
@@ -1464,6 +1660,8 @@ static void ui_draw_page(uint32_t counting)
         ui.bpm_t--;
     if (ui.hot_t)
         ui.hot_t--;
+    if (ui.help_t)
+        ui.help_t--;
     felucca_dbg.stage = 6;
     draw_foot();
     ui.force = 0;

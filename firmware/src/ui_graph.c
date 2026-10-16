@@ -235,6 +235,8 @@ static void graph_roll(const track_t *t, uint16_t c)
             cv_rect(x + 6, PR_Y0, 1, ybot - PR_Y0, T_ACCENT);
         if ((locks >> si) & 1u)                       /* a parameter lock: a mark under the step */
             cv_rect(x + 3, ybot + 3, 7, 2, T_ACCENT);
+        if (step_detailed(&seq_steps(t)[si]))         /* 1.5.1: CHANCE / RATCH / NUDGE set: a mark over it (DETAIL) */
+            cv_rect(x + 4, 2, 5, 3, c);
     }
     for (i = 0; i < ncol; i++) {                      /* the notes */
         uint32_t si = base + i, s = pr_src(t, si, len), nx = (si + 1u) % len;
@@ -266,9 +268,14 @@ static void graph_grid(const track_t *t, uint16_t c)
     uint32_t l, i, len = (uint32_t)t->p[P_SLEN], base = ui.bank * 16u, mute = drum_mute[trk_index(t) % NPART];
     uint64_t locks = motion_lock_steps(trk_index(t));
     int32_t y0 = 3;                                  /* (GHOULBOX: 8 lanes end on the window's inner edge, row 119) */
-    for (i = 0; i < 16u && base + i < len; i++)     /* a parameter lock: a mark over the step (GHOULBOX: rows 5, 6, */
-        if ((locks >> (base + i)) & 1u)             /* between the playing bar and the first lane) */
-            cv_rect(41 + (int32_t)i * 12, y0 + 2, 8, 2, T_ACCENT);
+    for (i = 0; i < 16u && base + i < len; i++) {   /* a parameter lock: a mark over the step (GHOULBOX: rows 5, 6, */
+        int lk = (locks >> (base + i)) & 1u;        /* between the playing bar and the first lane); CHANCE / RATCH / */
+        int dt = step_detailed(&seq_steps(t)[base + i]);   /* NUDGE set (Felucca 1.5.1, DETAIL): a dot in its middle */
+        if (lk)                                     /* (both: the lock's left half, the dot's right) */
+            cv_rect(41 + (int32_t)i * 12, y0 + 2, dt ? 4 : 8, 2, T_ACCENT);
+        if (dt)
+            cv_rect((lk ? 45 : 43) + (int32_t)i * 12, y0 + 2, 4, 2, c);
+    }
     for (l = 0; l < NLANE; l++) {
         int32_t y = y0 + 4 + (int32_t)l * 14;
         int sel = l == ui.lane, mu = (mute >> l) & 1u;
@@ -299,6 +306,73 @@ static void graph_grid(const track_t *t, uint16_t c)
     }
     if (song.playing && t->seq_idx < len && t->seq_idx / 16u == ui.bank)
         cv_rect(40 + (int32_t)(t->seq_idx % 16u) * 12, y0, 10, 2, T_TEXT);   /* (GHOULBOX: inside the border) */
+}
+/* SEQ > DETAIL (1.5.1, Discussion #199): the cursor's 16 steps as four lanes, the knobs' order top to bottom, each
+ * named on the left (the lane of the knob just turned in the accent): CHANCE a bar as high as the chance, RATCH the
+ * step's bar in its 2..4 parts (as the roll draws a ratchet), NUDGE a tick left / right of the step's middle, VEL a bar
+ * as high as the velocity (an ACC step's full, TEXT). Off its default a value is bright (THEME, the cursor's ACCENT),
+ * at it faint (RAISE: 100 %, x1, 0, a VEL never set); DIM where it does not play (a NUDGE with QUANTIZE ON or on a
+ * ratchet, a VEL under ACC). A step that plays nothing: a dot (a value left on it DIM); past LEN nothing. The cursor
+ * framed through the lanes, the step playing a line */
+#define SD_X0 36                                    /* the first step column (12 px each) */
+static void graph_detail(const track_t *t, uint16_t c)
+{
+    static const char *const NAME[4] = {"CHN", "RAT", "NDG", "VEL"};
+    static const uint8_t LY[4] = {4, 38, 62, 86}, LH[4] = {28, 18, 18, 28};
+    uint32_t i, l, len = (uint32_t)t->p[P_SLEN], base = ui.bank * 16u, ncol;
+    ncol = base < len ? (len - base < 16u ? len - base : 16u) : 0u;
+    for (l = 0; l < 4u; l++) {
+        int32_t yb = LY[l] + LH[l];
+        cv_rect(SD_X0, yb, (int32_t)ncol * 12 + 1, 1, T_GRID);   /* the lane's floor */
+        cv_text_on(8, LY[l] + LH[l] / 2 - 8, &AF_S, NAME[l], ui.hot_t && ui.hot_col == l ? T_ACCENT : T_MID, T_SURF);
+    }
+    for (i = 0; i < ncol; i++) {
+        uint32_t si = base + i;
+        const step_t *st = &seq_steps(t)[si];
+        int32_t x = SD_X0 + (int32_t)i * 12;
+        uint16_t hi = si == ui.cursor ? T_ACCENT : c;
+        if (si == ui.cursor)
+            cv_frame(x, 1, 13, 116, T_TEXT);
+        if (song.playing && si == t->seq_idx)
+            cv_rect(x + 6, 2, 1, 114, T_ACCENT);
+        for (l = 0; l < 4u; l++) {
+            uint32_t k = SD_KIND[l];
+            int32_t v = ev_sval(st, k), y = LY[l], h = LH[l], set = v != ev_sdefv(k), bh;
+            uint16_t col;
+            if (!sd_takes(st, k) && !set) {           /* nothing plays there */
+                cv_rect(x + 5, y + h - 3, 2, 2, T_DIM);
+                continue;
+            }
+            col = !sd_takes(st, k) ? T_DIM : set ? hi : T_RAISE;
+            if (k == EVK_CHANCE && v > 100) {         /* 1.5.5: a condition: a:b as b cells up the lane, the a-th lit; */
+                int32_t c = v - 100, j, nb = c < 10 ? COND_B[c - 1] : 0;   /* FILL a frame, !FILL a frame crossed */
+                for (j = 0; j < nb; j++)
+                    cv_rect(x + 2, y + h - 6 - 7 * j, 9, 5, j == COND_A[c - 1] - 1 ? col : T_GRID);
+                if (!nb)
+                    cv_frame(x + 2, y + 2, 9, h - 2, col);
+                if (c == (int32_t)COND_NFILL)
+                    cv_rect(x + 2, y + h / 2, 9, 1, col);
+            } else if (k == EVK_CHANCE) {
+                bh = v * h / 100;
+                cv_rect(x + 2, y + h - (bh < 2 ? 2 : bh), 9, bh < 2 ? 2 : bh, col);
+            } else if (k == EVK_RATCH) {
+                pr_split(x + 2, y + 5, 9, 8, col, (uint32_t)v);
+            } else if (k == EVK_NUDGE) {
+                if (set && (t->p[P_SQNT] || !ev_nudge_plays(t, st)))
+                    col = T_DIM;
+                cv_rect(x + 6, y + 2, 1, h - 4, T_GRID);
+                if (!set)
+                    cv_rect(x + 5, y + h / 2 - 1, 3, 3, col);
+                else
+                    cv_rect(x + 5 + v * 5 / 8, y + 3, 3, h - 6, col);
+            } else if (st->flags & SF_ACCENT) {       /* VEL: an ACC step plays 127 */
+                cv_rect(x + 2, y, 9, h, sd_takes(st, k) ? T_TEXT : T_DIM);
+            } else {
+                bh = v * h / 127;
+                cv_rect(x + 2, y + h - (bh < 2 ? 2 : bh), 9, bh < 2 ? 2 : bh, col);
+            }
+        }
+    }
 }
 /* SCL: the 12 keys as rounded bars (black keys high, white keys low): in the scale THEME, the root the
  * accent, out of the scale RAISE */
@@ -376,6 +450,38 @@ static void graph_fx(const track_t *t, uint16_t c)
         cv_rrect(x - 4, 85 - h, 12, 6, 3, c, T_SURF);
     }
 }
+/* INSERT pages (1.5, fx.c track_insert): the drives and CRUSH as their curve, input (-1.5 .. +1.5 of a voice's full
+ * scale) across, output up, dry and wet blended by MIX (fx.c ins_shape: the same shape; the dry diagonal RAISE); the
+ * swept ones as two cycles of their sweep, as deep as DEPTH (FLANG the squared triangle, CHOR a sine, PHASR a
+ * triangle). OFF: the dry diagonal, dim */
+static void graph_insert(const track_t *t, uint16_t c)
+{
+    int32_t x, cy = graph_ht / 2, a = 38 * graph_ht / 100, py = cy, ty = clamp(t->p[P_ITYPE], 0, IT_N - 1);
+    int32_t m = ins_mixq(t->p[P_IMIX]), g = 4096 + t->p[P_IA] * t->p[P_IA] * 3, lvl = LEVEL_Q12[t->p[P_IC] & 127];
+    uint32_t sh = ins_bits_sh(t->p[P_IA]);
+    cv_rect(PANEL_X0, cy, PANEL_W, 1, T_RAISE);
+    cv_line(PANEL_X0 + PANEL_W / 2, cy - a, PANEL_X0 + PANEL_W / 2, cy + a, T_RAISE);
+    if (ty == IT_OFF || ty >= IT_PHASER || !m)
+        cv_line(PANEL_X0 + PANEL_W / 6, cy + a, PANEL_X0 + PANEL_W * 5 / 6, cy - a, ty ? T_RAISE : T_DIM);
+    if (ty == IT_OFF)
+        return;
+    for (x = 0; x < PANEL_W; x++) {
+        int32_t y, w;
+        if (ty >= IT_PHASER) {                       /* the sweep, two cycles */
+            uint32_t ph = (uint32_t)x * (0xFFFFFFFFu / (PANEL_W / 2u)), tr = pf_tri(ph);
+            w = ty == IT_CHORUS ? osc_sine(ph) * 2 : ty == IT_FLANGER ? (int32_t)((tr * tr) >> 16) * 2 - 65536 : (int32_t)tr * 2 - 65536;
+            y = cy - (w >> 1) * a / 32768 * t->p[P_IB] / 127;
+        } else {                                     /* the curve: v in, dry v, wet shaped */
+            int32_t v = (x - PANEL_W / 2) * 49152 / (PANEL_W / 2), o;
+            o = ty == IT_CRUSH ? ins_shape(IT_CRUSH, v, sh) : (ins_shape((uint32_t)ty, ((v >> 3) * g) >> 9, 0) * lvl) >> 12;
+            w = v + mulq16(o - v, (uint32_t)m << 1);
+            y = cy - clamp(w, -49152, 49152) * a / 49152;
+        }
+        if (x)
+            cv_line_t(PANEL_X0 + x - 1, py, PANEL_X0 + x, y, c, 2);
+        py = y;
+    }
+}
 /* SLICER page: the pattern's 16 steps, a 'x' step a full bar; a '.' step: GATE a bar as high as it stays
  * open (DEPTH), STUT hatched (it repeats the last 'x'); the step playing underlined. Grey when OFF. */
 static void graph_slicer(const track_t *t, uint16_t c)
@@ -436,6 +542,7 @@ static uint32_t steps_hash(const track_t *t)
         h = (h ^ (st->note[0] + st->n * 128u + st->time * 1024u + st->flags * 4096u + st->note[1] * 65536u)) *
             16777619u;
         h = (h ^ (st->hit | (uint32_t)st->acc << 8 | (uint32_t)st->note[2] << 16 | (uint32_t)st->note[3] << 24)) * 16777619u;
+        h = (h ^ (st->vel | (uint32_t)st->probability << 8)) * 16777619u;   /* (1.5.1: DETAIL, the marks) */
     }
     return h;
 }
@@ -1053,14 +1160,14 @@ static void page_title(char *ti)
             if (i == ui.page)
                 k = n;
         }
-    str_cpy(ti, pt ? pt : grid_on() ? "GRID" : pg->title, 12);
+    str_cpy(ti, pt ? pt : grid_on() && !detail_on() ? "GRID" : pg->title, 12);
     if (n > 1) {
         str_cpy(ti + str_len(ti), " ", 4);
         fmt_int(ti + str_len(ti), (int32_t)k);
         str_cpy(ti + str_len(ti), "/", 4);
         fmt_int(ti + str_len(ti), (int32_t)n);
     }
-    if (pg->graph == GR_ROLL && !drum_track(t)) {  /* the piano roll: its tinted rows' scale ("C MIN") */
+    if (pg->graph == GR_ROLL && !drum_track(t) && !detail_on()) {   /* the piano roll: its tinted rows' scale ("C MIN") */
         str_cpy(ti, N_NOTE[(uint32_t)t->p[P_ROOT] % 12u], 4);
         str_cpy(ti + str_len(ti), " ", 4);
         str_cpy(ti + str_len(ti), N_SCALE[clamp(t->p[P_SCALE], 0, (int32_t)(sizeof N_SCALE / sizeof N_SCALE[0]) - 1)], 8);
@@ -1147,7 +1254,9 @@ static uint32_t graph_signature(void)
             uint64_t lk = motion_lock_steps(trk_index(t));
             h = (h ^ (uint32_t)lk ^ (uint32_t)(lk >> 32) * 2654435761u) * 16777619u;
         }
-        if (!drum_track(t)) {                        /* the roll: its view and the keys held */
+        if (detail_on())                             /* DETAIL: QUANTIZE (NUDGE's DIM), the lane named in the accent */
+            h = (h ^ (0xD1u + (uint32_t)t->p[P_SQNT] * 31u + (ui.hot_t ? ui.hot_col + 1u : 0u) * 977u)) * 2654435761u;
+        else if (!drum_track(t)) {                   /* the roll: its view and the keys held */
             pr_follow(t);
             h = (h ^ (proll.lo + 1u)) * 16777619u;
             h = (h ^ pr_held()) * 16777619u;
@@ -1346,8 +1455,8 @@ static int32_t ev_value(int32_t y, const char *v, const char *unit, uint16_t fg,
 }
 /* SEQ > AUTOMATION (ui_events.c): the track's rows around the one selected: PLAY first (ON / OFF and the counts),
  * QUANTIZE (ON / OFF and the steps nudged), then a row each: the kind (LOCK in the accent, AUTO; STEP: a step's CHANCE,
- * RATCH or NUDGE, a NUDGE that does not play DIM), the step, the name, the value at the right; the last row + ADD (LOCK,
- * CHANCE, RATCH or NUDGE: what OCT+ adds) */
+ * RATCH, NUDGE or VEL, a NUDGE or VEL that does not play DIM), the step, the name, the value at the right; the last row
+ * + ADD (LOCK, CHANCE, RATCH, NUDGE or VEL: what OCT+ adds) */
 static void graph_events(void)
 {
     const track_t *t = TSEL;
@@ -1368,7 +1477,8 @@ static void graph_events(void)
             ev_fix();
             GFX_HOOK_ALIGN(0, y, 0, y + 16, AL_V, "list row text centred up/down");
             cv_text_on(14, y + LIST_TY, &AF_M, ui.ev_id == EV_CHANCE ? "+ ADD CHANCE" : ui.ev_id == EV_RATCH ?
-                       "+ ADD RATCH" : ui.ev_id == EV_NUDGE ? "+ ADD NUDGE" : "+ ADD LOCK", sel ? T_INK : T_DIM, bg);
+                       "+ ADD RATCH" : ui.ev_id == EV_NUDGE ? "+ ADD NUDGE" : ui.ev_id == EV_VEL ?
+                       (ui.ev_vel ? "+ HIDE VEL" : "+ SHOW VEL") : "+ ADD LOCK", sel ? T_INK : T_DIM, bg);
             break;
         }
         if (c >> 8 == EVK_TOP) {                     /* PLAY ON / OFF, the counts: "EVENT 3  LOCK 2" */
@@ -1401,7 +1511,8 @@ static void graph_events(void)
         if (c >> 8 != EVK_REC) {                     /* a step's CHANCE / RATCH / NUDGE: "STEP 05 CHANCE  50%" */
             uint32_t s = c & 0xFFu, kd = c >> 8;
             int32_t v = ev_sval(&t->step[s], kd);
-            uint16_t vc = kd == EVK_NUDGE && !ev_nudge_plays(t, &t->step[s]) ? T_DIM : T_TEXT;   /* (QUANTIZE ON ..) */
+            uint16_t vc = (kd == EVK_NUDGE && !ev_nudge_plays(t, &t->step[s])) ||   /* (QUANTIZE ON ..) */
+                          (kd == EVK_VEL && !ev_vel_plays(&t->step[s])) ? T_DIM : T_TEXT;
             char b[8];
             b[0] = (char)('0' + (s + 1u) / 10u);
             b[1] = (char)('0' + (s + 1u) % 10u);
@@ -1411,9 +1522,12 @@ static void graph_events(void)
             GFX_HOOK_ALIGN(0, y, 0, y + 16, AL_V, "list row text centred up/down");
             cv_text_on(EV_SX, y + LIST_TY, &AF_M, b, sel ? T_INK : T_MID, bg);
             GFX_HOOK_ALIGN(0, y, 0, y + 16, AL_V, "list row text centred up/down");
-            cv_text_on(EV_NX, y + LIST_TY, &AF_M, kd == EVK_CHANCE ? "CHANCE" : kd == EVK_RATCH ? "RATCH" : "NUDGE",
-                       sel ? T_INK : vc, bg);
-            if (kd == EVK_CHANCE) {
+            cv_text_on(EV_NX, y + LIST_TY, &AF_M, kd == EVK_CHANCE ? (v > 100 ? "COND" : "CHANCE") : kd == EVK_RATCH ? "RATCH" :
+                       kd == EVK_VEL ? "VEL" : "NUDGE", sel ? T_INK : vc, bg);
+            if (kd == EVK_CHANCE) {                  /* (1.5.5: "STEP 05 COND  1:4") */
+                ev_value(y, b, ev_chance_fmt(b, v), sel ? T_INK : vc, bg);
+                continue;
+            } else if (kd == EVK_VEL) {
                 fmt_int(b, v);
             } else if (kd == EVK_RATCH) {
                 b[0] = 'x';
@@ -1422,7 +1536,7 @@ static void graph_events(void)
             } else {                                 /* "+3" "/16" */
                 ev_nudge_fmt(b, v);
             }
-            ev_value(y, b, kd == EVK_CHANCE ? "%" : kd == EVK_RATCH ? "" : "/16", sel ? T_INK : vc, bg);
+            ev_value(y, b, kd == EVK_CHANCE ? "%" : kd == EVK_NUDGE ? "/16" : "", sel ? T_INK : vc, bg);
             continue;
         }
         {
@@ -1549,13 +1663,13 @@ static void trk_short_name(uint32_t c, char *b)      /* the track's sound, b hol
 #define TSS_GY 40                                    /* the LEVEL gauge, 3 px */
 #define TSS_MY 48                                    /* the meter, 3 px */
 static void track_strip(uint32_t c, uint32_t sel, uint32_t st, uint32_t mute, uint32_t arm, uint32_t hot, uint32_t lvl,
-                        const char *b)
+                        const char *b, uint32_t lit)
 {
     int32_t gw = CARD_W - 10, m = ts.meter[c] * gw / (TS_MH - 2), fx = (int32_t)lvl * gw / 127;
     uint16_t vc = mute ? T_DIM : T_THEME;
     cv_begin(CARD_W, LG_H_GRAPH, T_BG);
     cv_rrect(0, 0, CARD_W, LG_H_GRAPH, 5, T_SURF, T_BG);
-    cv_icon_on(4, 4, 16, trk_icon(c, sel), sel ? T_ACCENT : T_MID, T_SURF);
+    cv_icon_on(4, 4, 16, trk_icon(c, sel), lit ? (sel ? T_TEXT : T_ACCENT) : sel ? T_ACCENT : T_MID, T_SURF);
     if (st)
         GFX_HOOK_ALIGN(0, 4, 0, 20, AL_V, "mixer badge on the cushion's line");
     if (st == 1u || st == 2u)
@@ -1587,7 +1701,7 @@ static void draw_tracks(void)
     }
     for (c = 0; c < NTRK; c++) {
         track_t *t = &trk[c];
-        uint32_t sel = c == song.sel, lvl = trk_level(c), mute = t->p[P_MUTE] != 0;
+        uint32_t sel = c == song.sel, lvl = trk_level(c), mute = t->p[P_MUTE] != 0, lit = (uint32_t)midi_lit(c);
         uint32_t arm = (song.rec >> c) & 1u, st = arm ? (song.playing ? 1u : 2u) : mute ? 3u : 0u, sig;
         uint32_t hot = sel && ui.hot_t ? ui.hot_col + 1u : 0u;   /* the knob just turned (hot_col + 1): 1 LEVEL, 2 PAN,
                                                                 * 3 REV, 4 MUTE (its badge) */
@@ -1601,17 +1715,18 @@ static void draw_tracks(void)
             m = ts.meter[c] - 1;                     /* falls ~2 dB a frame */
         ts.meter[c] = (uint8_t)(m < 0 ? 0 : m);
         sig = str_hash(1u + sel + st * 2u + (mute && arm) * 16u + hot * 32u, b) + lvl * 7919u +
-              ts.meter[c] * 131u + (uint32_t)(pan + 128) * 104729u + (uint32_t)rv * 1299709u + mute * 3u + sk * 0x9E37u;
+              ts.meter[c] * 131u + (uint32_t)(pan + 128) * 104729u + (uint32_t)rv * 1299709u + mute * 3u + sk * 0x9E37u +
+              lit * 15485863u;                         /* (1.5.5: MIDI IN lights the cushion) */
         if (!ui.force && sig == ts.col[c])
             continue;
         ts.col[c] = sig;
         if (sk) {
-            track_strip(c, sel, st, mute, arm, hot, lvl, b);
+            track_strip(c, sel, st, mute, arm, hot, lvl, b, lit);
             continue;
         }
         cv_begin(CARD_W, H_GRAPH, T_BG);
         cv_window(0, 0, CARD_W, H_GRAPH, 3);           /* (GHOULBOX: a mixer strip is a window) */
-        cv_icon_on(4, 5, 16, trk_icon(c, sel), sel ? T_ACCENT : T_MID, T_SURF);
+        cv_icon_on(4, 5, 16, trk_icon(c, sel), lit ? (sel ? T_TEXT : T_ACCENT) : sel ? T_ACCENT : T_MID, T_SURF);
         if (st)
             GFX_HOOK_ALIGN(0, 5, 0, 21, AL_V, "mixer badge on the cushion's line");
         if (st == 1u || st == 2u)                    /* REC (recording) / ARM (armed, stopped) */
@@ -1654,7 +1769,7 @@ static void draw_tracks(void)
             knob(PAN_X - KNOB_SMALL_R, KS_Y, KNOB_SMALL_R, KNOB_SMALL_COV, KNOB_SMALL_ANG, pan, -64, 63, pc);
             knob(42 - KNOB_SMALL_R, KS_Y, KNOB_SMALL_R, KNOB_SMALL_COV, KNOB_SMALL_ANG, rv, 0, 127, rc);
             v[0] = '+';                              /* the cards' numbers, without the % */
-            fmt_int(pan > 0 ? v + 1 : v, pan * 100 / 64);
+            fmt_int(pan > 0 ? v + 1 : v, pan * 100 / (pan > 0 ? 63 : 64));   /* (+100 at the top: param_format) */
             GFX_HOOK_ALIGN(PAN_X - KNOB_SMALL_R, 0, PAN_X + KNOB_SMALL_R, 0, AL_H, "mixer value under its knob");
             cv_text_in(PAN_X - KNOB_SMALL_R, KS_Y + 17, 2 * KNOB_SMALL_R, &AF_S, v, pc, T_SURF);
             fmt_int(v, (rv * 100 + 63) / 127);
@@ -1697,7 +1812,7 @@ static void home_track_row(uint32_t c)
 {
     track_t *t = &trk[c];
     const step_t *s = seq_steps(t);
-    uint32_t sel = c == song.sel, mute = t->p[P_MUTE] != 0, large = (ui_prefs & PREF_LARGE) != 0u;
+    uint32_t sel = c == song.sel, mute = t->p[P_MUTE] != 0, large = (ui_prefs & PREF_LARGE) != 0u, lit = (uint32_t)midi_lit(c);
     uint32_t len = (uint32_t)clamp(t->p[P_SLEN], 1, NSTEP), np = (len + 15u) / 16u, pg, p0, ph, i, sig, carry = 0;
     int32_t y = Y_GRAPH + (int32_t)c * TR_PITCH, m, x, xr = 222, ch = large ? AF_M_CAP_H : AF_S_CAP_H;
     uint16_t bg = sel ? T_THEME : T_SURF, half = ux_mix(T_THEME, T_INK, 35);
@@ -1716,7 +1831,7 @@ static void home_track_row(uint32_t c)
     if (m < ts.meter[c] - 1)
         m = ts.meter[c] - 1;                         /* (falls as the MIXER's) */
     sig = str_hash(1u + sel + mute * 2u + large * 4u + t->eng_req * 8u, b) + steps_hash(t) * 31u + pg * 7919u +
-          ph * 104729u + len * 1299709u;
+          ph * 104729u + len * 1299709u + lit * 15485863u;   /* (1.5.5: MIDI IN lights the cushion) */
     if (!ui.force && sig == ts.col[c]) {
         if (m != ts.meter[c]) {                      /* the meter alone: its slot */
             ts.meter[c] = (uint8_t)m;
@@ -1730,7 +1845,7 @@ static void home_track_row(uint32_t c)
     ts.meter[c] = (uint8_t)m;
     cv_begin(TR_W, TR_H, T_BG);
     cv_rrect(0, 0, TR_W, TR_H, 5, bg, T_BG);
-    cv_icon_mid(4, TR_H / 2, 16, trk_icon(c, 1), sel ? T_INK : mute ? T_DIM : T_MID, bg);
+    cv_icon_mid(4, TR_H / 2, 16, trk_icon(c, 1), lit ? (sel ? half : T_ACCENT) : sel ? T_INK : mute ? T_DIM : T_MID, bg);
     if (mute) {                                      /* MUTE: its badge at the name line's end */
         xr -= kc_w(KC_MUTE);
         GFX_HOOK_ALIGN(0, TR_NY(large), 0, TR_NY(large) + ch, AL_V, "tracks row badge on the name's line");
@@ -1812,7 +1927,7 @@ static void graph_scope(uint16_t c)
 /* .. on row cy, a px each way at its peak */
 static void graph_scope_at(uint16_t c, int32_t cy, int32_t a)
 {
-    static int16_t snap[SCOPE_N];
+    static int16_t snap[SCOPE_N] __attribute__((section(".pool")));
     uint32_t w = scope_w, i, trig = 0;
     int32_t py = cy, x, peak = 1500;
     for (i = 0; i < SCOPE_N; i++) {
@@ -2296,7 +2411,9 @@ static void draw_graph(void)
             break;
         case GR_ROLL:
             cv_oy = 0;
-            if (drum_track(t))
+            if (detail_on())                          /* 1.5.1 (#199) */
+                graph_detail(t, c);
+            else if (drum_track(t))
                 graph_grid(t, c);
             else
                 graph_roll(t, c);
@@ -2313,6 +2430,9 @@ static void draw_graph(void)
             break;
         case GR_SLCR:
             graph_slicer(t, c);
+            break;
+        case GR_INS:
+            graph_insert(t, c);
             break;
         case GR_MOD:
             cv_oy = 0;

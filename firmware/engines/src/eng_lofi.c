@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: GPL-3.0-only
+/* SPDX-License-Identifier: MIT
  * Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments */
 /* Chip voice: pulse/triangle/saw/noise/wave RAM, quantised amplitude and a held
  * (downsampled) output; SWEEP bends the pitch down after note-on.
@@ -144,7 +144,6 @@ static void lofi_render(track_t *t, voice_t *v, int32_t *out, uint32_t n, const 
     v->s[5]++;
     pitch = m->pitch16 - v->s[3] + ARPS[ar & 3][(v->s[5] / 28) % 3] * 16;   /* ~50 Hz, chip-style */
     inc = pitch_inc(clamp(pitch, 0, 2047));
-    inc += (uint32_t)((int32_t)(inc >> 12) * v->tfine);   /* GHOULBOX: TEMP's rest */
     if (p[P_E5])
         inc += (uint32_t)(((int32_t)(inc >> 12) * (((osc_sine(v->ph[1]) >> 8) * p[P_E5]) >> 4)) >> 4);   /* no overflow */
     v->ph[1] += 0x01000000u;
@@ -212,11 +211,10 @@ static const preset_t LOFI_PRESETS[] = {
     {"WAVE LEAD", {0, 4, 92, 0, 0, 18, 0, 110}, {0, 70, 90, 30}, 0, 1, FX(0, 0, 40, 25), PAT(3)},
     /* STEP: 25 % pulse, DCY 34 = D7 (a 15-step decay over 0.5 s), REL ~54 ms of staircase after note-off */
     {"STEP LEAD", {4, 0, 40, 34, 0, 16, 0, 127}, {0, 64, 127, 55}, 0, 1, FX(0, 0, 40, 20), PAT(4)},
-    /* GHOULBOX presets (tools/ghoulbox_presets.py) */
-    {"TOWER LEAD", {0, 1, 64, 0, 0, 30, 0, 70}, {5, 70, 110, 60}, 0, 1, FX(0, 20, 35, 90), PAT(4)},
-    {"CASIO CHOIR", {0, 4, 92, 0, 0, 20, 0, 80}, {60, 90, 115, 90}, 0, 0, FX(0, 70, 20, 100), PAT(5)},
-    {"RECORDER", {2, 1, 64, 0, 0, 24, 0, 60}, {12, 70, 115, 50}, 0, 1, FX(0, 20, 25, 90), PAT(4)},
-    /* GHOULBOX end */
+
+#ifdef ESTAMPIE_LOFI_PRESETS   /* ESTAMPIE: the host's own presets after these (firmware/src/engine_presets.h) */
+    ESTAMPIE_LOFI_PRESETS
+#endif
 };
 
 static const engine_t ENG_LOFI = {

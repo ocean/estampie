@@ -35,7 +35,8 @@
  * start per voice and block (<= 255 skipped decodes), one index entry per block. Host count, one
  * part, worst settings: ~1050 instructions / sample (~1170 while a 24-zone index builds), against
  * PHASE WIRE 1510, TRIO CHIP CHOIR 1455, WHEEL FULL ORGAN 1413 (8 keys, no sends). State: per part the grain pool, the reverse windows and the index
- * (gr_p, in the pool section); per voice s[0] the zone, s[1] the countdown to the next grain,
+ * (gr_part_t, in the part's engine memory: engines.c eng_mem), the random numbers outside it (gr_rng: they run on
+ * over notes and engine switches); per voice s[0] the zone, s[1] the countdown to the next grain,
  * s[2] the low-pass, voice_t's phases are unused. */
 #define GR_POLY 3                /* voices per part */
 #define GR_NG 12                 /* grains per part */

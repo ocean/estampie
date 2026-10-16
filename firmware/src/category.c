@@ -34,7 +34,8 @@ static const char *const PRESET_CAT[16] = {   /* GHOULBOX: its sounds after Felu
     "PFPP",                      /* 8 GRAIN: CLOUD PAD, GLITCH, FROZEN, SHIMMER */
     "UUUPUDDPU" "UKUP",          /* 9 PHYS: BELL TREE, MARIMBA, PLUCK, BOWED METAL, KALIMBA, HAND DRUM, TOMS, DRONE
                                   * STRING, HARP; LUTE, HARPSICHORD, DUNGEON HARP, GURDY DRONE */
-    "D" "DD" "DD",               /* 10 DRUM: DRUM KIT; CRYPT KIT, TOMB DRUMS; DANCE KIT, PROCESSION */
+    "D" "DD" "DD" "DDD",         /* 10 DRUM: DRUM KIT; CRYPT KIT, TOMB DRUMS; DANCE KIT, PROCESSION; Felucca 1.5.6's DEEP
+                                  * KIT, TIGHT KIT, PERC KIT */
     "FFFF" "FF",                 /* 11 NOISE: WIND, RAIN, ARCADE, METAL; CAVE WIND, TORCH */
     "KUBLPUKU" "LKPPLKB",        /* 12 FM6: TINE EP, BELL, FM BASS, BRASS, PAD, MARIMBA, ORGAN, PLUCK; FRENCH HORN,
                                   * VIRGINAL, GLASS CHOIR, DARK STRINGS, LOFI FLUTE, PIPE ORGAN, TUBA */

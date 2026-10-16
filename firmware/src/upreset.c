@@ -37,8 +37,9 @@
  * 91 parameters before P_E0 and the engine's 8: the four new ones are left out). A pattern keeps no step's NUDGE (core.h
  * SF_NUDGE: its bit 4 would read as the tie here): the step on its start.
  * SPREAD (P_SPRD, #148, before 1.2's release) made it P_COUNT 104 the same way: a record of 103 gets SPREAD 0.
- * GHOULBOX: Felucca 1.5's seven ids (reserved) and TEMP made it P_COUNT 112 the same way: a record of 104 gets TEMP
- * EQUAL; firmware before reads a record of 112 by count (its 96 and the engine's 8: TEMP left out).
+ * 1.5: the INSERT (P_ITYPE .. P_IMIX), ANALOG's filter TYPE and ENV SYNC (P_FTYPE, P_ESYNC) made it 111 the same way,
+ * and GHOULBOX's TEMP after them 112 (GHOULBOX reserved the seven before Felucca 1.5 came): a record of 104 gets the
+ * INSERT OFF, LP, OFF and TEMP EQUAL; 1.2 .. 1.4 read a record of 112 by count (the eight left out).
  * A record of engine 1 (DIGITAL, retired in 1.0) stays as it is (UP_PUT takes it too): its values are DIGITAL's,
  * and every load converts them to an FM6 sound with its own patch (ui.c fm4_apply, fm4_convert.c); lists count it
  * with FM6's (up_engine).
@@ -65,7 +66,7 @@ typedef struct {
 } up_bank_t;
 _Static_assert(sizeof(up_rec_t) == 192, "user preset record layout");
 _Static_assert(P_COUNT <= UP_PMAX * 2u && P_COUNT < 128, "user preset record: P_COUNT");
-static up_bank_t up_bank[UP_SLOTS / UP_PER_BANK];
+static up_bank_t up_bank[UP_SLOTS / UP_PER_BANK] __attribute__((section(".pool")));   /* (main loop only) */
 
 static up_rec_t *up_rec(uint32_t k) { return &up_bank[k / UP_PER_BANK].r[k % UP_PER_BANK]; }
 
