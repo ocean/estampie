@@ -1178,7 +1178,6 @@ static const char *eng_abbr(const char *name)
  * from x 54 to x1 */
 #define LIST_Y(k) (4 + 16 * (int32_t)(k))            /* (GHOULBOX: 16 px rows: 7 fit inside the window's border) */
 #define LIST_TY CAP_IN(M, 16)                           /* Felucca 1.4's AUTOMATION list (M rows): its capitals rows 2 .. 12 */
-#define LIST_NX 64
 static void list_row(int32_t y, int sel, const char *tag, uint16_t tc, const char *name, uint16_t nc, int32_t x1)
 {
     if (sel)

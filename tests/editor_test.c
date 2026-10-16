@@ -45,6 +45,8 @@ static void lcd_blit(uint32_t x, uint32_t y, uint32_t w, uint32_t h, const uint1
 #include "../firmware/src/menu_items.c"
 static void panel_setup(void) {}
 #include "../firmware/src/upreset.c"
+/* a user preset renamed, its category kept 0 (the editor's rename goes through up_rename_cat) */
+static int up_rename(uint32_t k, const char *name) { return up_rename_cat(k, name, 0); }
 #include "../firmware/src/project.c"
 
 static uint32_t flash_ok = 1;

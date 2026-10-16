@@ -75,16 +75,6 @@ def drum_snare():
     return out
 
 
-def drum_hat(decay):
-    out, hp = [], 0.0
-    for i in range(int(decay * 6 * SR)):
-        t = i / SR
-        n = random.uniform(-1, 1)
-        hp += 0.2 * (n - hp)
-        out.append((n - hp) * math.exp(-t / decay))
-    return out
-
-
 def drum_clap():
     out, bp1, bp2 = [], 0.0, 0.0
     for i in range(int(0.35 * SR)):

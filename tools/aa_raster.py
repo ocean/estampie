@@ -16,7 +16,6 @@ moved it up to 0.8 px off its fractional advance, which made the space between r
 uneven (text_spacing_test.py measures it).
 """
 import os
-from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 

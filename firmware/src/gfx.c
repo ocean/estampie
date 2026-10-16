@@ -202,14 +202,6 @@ static void cv_blit(uint32_t x, uint32_t y)
     lcd_blit(x, y, cv_w, cv_h, cv_px);
 }
 
-/* canvas rows r0 .. cv_h-1 only, to screen row y + r0 */
-static void cv_blit_from(uint32_t x, uint32_t y, uint32_t r0)
-{
-    GFX_HOOK_BLIT(x, y, r0);
-    if (r0 < cv_h)
-        lcd_blit(x, y + r0, cv_w, cv_h - r0, cv_px + r0 * cv_w);
-}
-
 static inline void cv_pset(int32_t x, int32_t y, uint16_t c)
 {
     y += cv_oy;
@@ -926,12 +918,4 @@ static void draw_text_box(uint32_t x, uint32_t y, uint32_t w, const aafont_t *f,
                           uint16_t c, int align)
 {
     draw_text_line(x, y, w, f, s, c, T_BG, align);
-}
-/* GHOULBOX: a 4-bit alpha picture (estampie_art.h) centred on a full-width band at row y, in c (one-shots: boot) */
-static void draw_art_box(uint32_t y, uint32_t w, uint32_t h, const uint8_t *d, uint16_t c)
-{
-    cv_begin(240, h, T_BG);
-    cv_alpha((240 - (int32_t)w) / 2, 0, w, h, d, ramp(c, T_BG));
-    cv_blit(0, y);
-    lcd_sync();
 }

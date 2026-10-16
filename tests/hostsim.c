@@ -40,6 +40,8 @@ static void fm1_delay_ms(uint32_t ms) { (void)ms; }
 #include "../firmware/src/midi_uart.c"                /* TRS MIDI IN: its parser (um_byte) feeds midi_in_q */
 #include "../firmware/src/song_chain.c"
 #include "../firmware/src/seq.c"
+/* a block of the arpeggiator, its gate as long as the block (seq.c events_block calls arp_step itself) */
+static void arp_tick(track_t *t, uint32_t n) { arp_step(t, n, n); }
 #define inst (trk[0])                   /* the single-part renders below: part 1 */
 
 static void wav_hdr(FILE *f, uint32_t frames)

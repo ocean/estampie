@@ -356,6 +356,11 @@ static int readout(void)
                  pcs_is((const uint8_t[]){62, 65, 69, 72, 0}, "m7", 2) && pcs_is((const uint8_t[]){59, 62, 65, 0}, "dim", 11) &&
                  pcs_is((const uint8_t[]){60, 65, 67, 0}, "sus4", 0) && pcs_is((const uint8_t[]){60, 0}, 0, 0) &&
                  pcs_is((const uint8_t[]){60, 62, 64, 0}, 0, 0) && pcs_is((const uint8_t[]){60, 61, 0}, 0, 0));
+    bad += check("  Melodee's jazz chords: G B D F Ab 7b9; C E G B D A maj13; D F A C E G m11; C E Bb D 9 (no 5th)",
+                 pcs_is((const uint8_t[]){55, 59, 62, 65, 68, 0}, "7b9", 7) &&
+                 pcs_is((const uint8_t[]){48, 52, 55, 59, 62, 69, 0}, "maj13", 0) &&
+                 pcs_is((const uint8_t[]){50, 53, 57, 60, 64, 67, 0}, "m11", 2) &&
+                 pcs_is((const uint8_t[]){48, 52, 58, 62, 0}, "9", 0));
     t->p[P_CHRD] = CH_DIA3;
     key_down(K_D4);
     bad += check("a chord key: its three notes held and last (D F A)", live_count(live_held[0]) == 3u &&

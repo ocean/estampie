@@ -184,8 +184,7 @@ static void chord_name(char *b, uint32_t root, uint32_t mask)
 }
 
 /* HOME's readout (ui_graph.c graph_played): any notes played, named. From Melodee (Kerem Kilic, ui_graph.c), with the
- * open fifth added for ESTAMPIE's drones, its altered, 11th and 13th chords left out (the flash is full; their notes are
- * shown instead). iv bit i: i semitones over the root */
+ * open fifth added for ESTAMPIE's drones. iv bit i: i semitones over the root */
 static const struct {
     uint16_t iv;
     char q[8];
@@ -193,9 +192,17 @@ static const struct {
     {0x091, ""}, {0x089, "m"}, {0x049, "dim"}, {0x111, "aug"}, {0x0A1, "sus4"}, {0x085, "sus2"}, {0x081, "5"},
     {0x491, "7"}, {0x891, "maj7"}, {0x489, "m7"}, {0x449, "m7b5"}, {0x249, "dim7"}, {0x4A1, "7sus4"},
     {0x291, "6"}, {0x289, "m6"}, {0x095, "add9"}, {0x08D, "madd9"}, {0x0B1, "add11"}, {0x0A9, "madd11"},
-    {0x889, "mM7"}, {0x495, "9"}, {0x895, "maj9"}, {0x48D, "m9"}, {0x4A5, "9sus4"}, {0x295, "6/9"},
+    {0x889, "mM7"}, {0x511, "7#5"}, {0x451, "7b5"}, {0x911, "maj7#5"}, {0x849, "dimM7"},
+    {0x495, "9"}, {0x895, "maj9"}, {0x48D, "m9"}, {0x4A5, "9sus4"}, {0x295, "6/9"}, {0x28D, "m6/9"},
+    {0x493, "7b9"}, {0x499, "7#9"}, {0x4D1, "7#11"}, {0x591, "7b13"}, {0x8D1, "maj7#11"},
+    /* 11ths and 13ths, also without the 5th or the 9th */
+    {0x4B5, "11"}, {0x4AD, "m11"}, {0x4A9, "m11"}, {0x42D, "m11"},
+    {0x695, "13"}, {0x691, "13"}, {0x615, "13"}, {0x611, "13"},
+    {0x6AD, "m13"}, {0x68D, "m13"}, {0x689, "m13"}, {0x60D, "m13"},
+    {0xA95, "maj13"}, {0xA91, "maj13"}, {0xA15, "maj13"},
     /* 7ths and 9ths without the 5th */
     {0x411, "7"}, {0x811, "maj7"}, {0x409, "m7"}, {0x415, "9"}, {0x815, "maj9"}, {0x40D, "m9"},
+    {0x413, "7b9"}, {0x419, "7#9"}, {0x851, "maj7#11"},
 };
 #define NCHORDS (sizeof CHORDS / sizeof CHORDS[0])
 

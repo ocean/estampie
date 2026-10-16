@@ -447,7 +447,6 @@ static int up_rename_cat(uint32_t k, const char *name, uint32_t cat)
     up_set_cat(&r, cat);
     return up_put(k, &r);
 }
-static int up_rename(uint32_t k, const char *name) { return up_rename_cat(k, name, 0); }
 
 /* slot k -> the selected part's sound: engine and every parameter except the track's own (param_kept:
  * the mix, ARP, SCL, the pattern parameters, the SLICER). The steps stay: the record's pattern is

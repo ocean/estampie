@@ -175,7 +175,8 @@ static void slicer_track(const track_t *t, int32_t *b, uint32_t n)
     }
 }
 
-/* slicer_track with SPREAD's side signal sd (fx.c mix_spread; b != 0) */
+/* slicer_track with SPREAD's side signal sd (fx.c mix_spread; b != 0). Two copies on purpose: in slicer_track, sl_seg's
+ * side signal folds away (sd 0), so a track without SPREAD does not pay for it (one function: +26 %, target_budget.py) */
 static __attribute__((noinline)) void slicer_track_sd(const track_t *t, int32_t *b, int32_t *sd, uint32_t n)
 {
     uint32_t k = (uint32_t)(t - trk), i = 0;

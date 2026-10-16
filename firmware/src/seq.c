@@ -387,7 +387,6 @@ static void arp_step(track_t *t, uint32_t n, uint32_t gate_n)
     }
 }
 
-static void arp_tick(track_t *t, uint32_t n) { arp_step(t, n, n); }
 
 /* -------------------------------------------------------- note input --- */
 /* the length of step idx in samples: SWING (the track's + the global, at most 100) makes the even steps longer
@@ -414,6 +413,27 @@ static __attribute__((noinline)) int32_t rec_nudge(int32_t off, uint32_t period)
  * of the last one puts that step back (rec_release), so a short note stays one step.
  * A note recorded into another step ends the hold before (the step model ties the
  * notes of one step only). */
+/* note into step s's notes, once (at most 4: a fifth replaces the last) */
+static void step_add_note(step_t *s, uint32_t note)
+{
+    uint32_t k;
+    for (k = 0; k < s->n && s->note[k] != note; k++)
+        ;
+    if (k == s->n) {
+        if (s->n < 4u)
+            s->n++;
+        s->note[s->n - 1u] = (uint8_t)note;
+    }
+}
+/* note, recorded into step idx as it sounds, is not triggered again when the step plays this pass (at most max) */
+static void rec_skip(track_t *t, uint32_t idx, uint32_t note, uint32_t max)
+{
+    if (t->rskip_idx != idx)
+        t->rskip_n = 0;
+    t->rskip_idx = (uint8_t)idx;
+    if (t->rskip_n < max)
+        t->rskip[t->rskip_n++] = (uint8_t)note;
+}
 static void rec_note(track_t *t, uint32_t note, uint32_t vel)
 {
     uint32_t len = t->p[P_SLEN] > 0 ? (uint32_t)t->p[P_SLEN] : 1u, idx = t->seq_idx % len, k;
@@ -441,26 +461,15 @@ static void rec_note(track_t *t, uint32_t note, uint32_t vel)
             if (vel > 110)
                 s->acc |= (uint8_t)(1u << l);
         } else {                                    /* another GM drum (a low tom, a crash): a note */
-            for (k = 0; k < s->n && s->note[k] != note; k++)
-                ;
-            if (k == s->n) {
-                if (s->n < 4u)
-                    s->n++;
-                s->note[s->n - 1u] = (uint8_t)note;
-            }
+            step_add_note(s, note);
             if (vel > 110)
                 s->flags |= SF_ACCENT;
         }
         if (vel > s->vel)
             s->vel = (uint8_t)vel;
         t->seq_active = 1;
-        if (sounds) {
-            if (t->rskip_idx != idx)
-                t->rskip_n = 0;
-            t->rskip_idx = (uint8_t)idx;
-            if (t->rskip_n < NLANE)
-                t->rskip[t->rskip_n++] = (uint8_t)note;
-        }
+        if (sounds)
+            rec_skip(t, idx, note, NLANE);
         return;
     }
     if (s->time != ST_NOTE || !s->n || trk_vmode(t) != V_POLY) {
@@ -469,26 +478,15 @@ static void rec_note(track_t *t, uint32_t note, uint32_t vel)
         s->vel = 0;
         step_set_nudge(s, off);
     }
-    for (k = 0; k < s->n && s->note[k] != note; k++)
-        ;
-    if (k == s->n) {
-        if (s->n < 4u)
-            s->n++;
-        s->note[s->n - 1u] = (uint8_t)note;
-    }
+    step_add_note(s, note);
     s->time = ST_NOTE;
     if (vel > 110)
         s->flags |= SF_ACCENT;
     if (vel > s->vel)
         s->vel = (uint8_t)vel;
     t->seq_active = 1;
-    if (sounds) {                                   /* it sounds now: the step must not trigger it again */
-        if (t->rskip_idx != idx)
-            t->rskip_n = 0;
-        t->rskip_idx = (uint8_t)idx;
-        if (t->rskip_n < 4u)
-            t->rskip[t->rskip_n++] = (uint8_t)note;
-    }
+    if (sounds)                                     /* it sounds now: the step must not trigger it again */
+        rec_skip(t, idx, note, 4u);
     if (!t->rh_n || t->rh_start != idx) {           /* a new hold (one in another step ends) */
         t->rh_n = 0;
         t->rh_start = (uint8_t)idx;
@@ -600,7 +598,7 @@ static void input_on(track_t *t, uint32_t note, uint32_t vel)
     live_note_on(t, note);
     if (cin_left)
         cin_keep(t, note, vel);
-    if (rec_on(t) && !t->p[P_AMODE])               /* (ARP on: arp_tick records its notes) */
+    if (rec_on(t) && !t->p[P_AMODE])               /* (ARP on: arp_step records its notes) */
         rec_note(t, note, vel);
     if (t->p[P_AMODE])
         arp_add(t, note);

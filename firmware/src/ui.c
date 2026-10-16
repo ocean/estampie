@@ -780,6 +780,27 @@ static void mom_back(const track_t *t)            /* a sound load into t (0: a p
         }
     mom.n = (uint8_t)k;
 }
+/* the undo copy of track t as it is now: its sound, steps, FM6 patch, pattern and motion; what: what UNDO swaps back
+ * (UNDO_SOUND, UNDO_PAT, UNDO_MOT). (A load: load_begin; an edit by hand: edit_undo_take; a SEQ TOOLS action: ui_tools.c
+ * tl_undo_take) */
+static void undo_copy(track_t *t, uint32_t what)
+{
+    uint32_t i = trk_index(t);
+    undo.trk = (uint8_t)(i + 1u);
+    undo.what = (uint8_t)what;
+    undo.eng = t->eng_req;
+    undo.preset = t->preset;
+    undo.user = t->user;
+    memcpy(undo.p, t->p, sizeof undo.p);
+    memcpy(undo.step, t->step, sizeof undo.step);
+    memcpy(undo.fm6, fm6_patch[i], FP_SIZE);
+    undo.fm6_slot = fm6_slot[i];
+    undo.pat = pat_sig[i];
+    undo.from = pat_from[i];
+    undo.from_h = pat_from_h[i];
+    undo.patn = pat_last[i];
+    motion_snapshot_track(t, &undo.motion_backup);
+}
 static void load_begin(track_t *t, uint32_t what)
 {
     uint32_t i = trk_index(t);
@@ -795,20 +816,7 @@ static void load_begin(track_t *t, uint32_t what)
         load_motion_hold(t, what);
         return;
     }
-    undo.trk = (uint8_t)(i + 1u);
-    undo.what = (uint8_t)what;
-    undo.eng = t->eng_req;
-    undo.preset = t->preset;
-    undo.user = t->user;
-    memcpy(undo.p, t->p, sizeof undo.p);
-    memcpy(undo.step, t->step, sizeof undo.step);
-    memcpy(undo.fm6, fm6_patch[i], FP_SIZE);
-    undo.fm6_slot = fm6_slot[i];
-    undo.pat = pat_sig[i];
-    undo.from = pat_from[i];
-    undo.from_h = pat_from_h[i];
-    undo.patn = pat_last[i];
-    motion_snapshot_track(t, &undo.motion_backup);
+    undo_copy(t, what);
     load_motion_hold(t, what);
 }
 
@@ -853,20 +861,7 @@ static void edit_undo_take(track_t *t, uint32_t tag, uint32_t what)
         edit_sig(t) == undo.after && fm1_ms - undo.t_ms < 1500u)
         return;
     undo_mot_tag = tag;
-    undo.trk = (uint8_t)(i + 1u);
-    undo.what = (uint8_t)what;
-    undo.eng = t->eng_req;
-    undo.preset = t->preset;
-    undo.user = t->user;
-    memcpy(undo.p, t->p, sizeof undo.p);
-    memcpy(undo.step, t->step, sizeof undo.step);
-    memcpy(undo.fm6, fm6_patch[i], FP_SIZE);
-    undo.fm6_slot = fm6_slot[i];
-    undo.pat = pat_sig[i];
-    undo.from = pat_from[i];
-    undo.from_h = pat_from_h[i];
-    undo.patn = pat_last[i];
-    motion_snapshot_track(t, &undo.motion_backup);
+    undo_copy(t, what);
     undo.keep = 0;
 }
 static void motion_undo_take(track_t *t, uint32_t tag) { edit_undo_take(t, tag, UNDO_MOT); }
