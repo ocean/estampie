@@ -24,8 +24,16 @@ In this order, each with golden renders and a page to hear it:
 2. **Plucked strings**: lute, citole, gittern, psaltery; a harp with bray pins.
 3. **Reeds and winds**: a brighter shawm, crumhorn, rauschpfeife, bagpipe with drones, recorder, herald trumpet.
 4. **Portative organ** and a reworked **chant**.
-5. **Dances**: patterns on the estampie, saltarello, ductia and trotto, and the rhythmic modes.
-6. **Modes**: all the church modes beside major and minor, with GHOULBOX's tunings.
+5. **Kora and uilleann pipes**, beyond the mediæval set but close to it in spirit:
+   - Kora: PHYS's SYMP model is most of the way there already (a plucked string driving sympathetic strings, after
+     Rings, with BUZZ for the rattle). It needs a harp-like attack, the gourd's body resonance and a pentatonic or
+     heptatonic tuning on the keys.
+   - Uilleann pipes: GURDY's drones under a reedy chanter, and the regulators' chords on the chord keys. The
+     chanter's sweet, conical-bore tone could come from PHYS, FM6 or VOICE; Melodee's CZ phase-distortion engine
+     is worth a look for it. A CC0 recording for SAMPLE is the fallback.
+   - Also check what SLOOP's and Melodee's sound models do that ours don't, and port what fits (with credit).
+6. **Dances**: patterns on the estampie, saltarello, ductia and trotto, and the rhythmic modes.
+7. **Modes**: all the church modes beside major and minor, with GHOULBOX's tunings.
 
 ## Later
 
