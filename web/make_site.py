@@ -6,7 +6,7 @@
   CNAME                       GHOULBOX: the site's domain (GitHub Pages' custom domain; a publish must keep it)
   index.html                  redirect to the emulator (GHOULBOX; the installer when there is none)
   favicon.ico                 ESTAMPIE: the pages' icon (also in webapp/art/, with the home-screen icons)
-  firmware/felucca-VER.fwsc   the package (+ LICENSE, LICENSING.md, LICENSES/: the package holds
+  firmware/estampie-VER.fwsc   the package (+ LICENSE, LICENSING.md, LICENSES/: the package holds
                               JieLi SDK files under Apache-2.0, see LICENSING.md)
   webapp/installer/index.html index_pkg.html, self-contained (fm1pkg.js, fm1ota.js, metadata inlined)
   webapp/editor/index.html    editor.html (+ fukiai.ttf, FUKIAI-LICENSE.txt)
@@ -14,10 +14,10 @@
   webapp/emu/                 GHOULBOX: the browser emulator, build/emu as web/emu/build.sh made it (when it is there)
   src/                        not touched
 
-  web/make_site.py build/felucca-X.Y.fwsc X.Y OUT_DIR
+  web/make_site.py build/estampie-X.Y.fwsc X.Y OUT_DIR
 
 The package must be one made by tools/fm1pkg_make.py (Felucca's own loader, no vendor files).
-Its identity (FM-1_9xx) is read from the package; the device must report it after
+Its identity (FM-1_378xx) is read from the package; the device must report it after
 the install.
 """
 import json
@@ -46,8 +46,8 @@ def main(pkg, version, out):
     pkg, out = Path(pkg), Path(out)
     raw = pkg.read_bytes()
     product = product_of(raw)
-    if not re.fullmatch(r"FM-1_9\d\d", product):
-        raise SystemExit(f"{pkg}: identity {product!r} is not a Felucca package (FM-1_9xx)")
+    if not re.fullmatch(r"FM-1_378\d\d", product):
+        raise SystemExit(f"{pkg}: identity {product!r} is not an ESTAMPIE package (FM-1_378xx)")
     if b"FELUCCA-LOADER-1" not in raw:              # Felucca loader marker: never publish a package with vendor files
         raise SystemExit(f"{pkg}: no Felucca loader in it; the site ships only fm1pkg_make.py packages "
                          "(a package patched from an official one carries vendor files)")
@@ -55,7 +55,7 @@ def main(pkg, version, out):
     lib = strip_module((HERE / "fm1pkg.js").read_text(encoding="utf-8")) + "\n" + \
         strip_module((HERE / "fm1ota.js").read_text(encoding="utf-8")) + "\n" + \
         strip_module((HERE / "fm1backup.js").read_text(encoding="utf-8"))
-    name = f"felucca-{re.sub(r'[^A-Za-z0-9.-]', '-', version)}.fwsc"
+    name = f"estampie-{re.sub(r'[^A-Za-z0-9.-]', '-', version)}.fwsc"
     meta = json.dumps({"version": version, "product": product, "pkg": "../../firmware/" + name})
     for mark in ("/*LIB*/", "/*META*/"):
         if html.count(mark) != 1:
@@ -64,7 +64,7 @@ def main(pkg, version, out):
     inst, ed, fw = out / "webapp" / "installer", out / "webapp" / "editor", out / "firmware"
     for d in (inst, ed, fw):
         d.mkdir(parents=True, exist_ok=True)
-    for old in fw.glob("felucca-*.fwsc"):          # one package: the current one
+    for old in fw.glob("estampie-*.fwsc"):          # one package: the current one
         old.unlink()
     (inst / "index.html").write_text(html, encoding="utf-8")
     shutil.copy(pkg, fw / name)

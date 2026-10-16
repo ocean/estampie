@@ -44,10 +44,11 @@ On Linux x86-64 the toolchain runs natively and Docker is not needed.
 `JIELI_TOOLCHAIN` and `AC79_SDK` override the default locations
 (`.toolchain/jieli/toolchain`, `.toolchain/ac79-sdk`); `JIELI_DOCKER_IMAGE` overrides the pinned container.
 
-`./build.sh --release 1.0` makes a release build: the package identity becomes `FM-1_910`
-and the version string `v1.0`; the package is `build/felucca-1.0.fwsc`, and
-`build/release-1.0/` holds what a release ships: the package, the app
-(`felucca-1.0-app.bin`), `SHA256SUMS`, the sample attribution, `LICENSE`, `LICENSING.md` and
+`./build.sh --release 0.1` makes a release build: the package identity becomes `FM-1_37801`
+(378 spells "EST" on a phone keypad; dev builds are `FM-1_37800`) and the version string `0.1`;
+the package is `build/estampie-0.1.fwsc`, and `build/release-0.1/` holds what a release ships:
+the package, the app (`estampie-0.1-app.bin`), `SHA256SUMS`, the sample attribution, `LICENSE`,
+`LICENSING.md` and
 `LICENSES/` (the package contains Apache-2.0 SDK files, so the licence texts travel with it).
 
 Build options (environment, `0` or `1`; defaults in `firmware/src/felucca.c`, `core.h` and `icons.c`):

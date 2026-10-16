@@ -183,6 +183,10 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 <div class="note">If the installer stops after it says "update mode", unplug the USB cable, plug it back in, and press Install again. The FM-1 stays in update mode until the install is finished, so nothing is lost.</div>
 <h3>Updating later</h3>
 <p>Save a backup in the web editor, then run the installer again. Your projects and sounds stay where they are.</p>
+<h3>If it won't start: USB recovery</h3>
+<p>If an update was interrupted, or ESTAMPIE won't start, switch the FM-1 on while holding <span class="k">OCT−</span> on its own, and keep holding it for a second. Instead of the instrument, ESTAMPIE starts its <b>USB rescue</b>: a dark screen reading ESTAMPIE · USB RESCUE, no sound and no menus, only what the installer needs. Connect the cable and run the installer as usual: it finds the FM-1 and installs again. Your projects, sounds and samples are not touched.</p>
+<p>Two starts in a row that fail within their first 30 seconds open the rescue on their own. To leave it without installing, switch the FM-1 off and on again.</p>
+<div class="note">The OCT− rescue is part of ESTAMPIE itself, not of the FM-1: it only works once ESTAMPIE is installed. Only some FM-1 firmwares have one: Felucca, for example, simply starts as normal when OCT− is held. If even the rescue can't start, the FM-1's built-in boot mode (a device named WL80UBOOT on a computer) is the last resort; it needs a computer, not a phone. Felucca's README describes it.</div>
 <h3>Going back</h3>
 <p>To return to Felucca, install it from <span class="path">hugelton.github.io/Felucca</span> and restore your backup in its editor. Its <b>Return to official V15</b> button puts back M-VAVE's own firmware.</p>
 <h3>Your old music</h3>
@@ -946,7 +950,7 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
   <tr><td>A keyboard on MIDI IN plays nothing</td><td>Try the other type of 3.5 mm MIDI adapter (Type A or B), and check the keyboard sends on a channel MENU › MIDI › MIDI IN listens to (1–4 on CH1-4), or set MIDI IN to SEL.</td></tr>
   <tr><td>No USB audio on a Mac</td><td>MENU › SYSTEM › USB SERIAL OFF (macOS 13–15).</td></tr>
   <tr><td>The recording sounds thin or boomy</td><td>MENU › AUDIO › SPEAKER EQ to FLAT.</td></tr>
-  <tr><td>The screen is black after an interrupted update</td><td>If GHOULBOX itself won't start, switch the FM-1 on while holding <span class="k">OCT−</span>: it starts in its USB rescue (no sound, no menu), and the installer can install again from there; two failed starts in a row open it on their own. If the computer sees a device named WL80UBOOT, the FM-1 is in its boot mode and can be recovered: try another cable and run the installer again. Felucca's README describes further recovery.</td></tr>
+  <tr><td>The screen is black after an interrupted update</td><td>Switch the FM-1 on while holding <span class="k">OCT−</span>: ESTAMPIE starts in its USB rescue (no sound, no menu), and the installer can install again from there; two failed starts in a row open it on their own (chapter 2, <i>If it won't start</i>). If the computer sees a device named WL80UBOOT, the FM-1 is in its boot mode and can be recovered: try another cable and run the installer again. Felucca's README describes further recovery.</td></tr>
   <tr><td>Something else</td><td>Report it at <span class="path">github.com/jasonpersinger/ghoulbox-fm1-dungeon-synth/issues</span> with your OS, browser and the installer's log text.</td></tr>
 </table>
 </section>

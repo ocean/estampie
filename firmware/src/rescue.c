@@ -63,7 +63,7 @@ static void rescue_main(void)
     flash_ok = FL_FAR(fl_jedec_ram)() == 0x856014u;     /* (as persist_boot: the expected 1 MiB part) */
     lcd_init();
     lcd_fill(0, 0, 240, 240, 0);                        /* fixed colours: no palette is read here */
-    draw_text_line(0, 56, 240, &AF_M, "GHOULBOX", UI_CRASH_INK, 0, 1);
+    draw_text_line(0, 56, 240, &AF_M, "ESTAMPIE", UI_CRASH_INK, 0, 1);
     draw_text_line(0, 84, 240, &AF_M, "USB RESCUE", UI_CRASH_INK, 0, 1);
     draw_text_line(0, 128, 240, &AF_S, "CONNECT USB", UI_CRASH_INK, 0, 1);
     draw_text_line(0, 148, 240, &AF_S, flash_ok ? "OPEN THE INSTALLER" : "UNKNOWN FLASH", UI_CRASH_INK, 0, 1);

@@ -21,7 +21,7 @@
                                   * by default; replaced by FM6, its sounds convert (fm4_convert.c) */
 #endif
 #ifndef ESTAMPIE_VERSION
-#define ESTAMPIE_VERSION "0.1"   /* ESTAMPIE's own: the ABOUT screen */
+#define ESTAMPIE_VERSION "0.1"   /* ESTAMPIE's own: the ABOUT screen; build.py --release X.Y */
 #endif
 #ifndef GHOULBOX_VERSION
 #define GHOULBOX_VERSION "2.1"   /* GHOULBOX's own: the ABOUT screen; the editor's version string ends " GB" it */
