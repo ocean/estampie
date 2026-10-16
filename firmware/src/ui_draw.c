@@ -190,8 +190,8 @@ static void head_geo(head_geo_t *g, const char *bpm)
     int32_t db[4];
     z[n] = 0;
     text_ink(&AF_M, z, g->b);
-    for (d = 1; n && d < 10u; d++) {                   /* ESTAMPIE: every digit's ink, first and last (Alagard's 4 */
-        z[0] = (char)('0' + d);                        /* reaches past its 0): the group holds whatever the tempo */
+    for (d = 1; n && d < 10u; d++) {                   /* ESTAMPIE: every digit's ink, first and last (a figure */
+        z[0] = (char)('0' + d);                        /* may reach past 0): the group holds whatever the tempo */
         text_ink(&AF_M, z, db);
         if (db[0] < g->b[0]) g->b[0] = db[0];
         z[0] = '0';
@@ -1056,7 +1056,7 @@ static void draw_columns(void)
         if (k == EVK_QNT) {                            /* QUANTIZE (1.2): the steps with a NUDGE, QNTZ ON / OFF */
             draw_column(0, "ROW", "ALL", "", VAL(0u), -1, ICON_AUTO);
             fmt_int(val, (int32_t)ev_nudged(t));
-            draw_column(1, "NUDGED", val, "", T_MID, -1, ICON_NONE);
+            draw_column(1, "NUDGE", val, "", T_MID, -1, ICON_NONE);   /* (the steps nudged: NUDGED is too wide) */
             draw_column(2, "", "", "", T_THEME, -1, ICON_NONE);
             draw_column(3, "QNTZ", t->p[P_SQNT] ? "ON" : "OFF", "", VAL(3u), -1, ICON_QUANTIZE);
             return;

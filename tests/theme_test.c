@@ -145,9 +145,9 @@ int main(int argc, char **argv)
     palette_set(6);
     cv_begin(3, 1, T_BG); cv_text(0, 0, &probe, "A", T_THEME);
     assert(swap16(cv_px[1]) != green);
-    /* fonts: VT323 S 17 px, Alagard M 16 px and L 32 px (ESTAMPIE; GHOULBOX: VT323 throughout; Felucca: Inter Tight
-     * 12 / 15 / 28); tabular digits; the ellipsis; L has capitals only */
-    assert(AF_S.h == 18 && AF_S.asc == 13 && AF_M.h == 18 && AF_M.asc == 15 && AF_L.h == 33 && AF_L.asc == 29);
+    /* fonts: Alegreya Sans S 14 px and M 16 px, Cinzel L 26 px (ESTAMPIE; GHOULBOX: VT323 throughout; Felucca: Inter
+     * Tight 12 / 15 / 28); tabular digits; the ellipsis; L has capitals only */
+    assert(AF_S.h == 16 && AF_S.asc == 12 && AF_M.h == 20 && AF_M.asc == 15 && AF_L.h == 36 && AF_L.asc == 26);
     assert(text_w(&AF_M, "0000") == text_w(&AF_M, "1111") && text_w(&AF_S, "1.25") == text_w(&AF_S, "8.75"));
     assert(glyph(&AF_S, (uint8_t)ELLIPSIS) != glyph(&AF_S, '?') && glyph(&AF_M, (uint8_t)ELLIPSIS) != glyph(&AF_M, '?'));
     assert(text_w(&AF_L, "abc") == text_w(&AF_L, "ABC"));
@@ -210,14 +210,14 @@ int main(int argc, char **argv)
         }
         printf("primitives: window, stone (seamless), sprite ok\n");
     }
-    {   /* GHOULBOX: the UI faces are crisp (VT323 drawn without smoothing): S's alpha is only 0 or 15 */
+    {   /* ESTAMPIE: the UI faces are anti-aliased (Alegreya Sans; GHOULBOX's VT323 was crisp, its alpha only 0 or 15) */
         unsigned bad_alpha = 0;
         for (unsigned i = 0; i < sizeof AF_S_DATA; i++) {
             unsigned hi = AF_S_DATA[i] >> 4, lo = AF_S_DATA[i] & 15u;
             bad_alpha += (hi != 0u && hi != 15u) + (lo != 0u && lo != 15u);
         }
-        printf("faces: S alpha values other than 0 / 15: %u\n", bad_alpha);
-        assert(bad_alpha == 0u);
+        printf("faces: S alpha values other than 0 / 15 (smoothing): %u\n", bad_alpha);
+        assert(bad_alpha > 0u);
     }
     printf("Palettes: GREY gray, MONO black and white, contrast (worst margin x%.2f), blending, ramp cache, font metrics and ellipsis passed.\n", worst);
     return 0;

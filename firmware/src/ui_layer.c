@@ -965,8 +965,10 @@ static void lcell(int32_t x, int32_t y, int32_t h, const char *note, uint32_t ic
 {
     uint16_t ink, fill = lc_fill(st, &ink), idle = fill == T_RAISE || ((st & LS_ALT) && fill == lc_alt());
     fill = lc_box(x, y, LC_W, h, fill);
-    if (note)                                           /* (GHOULBOX: 1 row up in a 25 .. 30 px cell, over its icon) */
-        cv_text_on(x + 5, y + (h > 24 && h <= 30 && name && *name ? 2 : 3), &AF_S, note, idle ? T_MID : ink, fill);
+    if (note)                     /* (2 rows up in a 25 .. 30 px cell, over its icon: Alegreya's G dips; a key's row:
+                                   * 4 px in, its name 4 px from the right, so G# and LTCH keep a pixel apart) */
+        cv_text_on(x + (h <= 24 && name && *name ? 4 : 5), y + (h > 24 && h <= 30 && name && *name ? 1 : 3), &AF_S, note,
+                   idle ? T_MID : ink, fill);
     if (h > 30) {                                   /* the icon's cell over the name, 6 px between, centred */
         int32_t t = y + HALF_UP(h - (16 + 6 + AF_S_CAP_H)) - (icon < ICON_COUNT);   /* (GHOULBOX: an icon's group 1 row up:
                                                                  * VT323's capitals are 1 row taller; a keycap's sits right) */
@@ -991,7 +993,7 @@ static void lcell(int32_t x, int32_t y, int32_t h, const char *note, uint32_t ic
             cv_text_r(x + LC_W - 3, y + CAP_IN(S, h), &AF_S, name, ink, fill);
         } else {
             GFX_HOOK_ALIGN(0, y, 0, y + h, AL_V, "layer key cell icon / name centred up/down");
-            cv_text_r(x + LC_W - 5, y + CAP_IN(S, h), &AF_S, name, ink, fill);
+            cv_text_r(x + LC_W - 4, y + CAP_IN(S, h), &AF_S, name, ink, fill);
         }
     } else if (!name) {                                    /* (an empty name: the note alone) */
         GFX_HOOK_ALIGN(0, y, 0, y + h, AL_V, "layer key cell icon / name centred up/down");
@@ -1036,7 +1038,8 @@ static void layer_glo(void)
     n[0] = 'C';                                         /* (GHOULBOX: a 20 px row, LATCH's under it) */
     lcell(LC_X(0), 50, 20, n, ICON_MUTE, 0, "ALL", LS_OFF, 0);   /* (unmute all) */
     n[0] = 'D';
-    lcell(LC_X(1), 50, 20, n, ICON_MIDI, 0, "LEARN", ui.ml.on ? LS_SEL : LS_OFF, 0);   /* (MIDI LEARN, Felucca 1.5) */
+    lcell(LC_X(1), 50, 20, n, ICON_MIDI, 0, "LRN", ui.ml.on ? LS_SEL : LS_OFF, 0);   /* (MIDI LEARN, Felucca 1.5: "LEARN"
+                                                                                * and its key are wider than the cell) */
     n[0] = 'E';
     lcell(LC_X(2), 50, 20, n, ICON_STEPS, 0, "FILL", seq_fill ? LS_HELD : LS_OFF, 1);   /* (FILL while held, 1.5.5) */
     n[0] = 'F';
@@ -1147,7 +1150,7 @@ static void layer_seq(void)
         GFX_HOOK_ALIGN(0, 100, 0, 118, AL_V, "tools resize cell on its middle");
         cv_text_on(x + 5, 100 + CAP_IN(S, 18), &AF_S, n, fill == T_RAISE || fill == T_SURF ? T_MID : ink, fill);
         GFX_HOOK_ALIGN(0, 100, 0, 118, AL_V, "tools resize cell on its middle");
-        cv_text_r(x + 26, 100 + CAP_IN(S, 18), &AF_S, p == TL_DOUBLE ? "x2" : "/2", ink, fill);
+        cv_text_r(x + 29, 100 + CAP_IN(S, 18), &AF_S, p == TL_DOUBLE ? "x2" : "/2", ink, fill);   /* (Alegreya: 2 px in) */
     }
 }
 

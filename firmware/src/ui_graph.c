@@ -285,10 +285,10 @@ static void graph_grid(const track_t *t, uint16_t c)
             cv_rrect(6, y, 228, 14, 3, T_RAISE, T_SURF);   /* (6 .. 234, as a list row; the hits 40 .. 230) */
         }
         GFX_HOOK_ALIGN(0, y + 2, 0, y + 12, AL_V, "drum lane label on its hits' line");
-        cv_text_on(10, y - 1, &AF_S, drum_lane_abbr(t, l), mu ? T_DIM : sel ? T_ACCENT : T_MID, row);   /* ink rows 2 .. 11, as the hits */
-        if (mu) {                                    /* (27 .. 39: between the name and the first hit) */
+        cv_text_on(9, y - 1, &AF_S, drum_lane_abbr(t, l), mu ? T_DIM : sel ? T_ACCENT : T_MID, row);   /* ink rows 2 .. 11, as the hits */
+        if (mu) {                                    /* (28 .. 40: between the name and the first hit) */
             GFX_HOOK_ALIGN(0, y, 0, y + 14, AL_V, "drum lane mute icon centred up/down");
-            cv_icon_in(27, y, 0, 14, 12, ICON_MUTE, T_DIM, row);
+            cv_icon_in(28, y, 0, 14, 12, ICON_MUTE, T_DIM, row);
         }
         for (i = 0; i < 16u && base + i < len; i++) {
             const step_t *st = &seq_steps(t)[base + i];
@@ -1284,7 +1284,8 @@ static const char *eng_abbr(const char *name)
 }
 
 /* a list row (16 px): the selected one marked by the sword (GHOULBOX), its text in the accent; tag at x 22, free text
- * from x 54 to x1 */
+ * from LIST_NX to x1 (ESTAMPIE: 61, after Alegreya Sans's widest tag, DRUM) */
+#define LIST_NX 61
 #define LIST_Y(k) (4 + 16 * (int32_t)(k))            /* (GHOULBOX: 16 px rows: 7 fit inside the window's border) */
 #define LIST_TY CAP_IN(M, 16)                           /* Felucca 1.4's AUTOMATION list (M rows): its capitals rows 2 .. 12 */
 static void list_row(int32_t y, int sel, const char *tag, uint16_t tc, const char *name, uint16_t nc, int32_t x1)
@@ -1295,7 +1296,7 @@ static void list_row(int32_t y, int sel, const char *tag, uint16_t tc, const cha
     cv_text_on(22, y + CAP_IN(S, 16), &AF_S, tag, sel ? T_ACCENT : tc, T_SURF);
     if (name[0])
         GFX_HOOK_ALIGN(0, y, 0, y + 16, AL_V, "list row text centred up/down");
-    cv_free_text(54, y + CAP_IN(S, 16), &AF_S, name, sel ? T_ACCENT : nc, T_SURF, x1 - 54);
+    cv_free_text(LIST_NX, y + CAP_IN(S, 16), &AF_S, name, sel ? T_ACCENT : nc, T_SURF, x1 - LIST_NX);
 }
 /* an empty list: a title and a hint, centred */
 static void note_line(int32_t y, const char *s, uint16_t fg)   /* centred S; "[K2] ADD PATTERN": a key hint */
@@ -1770,8 +1771,14 @@ static void draw_tracks(void)
             knob(42 - KNOB_SMALL_R, KS_Y, KNOB_SMALL_R, KNOB_SMALL_COV, KNOB_SMALL_ANG, rv, 0, 127, rc);
             v[0] = '+';                              /* the cards' numbers, without the % */
             fmt_int(pan > 0 ? v + 1 : v, pan * 100 / (pan > 0 ? 63 : 64));   /* (+100 at the top: param_format) */
-            GFX_HOOK_ALIGN(PAN_X - KNOB_SMALL_R, 0, PAN_X + KNOB_SMALL_R, 0, AL_H, "mixer value under its knob");
-            cv_text_in(PAN_X - KNOB_SMALL_R, KS_Y + 17, 2 * KNOB_SMALL_R, &AF_S, v, pc, T_SURF);
+            if (PAN_X - HALF_UP(ink_w(&AF_S, v)) < 3) {   /* ESTAMPIE: Felucca 1.6's "+100" in Alegreya: from the strip's */
+                int32_t ib[4];                              /* inner edge, not past it */
+                text_ink(&AF_S, v, ib);
+                cv_text_on(3 - ib[0], KS_Y + 17, &AF_S, v, pc, T_SURF);
+            } else {
+                GFX_HOOK_ALIGN(PAN_X - KNOB_SMALL_R, 0, PAN_X + KNOB_SMALL_R, 0, AL_H, "mixer value under its knob");
+                cv_text_in(PAN_X - KNOB_SMALL_R, KS_Y + 17, 2 * KNOB_SMALL_R, &AF_S, v, pc, T_SURF);
+            }
             fmt_int(v, (rv * 100 + 63) / 127);
             GFX_HOOK_ALIGN(42 - KNOB_SMALL_R, 0, 42 + KNOB_SMALL_R, 0, AL_H, "mixer value under its knob");
             cv_text_in(42 - KNOB_SMALL_R, KS_Y + 17, 2 * KNOB_SMALL_R, &AF_S, v, rc, T_SURF);

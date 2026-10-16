@@ -2258,7 +2258,7 @@ static int test_roll(void)
     turn(EN_K4, 1); frame(); frame(); frame();
     memcpy(roll_shot, host_screen, sizeof roll_shot);
     ui.force = 1; ui_draw();                       /* (snaps: the static render) */
-    ok = roll_diff(STRIP(3), 0) == 0 && roll_diff(STRIP(3), 1) > 10u && !ui.roll[3].from[0];   /* (the 1 moving: 18 px in Alagard) */
+    ok = roll_diff(STRIP(3), 0) == 0 && roll_diff(STRIP(3), 1) > 10u && !ui.roll[3].from[0];   /* (the 1 moving) */
     bad += check("roll: a mid-roll frame differs from the static render inside the value strip only", ok);
 
     /* BPM 120 -> 121 (SELECT): the header rolls, the digits 1 and 2 stay; the BPM card too (no unit:
@@ -8422,18 +8422,22 @@ static int test_large(void)
     ok &= !memcmp(off + Y_FOOT * 240, host_screen + Y_FOOT * 240, 240u * H_FOOT * sizeof *off);
     bad += check("#15 LARGE ON: HOME's cards tall (a K1..K4 pill over each column), the scope a strip, the footer kept", ok);
 
-    /* the value in L: CLOCK's SWG (0 .. 100) stands about twice as tall as in M. (ESTAMPIE: its BPM stays in M, as
-     * Felucca 1.6.1's #251 wants a knob in one face, and three of Alagard's L figures are wider than a card) */
+    /* the value in L: CLOCK's SWG (0 .. 100) stands about twice as tall as in M; the BPM in one face at every tempo
+     * (Felucca 1.6.1's #251: a knob's values in the face its widest fits) */
     go_title("CLOCK"); frame();
-    ok = large_kind() == LK_TALL && strip_kind() == SK_TITLE && cur_page()->id[1] == G_SWING && lg_value_rows(1) >= AF_L_CAP_H - 3;
-    ok &= lg_value_rows(0) <= AF_M_CAP_H + 2;           /* (BPM: M, at every tempo) */
-    song.g[G_BPM] = 111; ui.force = 1; frame();
-    ok &= lg_value_rows(0) <= AF_M_CAP_H + 2;
+    {
+        int r0 = lg_value_rows(0);
+        ok = large_kind() == LK_TALL && strip_kind() == SK_TITLE && cur_page()->id[1] == G_SWING && lg_value_rows(1) >= AF_L_CAP_H - 3;
+        song.g[G_BPM] = 111; ui.force = 1; frame();
+        ok &= lg_value_rows(0) == r0;
+        song.g[G_BPM] = 208; ui.force = 1; frame();
+        ok &= lg_value_rows(0) == r0;
+    }
     song.g[G_BPM] = 120;
     ui_prefs = 0; ui.force = 1; frame();
     ok &= lg_value_rows(1) <= AF_M_CAP_H + 2;
     ui_prefs = PREF_LARGE; ui.force = 1; frame();
-    bad += check("#15 LARGE: a card value in L (CLOCK's SWG: about 21 rows, M's 11); the BPM one face (M) at every tempo", ok);
+    bad += check("#15 LARGE: a card value in L (CLOCK's SWG: about twice M's rows); the BPM one face at every tempo", ok);
 
     /* a knob turned: its own card redrawn, the other three not */
     go_title("ENV"); frame(); frames(600);

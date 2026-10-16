@@ -45,7 +45,6 @@ specific to this firmware.
 | Node (binary only, for the tests) | `tools/toolchain.lock` | SHA-256 from GPG-signed `SHASUMS256.txt` | npm, npx and corepack deleted | `osv_scan.sh node` (Node security releases) |
 | Zig 0.17.0 (`zig cc` to WebAssembly) | `tools/toolchain.lock` | SHA-256, taken after checking its minisign signature | – | no package dependencies |
 | osv-scanner | `tools/toolchain.lock` | SHA-256 from the release's sums | – | – |
-| Alagard font (Hewett Tsoi, from DaFont) | `tools/toolchain.lock` | SHA-256 of the zip (DaFont serves the same bytes each time); only `alagard.ttf` is taken from it | data only: rasterised by `tools/gen_aa_font.py` (Pillow) | not code: no OSV entries |
 | pi32v2 hardware emulator (Rust) | `tools/toolchain.lock` | git commit; `cargo build --locked` | – | `osv_scan.sh hw-emu` |
 | Web page codecs (libFLAC, LAME) | `web/emu/vendor/README.md` | SHA-256 per file | encode only, the app's own audio | no OSV entries for these versions |
 | GitHub Actions | the workflows | commit SHA; zizmor checks the commits are real | `permissions: {}` / `contents: read`, no persisted credentials | zizmor, Dependabot |

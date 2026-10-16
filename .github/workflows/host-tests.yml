@@ -49,7 +49,7 @@ jobs:
           key: zig-${{ runner.os }}-${{ hashFiles('tools/toolchain.lock') }}
 
       - name: Zig and the fetched font
-        run: tools/setup_toolchain.sh --only zig,fonts
+        run: tools/setup_toolchain.sh --only zig
 
       - name: Generated headers (no toolchain)
         run: python3 tools/build.py --gen-only

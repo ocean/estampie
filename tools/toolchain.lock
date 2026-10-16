@@ -20,9 +20,6 @@ zig            linux-x64     0.17.0                         1cbe9df9f27e6b78d14c
 # osv-scanner: the vulnerability scanner itself (tools/osv_scan.sh); hashes from the release's osv-scanner_SHA256SUMS.
 osv-scanner    darwin-arm64  2.7.0                          d4926ef8da134332543be276dff157e4c170f99ad91fc48e89448a8816bdf70b  https://github.com/google/osv-scanner/releases/download/v2.7.0/osv-scanner_darwin_arm64
 osv-scanner    linux-x64     2.7.0                          160c6253e2922e9e0a6a9771c5c4c40a4b3c6090b34a3cdd5e80c96cc2e4218b  https://github.com/google/osv-scanner/releases/download/v2.7.0/osv-scanner_linux_amd64
-# Alagard, a pixel font by Hewett Tsoi (DaFont: "100% Free"; no licence file ships with it, so it is fetched rather
-# than kept in git): the UI's medium and large text. DaFont serves the same zip bytes every time.
-alagard        any           1.000                          84c3c267fbfb761aeaa6a517a8e8f6ab3f5b40dd015648f25f9fe29de2a65ba6  https://dl.dafont.com/dl/?f=alagard
 # The pi32v2 hardware emulator (tools/hw_check.sh), built with cargo --locked; optional (setup_toolchain.sh --hw).
 fm1-hw-emu     git           main                           056621b0c3187e6712326ef854d0a78ed9605600                          https://github.com/shcherbakov7/m-wave-fm1-browser-emulator.git
 # The container the JieLi tools run in on macOS / non-x86 hosts (tools/build.py): sha256 is the image index digest.

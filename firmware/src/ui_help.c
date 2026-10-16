@@ -28,8 +28,8 @@ static const struct { const char *title, *hint; } HELP_PAGE[] = {
     {"REVERB", "[K1]ROOM SPRING HALL[FX]CHORUS"},
     {"CHORUS", "[K1-4]ALL TRACKS[FX]TAPE"},
     {"TAPE", "[K1]TAPE[K3]AMBIENCE[FX]FX"},   /* GHOULBOX: the master's TAPE / CRSH, the ambience */
-    {"SCL", "[K2]SCALE[K3]QUANTIZE[SCL]CHORDS"},
-    {"CHORD", "[K1]CHORD[KEYS]ONE FINGER[SCL]SCL"},
+    {"SCL", "[K2]SCALE[K3]QNT[SCL]CHORDS"},
+    {"CHORD", "[K1]CHORD[KEYS]1 FINGER[SCL]SCL"},
     {"EDIT 1", H_EDIT},
     {"EDIT 2", H_EDIT},
     {"FILTER", "[K1]LP BP HP[K2]CUTOFF[EDIT]VOICE"},
@@ -45,7 +45,7 @@ static const struct { const char *title, *hint; } HELP_PAGE[] = {
     {"SONG", "[K1]SECTION[KEYS]A-D[PLAY]SONG"},
     {"USER", "[K1]SLOT[OCT+]SAVE[SAVE]PRESETS"},
     {"PRESETS", "[K2]ENGINE[K3]FAV[K4]LIST"},
-    {"PHRASES", "[K1]PHRASE[OCT+]LOAD[SAVE]PROJECT"},
+    {"PHRASES", "[K1]PICK[OCT+]LOAD[SAVE]PROJECT"},
     {"PROJECT", "[K2]ERASE[K4]SAVE[EDIT]NAME"},   /* (1.5.5, #199: ERASE) */
     {"TOOLS", "[K1]CLEAR[K2]INIT, CLEAN[OCT+]DO"},   /* (1.5.5, #190: KNOB 2 on, CLEAN INIT) */
     {"ARP", "[K1]MODE[KEYS]CHORD[ARP]ARP 2"},

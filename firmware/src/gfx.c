@@ -22,7 +22,7 @@ typedef struct {
 } aafont_t;
 typedef struct { const char *name; uint16_t bg, surf, text, theme, accent; } ui_pal_t;
 typedef struct { uint16_t off; uint8_t w; const char *label; } kc_t;
-#include "ui_fonts.h"                   /* ESTAMPIE: AF_S VT323 17 px, AF_M Alagard 16 px, AF_L Alagard 32 px */
+#include "ui_fonts.h"                   /* ESTAMPIE: AF_S Alegreya Sans 14 px, AF_M 16 px, AF_L Cinzel 26 px / 600 */
 #include "ui_palettes.h"
 #include "ui_keycaps.h"                 /* KC_*: the keycaps / badges (tools/gen_aa_keycaps.py), KNOB_* arcs */
 #include "estampie_art.h"               /* ES_INIT, ES_INIT_RULE, ES_WORD, ES_LOGO_S, ES_ORN_*: Huffman-coded, ES_HC (tools/gen_estampie_art.py) */

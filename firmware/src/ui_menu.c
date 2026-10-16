@@ -47,12 +47,13 @@ static const menu_credit_t MENU_CREDITS[] = {
     {"j. 'mach' wust, Peter Wiegel", MC_TEXT},
     {"SIL Open Font License 1.1", MC_TEXT},
     {"", MC_TEXT},
-    {"ALAGARD", MC_TITLE},                   /* ESTAMPIE: the medium and large text */
-    {"Hewett Tsoi: free with credit", MC_TEXT},
-    {"https://www.dafont.com/alagard.font", MC_URL},
+    {"ALEGREYA SANS", MC_TITLE},             /* ESTAMPIE: the UI text */
+    {"The Alegreya Sans Project Authors", MC_TEXT},
+    {"SIL Open Font License 1.1", MC_TEXT},
     {"", MC_TEXT},
-    {"VT323", MC_TITLE},                     /* GHOULBOX's: the small text */
-    {"Peter Hull / SIL Open Font License 1.1", MC_TEXT},
+    {"CINZEL", MC_TITLE},                    /* ESTAMPIE: the large text */
+    {"The Cinzel Project Authors", MC_TEXT},
+    {"SIL Open Font License 1.1", MC_TEXT},
     {"", MC_TEXT},
     {"H\xFCgelton Instruments", MC_TITLE},  /* Felucca's own: above; these are ours too */
     {"Leo Kuroshita", MC_TEXT},
