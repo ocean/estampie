@@ -81,6 +81,10 @@ Build options (environment, `0` or `1`; defaults in `firmware/src/felucca.c`, `c
 `FELUCCA_USB_LAYOUT` (`0` to `3`, default `0`) picks other USB descriptor layouts for testing; see
 `firmware/src/usb.c`.
 
+The build fails when the image leaves less than 16 KiB of the 581,564-byte app slot free (from GHOULBOX 2.2), so
+there is always room for a fix: a new feature has to find its bytes first. `FELUCCA_SPARE_MIN` (bytes) changes the
+floor, e.g. `FELUCCA_SPARE_MIN=0` for an experiment.
+
 ## Samples
 
 The CC0 instrument samples that the SAMPLE engine uses are in `assets/samples-cc0/`

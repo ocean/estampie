@@ -16,7 +16,7 @@ grain_block 136
 phys_render 61
 drum_render 89
 noise_render 259
-fm6_render 364
+fm6_render 398
 fm6_op_run 72
 fm6_op_fb 26
 px_modal_block 111
