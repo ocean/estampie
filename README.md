@@ -26,6 +26,9 @@ screen's type (Alegreya Sans, with Cinzel's Roman capitals for the large text), 
 browser emulator page. The sounds are still mostly GHOULBOX's, with ESTAMPIE's TROTTO scene, DANCE drum kit and
 mediæval presets. See [ROADMAP.md](ROADMAP.md).
 
+Its site (coming soon) is <https://fm-1.drewr.dev/estampie/>: play it in the browser, install it, edit sounds and
+read the guide. It sits beside Drew's other FM-1 projects, FM1Kit and FM-SWITCH ([BUILDING.md](BUILDING.md#the-site)).
+
 ## What it does
 
 Thirteen engines (virtual analog, 6-operator FM, phase distortion, chiptune, real recordings, sung vowels, three

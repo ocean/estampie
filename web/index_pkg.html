@@ -223,7 +223,7 @@ window.addEventListener("beforeunload", (e) => { if (writing) { e.preventDefault
     say(`ESTAMPIE ${VER}`);
     $("go").disabled = false;
     let resume = null;
-    try { resume = sessionStorage.getItem("ghoulbox-resume"); sessionStorage.removeItem("ghoulbox-resume"); } catch (_) {}
+    try { resume = sessionStorage.getItem("estampie-resume"); sessionStorage.removeItem("estampie-resume"); } catch (_) {}
     if (resume) { resumed = true; sayK("resuming"); $("go").click(); }   // (GHOULBOX: back from the "reload" below)
   } catch (e) { sayK("loadfail", e.message); }
 })();
@@ -249,7 +249,7 @@ $("go").addEventListener("click", async () => {
     if (resumed) {                                   // GHOULBOX: reloaded to reach the loader: wait for it (its ports can be
       resumed = false;                               // listed a moment late), never fall back to looking for a running FM-1
       const ok = await up.resume(image, step, meta.product, 15000);
-      if (ok) { try { sessionStorage.removeItem("ghoulbox-reloads"); } catch (_) {} }
+      if (ok) { try { sessionStorage.removeItem("estampie-reloads"); } catch (_) {} }
       sayK(ok ? "done" : "noloader");
       lockInstaller(false);
       return;
@@ -263,9 +263,9 @@ $("go").addEventListener("click", async () => {
     }
   } catch (e) {
     let reloads = 0;
-    try { reloads = +(sessionStorage.getItem("ghoulbox-reloads") || 0); } catch (_) {}
+    try { reloads = +(sessionStorage.getItem("estampie-reloads") || 0); } catch (_) {}
     if (e && e.code === "reload" && reloads >= 2) {   // GHOULBOX: two reloads did not reach it: the cable, not the page
-      try { sessionStorage.removeItem("ghoulbox-reloads"); } catch (_) {}
+      try { sessionStorage.removeItem("estampie-reloads"); } catch (_) {}
       sayK("noloader");
       log(String(e && e.stack || e));
       lockInstaller(false);
@@ -273,7 +273,7 @@ $("go").addEventListener("click", async () => {
     }
     if (e && e.code === "reload") {                    // GHOULBOX: Chrome on Linux hides the loader's input from this page;
       sayK("reload");                                  // a reloaded page sees it and resumes (the loader waits for us)
-      try { sessionStorage.setItem("ghoulbox-resume", "1"); sessionStorage.setItem("ghoulbox-reloads", String(reloads + 1)); } catch (_) {}
+      try { sessionStorage.setItem("estampie-resume", "1"); sessionStorage.setItem("estampie-reloads", String(reloads + 1)); } catch (_) {}
       writing = false;                                 // (no "leave this page?" prompt)
       setTimeout(() => location.reload(), 500);
       return;

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
 # Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments
-"""Make the site (GitHub Pages):
+"""Make the site: ESTAMPIE's folder of https://fm-1.drewr.dev/ (Drew's FM-1 projects, each in a folder of its own:
+/estampie/ is this one). Every link is relative, so OUT_DIR works anywhere; ESTAMPIE_SITE changes only the address
+the guide's text shows (docs/guide/make_guide.py). No CNAME: the domain belongs to the site above this folder.
 
-  CNAME                       the site's custom domain, when ESTAMPIE_DOMAIN names one (GitHub Pages; a publish
-                              must keep it). None by default: the site is served at ESTAMPIE_SITE
   index.html                  redirect to the emulator (GHOULBOX; the installer when there is none)
   favicon.ico                 ESTAMPIE: the pages' icon (also in webapp/art/, with the home-screen icons)
   firmware/estampie-VER.fwsc   the package (+ LICENSE, LICENSING.md, LICENSES/: the package holds
@@ -23,7 +23,6 @@ Its identity (FM-1_378xx) is read from the package; the device must report it af
 the install.
 """
 import json
-import os
 import re
 import shutil
 import subprocess
@@ -31,7 +30,6 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-DOMAIN = os.environ.get("ESTAMPIE_DOMAIN", "")      # GitHub Pages' custom domain (the CNAME file); none by default
 BLOCKS, BLK, KEEP = 20, 0x30, 0x2F
 
 
@@ -96,10 +94,8 @@ def main(pkg, version, out):
     for f in ("fukiai.ttf", "FUKIAI-LICENSE.txt", "fm1backup.js"):
         if (HERE / f).exists():
             shutil.copy(HERE / f, ed / f)
-    if DOMAIN:
-        (out / "CNAME").write_text(DOMAIN, encoding="utf-8")   # (as GitHub writes it: no newline)
-    elif (out / "CNAME").exists():
-        (out / "CNAME").unlink()                    # (GHOULBOX's domain is not ours to claim)
+    if (out / "CNAME").exists():
+        (out / "CNAME").unlink()                    # (an older build's GHOULBOX domain: the folder's site owns its own)
     sys.path.insert(0, str(root / "docs/guide"))   # ESTAMPIE: the user guide
     import make_guide
     shutil.rmtree(out / "guide", ignore_errors=True)

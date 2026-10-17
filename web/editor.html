@@ -2821,7 +2821,7 @@ $("lang").addEventListener("click", () => { lang = lang === "ja" ? "en" : "ja"; 
 /* ---------------------------------------------------------------- tabs --- */
 /* one panel at a time; the last one is remembered (localStorage) and in the URL hash (#sound ...) */
 const TABS = ["sound", "fm6", "sequencer", "tracks", "library", "samples", "projects", "settings"];
-const TAB_KEY = "felucca-editor-tab";
+const TAB_KEY = "estampie-editor-tab";   // (ESTAMPIE: its own names; the site shares an origin with other FM-1 projects)
 const TRACK_TABS = new Set(["sound", "sequencer", "tracks"]);
 let tab = (() => {
   const h = location.hash.slice(1);
@@ -4575,14 +4575,14 @@ $("file").addEventListener("change", async () => {
 });
 
 /* ----------------------------------------------------------- library --- */
-/* Patches live in IndexedDB "felucca-editor": store "patches" (by id), store "meta" ("layout": the
+/* Patches live in IndexedDB "estampie-editor" (ESTAMPIE: not Felucca's name, as fm-1.drewr.dev holds other FM-1 projects' editors): store "patches" (by id), store "meta" ("layout": the
    parameter keys / engine names the stored values are in). Without IndexedDB (some private windows)
    the library is kept in memory only. */
 const store = (() => {
   let dbp = null;
   const open = () => dbp || (dbp = new Promise((res) => {
     try {
-      const r = indexedDB.open("felucca-editor", 1);
+      const r = indexedDB.open("estampie-editor", 1);
       r.onupgradeneeded = () => { r.result.createObjectStore("patches", { keyPath: "id" }); r.result.createObjectStore("meta"); };
       r.onsuccess = () => res(r.result);
       r.onerror = r.onblocked = () => res(null);

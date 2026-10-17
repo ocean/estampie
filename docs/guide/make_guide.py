@@ -7,7 +7,7 @@ tables, the site's address and the crest -> a web page or a PDF.
   python3 docs/guide/make_guide.py pdf OUT.pdf    the same, printed by Chrome (A4)
 
 Needs build/host/desc.json (tests/run_tests.sh writes it) and build/gen (./build.sh: the crest's art).
-ESTAMPIE_SITE sets the site's address as the text shows it (default: ocean.github.io/estampie)."""
+ESTAMPIE_SITE sets the site's address as the text shows it (default: fm-1.drewr.dev/estampie)."""
 import html
 import json
 import os
@@ -20,7 +20,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
-SITE = os.environ.get("ESTAMPIE_SITE", "ocean.github.io/estampie")
+SITE = os.environ.get("ESTAMPIE_SITE", "fm-1.drewr.dev/estampie")
 SHOTS = ("boot", "home", "presets", "roll", "menu", "drone", "ring")   # tools/guide_shots.sh
 WHAT = {"ANALOG": "virtual analog", "FM6": "6-operator FM", "PHASE": "phase distortion", "LOFI": "chiptune",
         "SAMPLE": "real recordings", "VOICE": "sung vowels", "TRIO": "three oscillators", "WHEEL": "tonewheel organ",
