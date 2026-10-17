@@ -23,7 +23,28 @@ sounds are used.
 
 **Status: 0.1, early work.** So far: the VELLUM look (parchment, iron-gall ink, vermilion rubrics, lapis), the
 screen's type (Alegreya Sans, with Cinzel's Roman capitals for the large text), the illuminated boot screen and the
-browser emulator page. The sounds are still GHOULBOX's. See [ROADMAP.md](ROADMAP.md).
+browser emulator page. The sounds are still mostly GHOULBOX's, with ESTAMPIE's TROTTO scene, DANCE drum kit and
+mediæval presets. See [ROADMAP.md](ROADMAP.md).
+
+## What it does
+
+Thirteen engines (virtual analog, 6-operator FM, phase distortion, chiptune, real recordings, sung vowels, three
+oscillators, tonewheel organ, granular, physical models, GHOULBOX's hurdy-gurdy, noise and drums) on four tracks, each
+with a 64-step sequencer, an arpeggiator, chord keys, scales and mediæval temperaments (Pythagorean, meantone, just).
+
+From Felucca 1.5–1.6.1 (merged into ESTAMPIE 0.1):
+
+- **Sound:** an INSERT effect on every track (drives, a bit crusher, phaser, flanger, chorus) with a dry / wet MIX;
+  ANALOG's band- and high-pass filter; PHASE's wavefolder; envelopes in note values (ENV SYNC); humanize (MOD VEL and
+  TIME); three more drum kits.
+- **Sequencer:** SEQ › DETAIL (each step's chance, ratchet, nudge and velocity); conditional steps (1:2 .. 4:4) and
+  FILL; a note's length on the piano roll; EUCLID, DOUBLE and HALF; QNT SEQ+T; a roll that follows the playhead.
+- **MIDI:** MIDI LEARN on the device; Program Change; a channel per track; AUTO SELECT; reverb and echo throws.
+- **The panel:** on-screen HELP, SELECT as a page knob, mod wheel or velocity, your own colours, PROJECT ERASE and
+  CLEAN INIT, dimmer INV LEDs, and the chip's second core as an opt-in beta (MENU › SYSTEM › 2ND CORE).
+
+The user guide is [docs/guide/guide.html](docs/guide/guide.html) (still GHOULBOX's, with these additions; an
+ESTAMPIE edition is on the roadmap).
 
 ## Building
 

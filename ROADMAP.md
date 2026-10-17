@@ -14,6 +14,8 @@ Plans change; nothing here is a promise. GHOULBOX's own roadmap is kept at
 - **Marginalia**: replace GHOULBOX's wall torches beside the graphs with something from a manuscript's margins.
 - **Installer, editor and tools pages** in the same style.
 - **A brighter power-on scene**: a dance at a dance's tempo, instead of the dungeon.
+- **The user guide, ESTAMPIE's own**: rewritten for mediæval dance music (it is still GHOULBOX's dungeon guide, with
+  Felucca 1.5–1.6.1's features added), and its PDF made again.
 
 ## The sounds
 
@@ -39,4 +41,4 @@ In this order, each with golden renders and a page to hear it:
 
 - A phrase library, as the EP-1320 has.
 - Foley: swords, horses' hooves, the crowd.
-- New GHOULBOX and Felucca releases merged as they come.
+- New GHOULBOX and Felucca releases merged as they come (Felucca 1.6.1: merged in 0.1).

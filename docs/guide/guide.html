@@ -228,7 +228,7 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 <p>Other holds: <span class="k">HOME</span> opens the menu and <span class="k">SAVE</span> undoes. What the layers hold:</p>
 <ul>
   <li><b>FX</b>: performance effects on the keys (chapter 16).</li>
-  <li><b>GLO</b>: the black keys F♯ G♯ A♯ C♯ of the lower octave mute tracks 1–4, the white keys F–B solo them while held, C unmutes all, the upper F taps the tempo, and the upper F♯ G♯ A♯ C♯ latch a drone (chapter 15). KNOB 1–4 are the four tracks' levels; SELECT is the tempo even when BPM LOCK is on.</li>
+  <li><b>GLO</b>: the black keys F♯ G♯ A♯ C♯ of the lower octave mute tracks 1–4, the white keys F–B solo them while held, C unmutes all, D starts MIDI LEARN (LRN), E plays the FILL steps while held, the upper F taps the tempo, and the upper F♯ G♯ A♯ C♯ latch a drone (chapter 15). KNOB 1–4 are the four tracks' levels; SELECT is the tempo even when BPM LOCK is on.</li>
   <li><b>SCL</b>: press any key to make it the ROOT; KNOB 1–4 are ROOT, SCL, CHRD and VOIC.</li>
   <li><b>EDIT</b>: each white key picks an engine.</li>
   <li><b>SEQ</b> (SEQ TOOLS): the white keys from the lowest F are tools for the selected track's steps: CLEAR, REVERSE, SHIFT ‹, SHIFT ›, RANDOM and COOK (a few notes changed). KNOB 1–4 are LEN, DIV, SWG and GATE (chapter 13).</li>
@@ -404,7 +404,7 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 <p>Tap <span class="k">LFO</span> a fourth time for <b>MOD</b>: four slots, each connecting a <b>source</b> to a <b>destination</b> with an amount (AMT, which can be negative to turn the movement upside down). KNOB 1 chooses the slot.</p>
 <ul>
   <li><b>Sources:</b> LFO, ENV (the envelope), VEL (how hard a MIDI key is struck), KEY (how high the note is), RAND (a new random value each note), and from a MIDI controller MODW (the mod wheel), AT (aftertouch) and EXPR (an expression pedal).</li>
-  <li><b>Destinations:</b> pitch, cutoff, shape, loudness, pan, the four effect sends, the LFO's own rate, vibrato, and the engine's eight controls (E1–E8).</li>
+  <li><b>Destinations:</b> pitch, cutoff, shape, loudness, pan, the four effect sends, the LFO's own rate, vibrato, the engine's eight controls (E1–E8), and VEL and TIME: each note's velocity and a step's timing, read as the note starts (humanize: chapter 17).</li>
 </ul>
 <div class="try"><b class="t">TRY THIS · Make it breathe</b>
 <ol>
@@ -500,6 +500,7 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
   <div class="n">PART III</div>
   <h1>Reference</h1>
   <p>Every page, sound and setting of GHOULBOX, for looking things up.</p>
+  <p class="small"><b>New in ESTAMPIE 0.1, from Felucca 1.5–1.6.1:</b> an INSERT effect on every track, MIDI LEARN, ANALOG's band- and high-pass filter, envelopes in note values, a step's length and velocity, SEQ › DETAIL, conditional steps and FILL, EUCLID / DOUBLE / HALF, Program Change, a MIDI channel per track, dotted delay times, reverb and echo throws, FOLD for PHASE, humanize, three more drum kits, on-screen HELP, your own colours and the second CPU core (a beta). Each is described in its chapter below. ESTAMPIE also brings back PIANO and FLUTE, retires SAX (its sounds play FLUTE) and leaves out the SLICE engine.</p>
   <ol start="14"><li>Every page</li><li>The sounds</li><li>Effects</li><li>Sequencer, patterns and songs</li><li>Saving your work</li><li>The menu</li><li>MIDI, USB and recording</li></ol>
 </div>
 
@@ -513,48 +514,53 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
   <tr><td>CLOCK</td><td>BPM · SWG · CLK (INT, USB, TRS)</td></tr>
   <tr><td>KEYS</td><td>MODE (OFF, LAYER, SPLIT) · TRK (the second track) · SPLT (where the keyboard divides) · OCT (chapter 15)</td></tr>
   <tr><td rowspan="2"><span class="k">ENV</span></td><td>ENV</td><td>ATK · DEC · SUS · REL</td></tr>
-  <tr><td>ENV DEST</td><td>FLT · PIT · SHP (how much the envelope moves each)</td></tr>
+  <tr><td>ENV DEST</td><td>FLT · PIT · SHP (how much the envelope moves each) · ESYNC (ON: ATK, DEC and REL in note values of the tempo, from 1/64T to 4 bars)</td></tr>
   <tr><td rowspan="4"><span class="k">LFO</span></td><td>LFO</td><td>RATE · WAVE · PHS · FADE</td></tr>
   <tr><td>LFO 2</td><td>SYNC · TRIG · POL</td></tr>
   <tr><td>LFO DEST</td><td>PIT · FLT · SHP · AMP</td></tr>
   <tr><td>MOD</td><td>slot (1–4) · SRC · DST · AMT</td></tr>
-  <tr><td rowspan="6"><span class="k">FX</span></td><td>FX</td><td>The track's sends: DST · CHO · DLY · REV</td></tr>
+  <tr><td rowspan="8"><span class="k">FX</span></td><td>FX</td><td>The track's sends: DST · CHO · DLY · REV</td></tr>
   <tr><td>SLICER</td><td>SLCR (OFF, GATE, STUT) · PAT (1–16) · RATE · DEPTH</td></tr>
+  <tr><td>INSERT</td><td>TYPE (OFF, SOFT, HARD, FOLD, FUZZ, CRUSH, PHASR, FLANG, CHOR) · and the type's three values (chapter 16)</td></tr>
+  <tr><td>INSERT 2</td><td>MIX: the INSERT's dry / wet (100 % by default)</td></tr>
   <tr><td>DLY</td><td>TIME · FDBK · COLR · MIX</td></tr>
   <tr><td>REVERB</td><td>TYPE (ROOM, SPRING, HALL) · SIZE · DAMP</td></tr>
   <tr><td>CHORUS</td><td>CRT (rate) · CDP (depth)</td></tr>
   <tr><td>TAPE</td><td>TAPE · CRSH · AMB · CRKL</td></tr>
-  <tr><td rowspan="2"><span class="k">SCL</span></td><td>SCL</td><td>ROOT · SCL · QNT (OFF, SNAP, WHITE, SEQ) · TRN (transpose)</td></tr>
+  <tr><td rowspan="2"><span class="k">SCL</span></td><td>SCL</td><td>ROOT · SCL · QNT (OFF, SNAP, WHITE, SEQ, SEQ+T: the sequence follows TRN too) · TRN (transpose)</td></tr>
   <tr><td>CHORD</td><td>CHRD (OFF, DIA3, DIA7, MAJ, MIN, DOM7, MAJ7, MIN7, SUS4, POW) · VOIC (CLOSE, OPEN, INV1, INV2, +OCT) · TEMP (EQUAL, PYTH, MEAN, JUST)</td></tr>
-  <tr><td rowspan="3"><span class="k">EDIT</span></td><td>EDIT 1 · EDIT 2</td><td>The engine's eight controls, four per page (chapter 15)</td></tr>
+  <tr><td rowspan="4"><span class="k">EDIT</span></td><td>EDIT 1 · EDIT 2</td><td>The engine's eight controls, four per page (chapter 15)</td></tr>
+  <tr><td>FILTER</td><td>ANALOG only: TYPE (LP, BP, HP: low-, band- or high-pass) · CUT · RES · KTR</td></tr>
   <tr><td>VOICE</td><td>VCE · GLD · GLMOD · PRIO</td></tr>
   <tr><td>VOICE 2</td><td>ALLOC · DTUNE · PAN · MUTE</td></tr>
   <tr><td><span class="k">GLO</span></td><td>SONG</td><td>SECTION (the row) · TRACK · PAT (A–D, or – for silent) · REPS (1–16)</td></tr>
   <tr><td rowspan="5"><span class="k">SAVE</span></td><td>USER</td><td>slot (1–32) · LOAD · ERASE · SAVE</td></tr>
-  <tr><td>PHRASES</td><td>The factory pattern to load</td></tr>
-  <tr><td>PROJECT</td><td>SLOT (1–4) · – · LOAD · SAVE</td></tr>
-  <tr><td>TOOLS</td><td>PAT (clear the track's steps) · SOUND (reset the sound) · ROW · SONG</td></tr>
   <tr><td>PRESETS</td><td>sound · engine · mark as favourite · LIST (ALL, FAV, or one kind: BASS, LEAD, PAD, PLUCK, KEYS, DRUM, FX, OTHER)</td></tr>
+  <tr><td>PHRASES</td><td>The factory pattern to load</td></tr>
+  <tr><td>PROJECT</td><td>SLOT (1–4) · ERASE · LOAD · SAVE</td></tr>
+  <tr><td>TOOLS</td><td>PAT (clear the track's steps) · SOUND (INIT: the engine's first sound; one click further, CLEAN: its plain sound with nothing added) · ROW · SONG</td></tr>
   <tr><td rowspan="2"><span class="k">ARP</span></td><td>ARP</td><td>MODE · RATE · OCT · GATE</td></tr>
   <tr><td>ARP 2</td><td>SWG · PROB · HOLD · ORD</td></tr>
-  <tr><td rowspan="2"><span class="k">SEQ</span></td><td>STEP</td><td>STEP · NOTE · TIME (NOTE, TIE, REST) · FLAG (ACC, SLD, A+S); on a drum track STEP · LANE · HIT · ACC</td></tr>
+  <tr><td rowspan="3"><span class="k">SEQ</span></td><td>STEP</td><td>STEP · NOTE · TIME (NOTE, TIE, REST; on a note: LEN, its length) · FLAG (ACC, SLD, A+S); on a drum track STEP · LANE · HIT · ACC</td></tr>
+  <tr><td>DETAIL</td><td>The cursor step's CHANCE (or a condition) · RATCH · NUDGE · VEL (chapter 17)</td></tr>
   <tr><td>AUTOMATION</td><td>A list of the track's automation and its steps' CHANCE, RATCH and NUDGE: row · step · parameter · value (chapter 17)</td></tr>
 </table>
 <p><b>Action knobs</b> (LOAD, SAVE, CLEAR and the like): turn the knob right to pick the action, then press <span class="k">OCT+</span> to do it. Anything that would overwrite your work asks first.</p>
+<p><b>HELP</b>: with MENU › SYSTEM › HELP on, each page shows a short hint in its footer for a couple of seconds as it opens, and each quick layer a second hint row.</p>
 <div class="note">The <span class="k">PRESETS</span> knob changes the sound on every page that is not a list, so you can audition sounds from anywhere. On the SEQ pages it moves the step cursor instead, and on the lists it moves the selection.</div>
 </section>
 
 <section>
 <h2>15 · The sounds</h2>
-<p class="lede">59 sounds across 13 engines. Hear them all at <span class="path">ghoulbox.messy.quest/sounds</span>. <span class="gb">GB</span> marks GHOULBOX's own; the rest are Felucca's that fit the genre.</p>
+<p class="lede">67 sounds across 13 engines. Hear them all at <span class="path">ghoulbox.messy.quest/sounds</span>. <span class="gb">GB</span> marks GHOULBOX's own; the rest are Felucca's that fit the genre.</p>
 {{SOUNDS}}
 <p>To jump between engines quickly: <span class="k">SAVE</span> › PRESETS, KNOB 2. To mark a sound as a favourite, KNOB 3 on the same page; KNOB 4 then shows favourites only. <span class="k">SAVE</span> › TOOLS › SOUND resets the track's sound to its engine's first preset (the notes stay).</p>
 <h3>The engines</h3>
 <table>
   <tr><th>Engine</th><th>How it makes sound</th><th>Controls to try first (EDIT)</th></tr>
-  <tr><td><span class="k">ANALOG</span></td><td>Two oscillators and noise into a resonant low-pass filter, like the classic synthesizers. Pads, strings, horns, basses.</td><td>WAVE, DTN (detune), CUT, RES, DRV (drive)</td></tr>
+  <tr><td><span class="k">ANALOG</span></td><td>Two oscillators and noise into a resonant filter (low-pass, or band- and high-pass on EDIT › FILTER), like the classic synthesizers. Pads, strings, horns, basses.</td><td>WAVE, DTN (detune), CUT, RES, DRV (drive)</td></tr>
   <tr><td><span class="k">FM6</span></td><td>Frequency modulation with six operators, like the famous 1980s keyboards: oscillators bending each other's pitch for bells, organs, brass, glassy tones.</td><td>SLOT (the patch), FB (feedback: grit), MLVL (brightness)</td></tr>
-  <tr><td><span class="k">PHASE</span></td><td>Phase distortion: a smooth wave bent into brighter shapes.</td><td>WAVE, DCW (how far it's bent)</td></tr>
+  <tr><td><span class="k">PHASE</span></td><td>Phase distortion: a smooth wave bent into brighter shapes, and folded back on itself for metallic tones.</td><td>WAVE, DCW (how far it's bent), FOLD</td></tr>
   <tr><td><span class="k">LOFI</span></td><td>Old game-console chips: pulse, triangle, noise. Chiptune melodies and 8-bit dungeons.</td><td>CHIP, WAVE, DUTY, VIB (vibrato)</td></tr>
   <tr><td><span class="k">SAMPLE</span></td><td>Recordings of real instruments (below).</td><td>SET (the instrument), BITS, CUT</td></tr>
   <tr><td><span class="k">VOICE</span></td><td>A sung tone shaped into vowels: monks, choirs, low chants.</td><td>VOWL, VOWL2 (the vowels), BRTH (breath)</td></tr>
@@ -571,7 +577,7 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 
 <section>
 <h3 style="margin-top:0">Real recordings (SAMPLE)</h3>
-<p>The SAMPLE engine plays four real instruments, recorded by Versilian Studios and released into the public domain (CC0): a <b>bowed psaltery</b> (a medieval zither played with a bow), a <b>Renaissance chamber organ</b>, a <b>baroque tenor recorder</b> and a <b>folk harp</b>. Held notes on the first three sustain for as long as you hold the key. SAMPLE's SET knob lists them first, then your own samples (USR1–USR3, uploaded or recorded in the web editor). An empty user slot plays a plain tone and the screen says NO SAMPLE.</p>
+<p>The SAMPLE engine plays six real instruments, recorded by Versilian Studios and released into the public domain (CC0): a <b>bowed psaltery</b> (a mediæval zither played with a bow), a <b>Renaissance chamber organ</b>, a <b>baroque tenor recorder</b>, a <b>folk harp</b>, a <b>flute</b> and a <b>piano</b>. Held notes on the psaltery, organ, recorder and flute sustain for as long as you hold the key. SAMPLE's SET knob lists them first, then your own samples (USR1–USR3, uploaded or recorded in the web editor). An empty user slot plays a plain tone and the screen says NO SAMPLE.</p>
 <h3>The hurdy-gurdy (GURDY)</h3>
 <p>A hurdy-gurdy is a medieval string instrument played by turning a crank: a rosined wheel rubs the strings, keys on the side stop the melody string, and other strings drone on without stopping. One of them, the <b>trompette</b>, sits on a loose bridge that buzzes when the player jerks the crank, giving the dance its rhythm. GURDY plays one melody note at a time over its drones. Its eight controls (<span class="k">EDIT</span>):</p>
 <table>
@@ -597,7 +603,7 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 </ul>
 <p>KNOB 2 (TRK) picks the second track (T4 to begin with). KNOB 3 (SPLT) is the first key of the upper part (C4 to begin with: the seven keys below it play TRK). KNOB 4 (OCT) moves the second track's notes up or down by up to two octaves; a DRUM track keeps its drums where they are. Each track keeps its own sound, scale and chord settings, and each records what it plays when it is armed. KEYS is saved with the project. On the SEQ pages the keys play the selected track only, because there they write its steps.</p>
 <h3>Drums (DRUM)</h3>
-<p>The DRUM engine's <b>CRYPT</b> kit is built for dungeon synth: a low <b>frame drum</b>, a <b>rope snare</b>, a hand <b>slap</b>, a <b>shaker</b>, <b>jingles</b>, a <b>timpani</b>, a wooden <b>stick</b> and a <b>gong</b>. Two sounds use it: <b>CRYPT KIT</b> and <b>TOMB DRUMS</b> (lower, longer and further back in the hall), both suggesting the TOMBBEAT pattern. KIT also offers Felucca's kits (STD, 80, 10, 66, 55, 77) if you want something less ancient.</p>
+<p>The DRUM engine's <b>CRYPT</b> kit is built for dungeon synth: a low <b>frame drum</b>, a <b>rope snare</b>, a hand <b>slap</b>, a <b>shaker</b>, <b>jingles</b>, a <b>timpani</b>, a wooden <b>stick</b> and a <b>gong</b>. Two sounds use it: <b>CRYPT KIT</b> and <b>TOMB DRUMS</b> (lower, longer and further back in the hall), both suggesting the TOMBBEAT pattern. ESTAMPIE's <b>DANCE</b> kit is a mediæval dance band's percussion (a tabor and its snare, clapping hands, a tambourine, nakers, bones and a hand bell), played by <b>DANCE KIT</b> and <b>PROCESSION</b>. KIT also offers Felucca's kits (STD, 80, 10, 66, 55, 77), and since Felucca 1.5.6 <b>DEEP</b>, <b>TIGHT</b> and <b>PERC</b>, put together from those kits' pieces (DEEP KIT, TIGHT KIT and PERC KIT in PRESETS).</p>
 <p>The keys follow the General MIDI drum map, the same one drum machines and computer drum tracks use: C is the frame drum, D the rope snare, A the timpani. On a DRUM track, <span class="k">SEQ</span> › STEP becomes a <b>drum grid</b>: the white keys are the steps of the current bar and the black keys choose the lane (the drum); KNOB 1–4 are STEP, LANE, HIT and ACC (accent).</p>
 </section>
 
@@ -617,21 +623,29 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
   <li><b>AMB</b>: the ambience, a low cave wind that rises and falls, in the same reverb as your tracks. It uses no track and no voice, and plays even when the song is stopped, like the air in a room. Off (0) by default; the first half of the knob is subtle.</li>
   <li><b>CRKL</b>: the torch crackle in the ambience: from 0 (wind only) to a busy fire. AMB sets the level of both.</li>
 </ul>
+<h3>INSERT</h3>
+<p>An effect of the track's own, after its distortion and before the slicer. KNOB 1 picks the <b>TYPE</b>; the other three are the type's own:</p>
+<ul>
+  <li><b>SOFT, HARD, FOLD, FUZZ</b> (drives): DRIVE · TONE · LEVEL.</li>
+  <li><b>CRUSH</b> (fewer bits and a lower sample rate): BITS (1–16) · RATE · LPF.</li>
+  <li><b>PHASR, FLANG, CHOR</b>: RATE · DEPTH · FDBK.</li>
+</ul>
+<p>INSERT 2 has the <b>MIX</b> (dry / wet). TYPE OFF or MIX 0 leaves the track exactly as before. The INSERT is part of the sound: user presets and projects keep it, and it can be recorded as automation or locked per step.</p>
 <h3>DLY</h3>
-<p><b>TIME</b> (as a note length, so it follows the tempo), <b>FDBK</b> (feedback: how many repeats; past 100 it builds up on itself, so ride it carefully), <b>COLR</b> (darker or brighter repeats) and <b>MIX</b>. With HALL selected, the delay is limited to 0.74 s, because the hall borrows part of its memory.</p>
+<p><b>TIME</b> (as a note length, so it follows the tempo; 1/4D, 1/8D and 1/16D are dotted), <b>FDBK</b> (feedback: how many repeats; past 100 it builds up on itself, so ride it carefully), <b>COLR</b> (darker or brighter repeats) and <b>MIX</b>. With HALL selected, the delay is limited to 0.74 s, because the hall borrows part of its memory.</p>
 <h3>CHORUS</h3>
 <p><b>CRT</b> (rate) and <b>CDP</b> (depth). Slow and deep for a seasick, warped-tape shimmer; fast and shallow for a thicker sound.</p>
 <h3>SLICER</h3>
 <p>Chops the track's sound in time with the tempo. <b>GATE</b> cuts it on and off in one of 16 rhythm patterns (a pulsing pad); <b>STUT</b> repeats short slices of it (a stutter). RATE sets how fine the chopping is, DEPTH how deep.</p>
 <h3>The FX layer</h3>
-<p>Hold <span class="k">FX</span> to play performance effects from the keys (repeat, reverse, filter sweeps, tape stop, freeze, a harmonizer with octave shimmer) and mute tracks with the black keys. With MENU › FX LATCH on, they toggle instead of needing to be held. The screen shows which key does what.</p>
+<p>Hold <span class="k">FX</span> to play performance effects from the keys (repeat, reverse, filter sweeps, tape stop, freeze, a harmonizer with octave shimmer) and mute tracks with the black keys. With MENU › FX LATCH on, they toggle instead of needing to be held. The screen shows which key does what. <b>REV THROW</b> (D5) and <b>ECHO THROW</b> (E5) send every track fully into the reverb or the delay while held, and let the tails ring out when you let go.</p>
 </section>
 
 <section>
 <h2>17 · Sequencer, patterns and songs</h2>
 <p>Each track has its own sequence of up to 64 steps, with chords, ties, accents, slides, per-step chance and ratchets.</p>
 <h3>Load a factory pattern</h3>
-<p><span class="k">SAVE</span> › PHRASES (tap SAVE twice) lists ready-made patterns. Choose one with KNOB 1 (or PRESETS) and press <span class="k">OCT+</span> to load it into the selected track; if the track has notes you wrote, it asks first. GHOULBOX adds nine, all in D minor:</p>
+<p><span class="k">SAVE</span> › PHRASES (tap SAVE three times) lists ready-made patterns. Choose one with KNOB 1 (or PRESETS) and press <span class="k">OCT+</span> to load it into the selected track; if the track has notes you wrote, it asks first. GHOULBOX adds nine, all in D minor:</p>
 <table>
   <tr><th>Pattern</th><th>What it is</th><th>Try it on</th></tr>
   <tr><td>DIRGE</td><td>Slow pad chords</td><td>CRYPT PAD, DARK STRINGS, PIPE ORGAN</td></tr>
@@ -652,11 +666,18 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
   <li>Tap <span class="k">EDIT</span> to empty the step and move on: a rest.</li>
   <li>Set TIME (KNOB 3) to <b>TIE</b> to hold the previous note through this step instead of playing a new one.</li>
   <li>FLAG (KNOB 4): <b>ACC</b> plays the step louder, <b>SLD</b> slides into the next note, <b>A+S</b> both.</li>
+  <li>On a note step, KNOB 3 is its <b>LEN</b>: turn right to hold it over the steps after it (it writes TIEs), left to shorten it again.</li>
 </ol>
+<p>When the pattern is longer than 16 steps, the roll follows the play position while it plays; it stays where you are working while you edit, and follows again 3 seconds later.</p>
 <h3>Record live</h3>
 <p>Press <span class="k">REC</span> to arm the selected track (from any page), press <span class="k">PLAY</span>, and play: what you play is written into the steps as they pass. The sequence loops, and you can keep adding on each pass (overdub). Press REC again to stop recording. Knob moves on an armed track are recorded too (<b>automation</b>): the sound changes at those steps every time round. <span class="k">SEQ</span> › AUTOMATION (tap SEQ twice) lists them; its first row turns them off or clears them.</p>
-<h3>Chance and ratchets</h3>
-<p>A step can have a <b>CHANCE</b> (the percentage of times it plays: lower values make a pattern sparse and alive) and a <b>RATCH</b> count (the step played 2, 3 or 4 times within its length: a drum roll). Add them on <span class="k">SEQ</span> › AUTOMATION: turn KNOB 1 to the last row, <b>+ ADD</b>; choose the step with KNOB 2 and CHANCE or RATCH with KNOB 3, and press <span class="k">OCT+</span> (it starts at 50 % or ×2). KNOB 4 then sets the value. <span class="k">EDIT</span> on a row puts the step back to 100 % or ×1.</p>
+<h3>A step's details: chance, ratchets, nudge, velocity</h3>
+<p>Tap <span class="k">SEQ</span> on STEP for <b>DETAIL</b>: the same roll, with the cursor step's own four values on the knobs. <b>CHANCE</b> (KNOB 1) is the percentage of times it plays: lower values make a pattern sparse and alive. <b>RATCH</b> (KNOB 2) plays it 2, 3 or 4 times within its length: a drum roll. <b>NUDGE</b> (KNOB 3) moves it a little early or late, and <b>VEL</b> (KNOB 4) sets how hard it plays (steps you enter play 96, recorded ones keep how hard you played). <span class="k">PRESETS</span> walks the steps; on a drum track a white key picks the step. <span class="k">EDIT</span> puts the step back (100 %, ×1, 0, 96). The roll draws them as lanes, and STEP marks a step that has any. SEQ › AUTOMATION lists the same values as rows.</p>
+<h3>Conditions and FILL</h3>
+<p>Turn CHANCE past 100 % for a <b>condition</b>: <b>1:2</b> plays on the first of every two loops, <b>2:2</b> on the second, and so on up to <b>4:4</b> (only every fourth loop): one pattern that changes over two, three or four bars. <b>FILL</b> steps play only while you hold <span class="k">GLO</span> + E4, <b>!FILL</b> steps only while you don't: the plain beat, and a roll when you ask for it.</p>
+<h3>Pattern tools: EUCLID, DOUBLE, HALF</h3>
+<p>Hold <span class="k">SEQ</span> and press F4 for <b>EUCLID</b>: a rhythm with its hits spread as evenly as they can be (KNOB 1 HITS, KNOB 2 STEPS, KNOB 3 ROT), written at once so you hear it; OCT+ keeps it, OCT− cancels. D5 <b>doubles</b> the pattern (its steps once more after them) and E5 <b>halves</b> it. Each is one undo.</p>
+<p class="small">Humanize: in the MOD matrix (chapter 10), RAND → <b>VEL</b> gives every note its own velocity, and RAND → <b>TIME</b> plays steps up to 30 ms late, for a looser, played feel.</p>
 <h3>Length, speed and clearing</h3>
 <ul>
   <li>Hold <span class="k">SEQ</span>: KNOB 1–4 are LEN (1–64 steps), DIV (step length, from 4 bars to 1/32), SWG (swing) and GATE (how long notes sound within their step).</li>
@@ -691,6 +712,8 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 <p>Your sounds appear after the factory sounds when you turn <span class="k">PRESETS</span>. On USER and PROJECT, <span class="k">EDIT</span> renames the selected slot.</p>
 <h3>Undo</h3>
 <p>Hold <span class="k">SAVE</span> to go back before the last sound load, pattern load or clear (hold again to redo).</p>
+<h3>Erase a project, start a sound clean</h3>
+<p>On SAVE › PROJECT, KNOB 2 (ERASE) and <span class="k">OCT+</span> twice empties the slot (only while stopped). SAVE › TOOLS › SOUND turned one click past INIT is <b>CLEAN</b>: the engine's plain sound with no sends, no INSERT and no modulation, a blank canvas (in the EDIT layer it is F5, the key after INIT).</p>
 <h3>Backups</h3>
 <p>The web editor (on the installer site) makes a full backup of the FM-1 to your computer and restores it. Do one now and then, and before any experiment you might regret.</p>
 <div class="note">The FM-1 comes back on with your last session: it saves it once you have been stopped for about 10 seconds (MENU › SYSTEM › RESTORE LAST, ON since 2.1). Set RESTORE LAST to OFF to start with the power-on scene (MENU › SYSTEM › SCENE) every time instead. Your saved projects stay in their slots; load one from <span class="k">SAVE</span> › PROJECT.</div>
@@ -701,11 +724,11 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 <p>Hold <span class="k">HOME</span> for the menu. <span class="k">ALGORITHM</span> moves between its five tabs, <span class="k">PRESETS</span> through the rows, and any knob or <span class="k">OCT−</span> / <span class="k">OCT+</span> changes a value. Press <span class="k">HOME</span> to close it.</p>
 <table>
   <tr><th>Tab</th><th>Settings</th></tr>
-  <tr><td>DISPLAY</td><td><b>COLOR</b> (palette; GHOULBOX's is CRYPT) · <b>STYLE</b> (FLAT or LINE) · <b>LARGE</b> (bigger knob cards) · <b>ANIM</b> (rolling digits ON or OFF; IDLE also plays a light show on the keys when you leave it alone) · <b>LEDS</b> (OFF, DIM LO, DIM HI, INV) · <b>SCREEN OFF</b> (after NEVER, 5, 15, 30 or 60 minutes) · <b>SCOPE</b> (OUT draws the sound after MASTER, MIX before it) · <b>HOME</b> (SCOPE, or TRACKS: all four tracks at a glance)</td></tr>
-  <tr><td>CONTROL</td><td><b>HOLD</b> (how long a quick layer takes to open) · <b>KNOB ACCEL</b> (fast turns move further) · <b>FX LATCH</b> · <b>BPM LOCK</b> (SELECT stops changing the tempo) · <b>SCALE LEDS</b> (the keys light the scale) · <b>STEP PREVIEW</b> (on STEP, the cursor's step sounds as you move to it) · <b>CHORD ENTRY</b> (HOLD writes the keys held together into a step; ADD adds each key to it) · <b>NOTE NAMES</b> (the note or chord you play, named large on HOME and at the top of the screen on the other pages)</td></tr>
-  <tr><td>AUDIO</td><td><b>SPEAKER EQ</b> (FLAT, LOWCUT, BASS+; keep FLAT when recording) · <b>USB LEVEL</b> (MASTER or FIXED) · <b>CLICK</b> (a metronome: OFF, REC while recording, or ON) · <b>CLICK LEVEL</b> · <b>COUNT-IN</b> (OFF, 1 BAR, 2 BARS before recording) · <b>TUNE</b> (±50 cents, saved with the project)</td></tr>
-  <tr><td>MIDI</td><td><b>MIDI IN</b> (which channels play which track: chapter 20; saved with the project)</td></tr>
-  <tr><td>SYSTEM</td><td><b>SCENE</b> (what plays at power-on: DUNGEON, CRYPT, TAVERN, CHAPEL or BLANK; chapter 3) · <b>USB SERIAL</b> (OFF from 1.2 on; turn it ON only for Felucca's developer console, and keep it OFF on macOS 13–15 so the USB audio input appears) · <b>RESTORE LAST</b> (ON, the default: your last session comes back at power-on; OFF: the scene) · HARDWARE CALIBRATION · <b>INFO</b> (the firmware, the USB connection and the CPU load) · ABOUT (the version)</td></tr>
+  <tr><td>DISPLAY</td><td><b>COLOR</b> (palette; GHOULBOX's is CRYPT) · <b>STYLE</b> (FLAT or LINE) · <b>LARGE</b> (bigger knob cards) · <b>ANIM</b> (rolling digits ON or OFF; IDLE also plays a light show on the keys when you leave it alone) · <b>LEDS</b> (OFF, DIM LO, DIM HI, INV, and INV LO and INV HI: INV with the lit keys dimmed) · <b>SCREEN OFF</b> (after NEVER, 5, 15, 30 or 60 minutes) · <b>SCOPE</b> (OUT draws the sound after MASTER, MIX before it) · <b>HOME</b> (SCOPE; TRACKS: all four tracks at a glance; LEVELS: the same, with KNOB 1–4 the four tracks' levels). COLOR has <b>CUSTOM</b> once you have made your own colours in the web editor (Settings › Custom palette).</td></tr>
+  <tr><td>CONTROL</td><td><b>HOLD</b> (how long a quick layer takes to open) · <b>KNOB ACCEL</b> (fast turns move further) · <b>FX LATCH</b> · <b>BPM LOCK</b> (SELECT stops changing the tempo) · <b>SCALE LEDS</b> (the keys light the scale) · <b>CHORD ENTRY</b> (HOLD writes the keys held together into a step; ADD adds each key to it) · <b>NOTE NAMES</b> (the note or chord you play, named large on HOME and at the top of the screen on the other pages) · <b>SELECT</b> (what the SELECT knob does: BPM, the tempo; PAGE, the pages of the button you are on; MODW, a mod wheel; VEL, how hard the keys play)</td></tr>
+  <tr><td>AUDIO</td><td><b>SPEAKER EQ</b> (FLAT, LOWCUT, BASS+; keep FLAT when recording) · <b>USB LEVEL</b> (MASTER or FIXED) · <b>CLICK</b> (a metronome: OFF, REC while recording, or ON) · <b>CLICK LEVEL</b> · <b>COUNT-IN</b> (OFF, 1 BAR, 2 BARS before recording) · <b>TUNE</b> (±50 cents, saved with the project) · <b>STEP PREVIEW</b> (on STEP, the cursor's step sounds as you move to it)</td></tr>
+  <tr><td>MIDI</td><td><b>MIDI IN</b> (which channels play which track: chapter 20; saved with the project) · <b>T1–T4 CHANNEL</b> (with MIDI IN on TRACK) · <b>AUTO SELECT</b> (the track MIDI plays becomes the selected one) · <b>SCREEN WAKE</b> (+MIDI: a note from MIDI wakes the screen; PANEL: only the panel) · <b>LEARN CLEAR</b> (forgets every learned CC)</td></tr>
+  <tr><td>SYSTEM</td><td><b>SCENE</b> (what plays at power-on: DUNGEON, CRYPT, TAVERN, CHAPEL or BLANK; chapter 3) · <b>USB SERIAL</b> (OFF from 1.2 on; turn it ON only for Felucca's developer console, and keep it OFF on macOS 13–15 so the USB audio input appears) · <b>RESTORE LAST</b> (ON, the default: your last session comes back at power-on; OFF: the scene) · <b>HELP</b> (a hint on each page as it opens) · <b>2ND CORE</b> (a beta: ON lets the chip's second processor share the sound work, from the next power-on; it switches itself OFF if it misbehaves) · HARDWARE CALIBRATION · <b>INFO</b> (the firmware, the USB connection and the CPU load) · ABOUT (the version)</td></tr>
 </table>
 </section>
 
@@ -719,7 +742,11 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
   <li><b>Another instrument's clock</b>: <span class="k">HOME</span> › CLOCK › CLK (tap HOME twice on HOME) set to USB or TRS makes the FM-1 follow the tempo and start/stop of a computer or drum machine.</li>
 </ul>
 <h3>Channels</h3>
-<p>MIDI has 16 channels, like 16 radio stations on one cable. With MENU › MIDI › MIDI IN on <b>CH1-4</b>, channels 1–4 play tracks 1–4 and the rest are ignored: a DAW can play all four tracks at once. <b>CH5-8</b>, <b>CH9-12</b> and <b>CH13-16</b> do the same with those channels, to share a cable with other instruments. With <b>SEL</b>, every channel plays the selected track. Pitch bend and the sustain pedal work too.</p>
+<p>MIDI has 16 channels, like 16 radio stations on one cable. With MENU › MIDI › MIDI IN on <b>CH1-4</b>, channels 1–4 play tracks 1–4 and the rest are ignored: a DAW can play all four tracks at once. <b>CH5-8</b>, <b>CH9-12</b> and <b>CH13-16</b> do the same with those channels, to share a cable with other instruments. With <b>SEL</b>, every channel plays the selected track. With <b>TRACK</b>, each track has its own channel (MENU › MIDI › T1–T4 CHANNEL: 1–16, OMNI for any channel no other track has, or OFF): drums on 10, a bass on 2, a lead on 11. Pitch bend and the sustain pedal work too. A note from MIDI lights its track's number for a moment, and with AUTO SELECT on, the track you play becomes the selected one.</p>
+<h3>Program Change</h3>
+<p>A <b>Program Change</b> on a track's channel loads that track's sound, numbered from 0 in the order PRESETS lists the engine's sounds (on a DRUM track, its kits; on FM6, its presets and then the voice bank's). The steps and the track's own settings stay. A number past the last is ignored.</p>
+<h3>MIDI LEARN</h3>
+<p>Hold <span class="k">GLO</span> and press D4 (<b>LRN</b>) to start learning. Turn any knob on the FM-1 to pick its parameter, then move a knob or fader on your controller: that CC now sets it (the screen says, for example, "CC74 → T1 CUT"). Turn the next knob to learn the next one; <span class="k">OCT−</span> forgets the picked parameter's CC, and <span class="k">OCT+</span> (or GLO + D4 again) finishes. Up to 16 CCs, kept with the settings; a learned CC takes over from the fixed list below.</p>
 <h3>Control changes (CC)</h3>
 <p>Knobs on a MIDI controller send <b>control changes</b>, numbered 0–127. These turn the FM-1's controls: those marked <i>track</i> on the channel's track, the others for the whole mix:</p>
 <table>
