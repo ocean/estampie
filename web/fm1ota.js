@@ -10,8 +10,62 @@
 const HS_QUERY = [0xF0, 0x00, 0x32, 0x45, 0x00, 0x00, 0x00, 0x40, 0x7F, 0xF7];
 const UPGRADE = [0xF0, 0x22, 0x24, 0x35, 0x7F, 0xF7];
 const MAXDATA = 512;
+const FINISHED = [...new TextEncoder().encode("success"), 0];   // the answer to a finish request
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const IS_OTA = (id) => /^ota-/i.test(id.model);
+
+// ESTAMPIE: how far a loader has written, after FM1Kit's WriteProgress (github.com/ocean/FM1Kit, MIT): loaders read in
+// their own order (V15's backwards, Felucca's forwards, then all of it again), so neither the furthest address nor a
+// count of requests says how far it is. Progress is the share of the application area (fm1pkg.js applicationRange)
+// read at least once; reads outside it (headers, the boot area some loaders rewrite first) leave it where it is. Once
+// half is covered, three full-size reads in a row of bytes already read start the loader's check: its fraction is the
+// share read again; a read of new ground goes back to writing. The time left comes from the rate so far.
+export class WriteProgress {
+  constructor(range, now = () => Date.now()) {
+    this.start = range.start;
+    this.size = Math.max(1, range.end - range.start);
+    this.seen = new Uint8Array(this.size);                // 1 written, 2 read again (one byte each: 0.6 MB)
+    this.covered = 0;
+    this.rechecked = 0;
+    this.phase = "writing";
+    this.repeats = 0;
+    this.requests = 0;
+    this.now = now;
+    this.t0 = null;
+  }
+
+  // a read of len bytes at addr (the logical image); returns this
+  read(addr, len) {
+    this.requests++;
+    const a = Math.max(addr, this.start) - this.start, b = Math.min(addr + len, this.start + this.size) - this.start;
+    if (b <= a) return this;
+    if (this.t0 === null) this.t0 = this.now();
+    let fresh = 0, again = 0;
+    for (let i = a; i < b; i++) {
+      if (this.seen[i] === 0) { this.seen[i] = 1; fresh++; } else if (this.seen[i] === 1) { this.seen[i] = 2; again++; }
+    }
+    this.covered += fresh;
+    this.rechecked += again;
+    if (fresh) {
+      this.phase = "writing";
+      this.repeats = 0;
+    } else if (this.phase === "writing" && len >= MAXDATA && this.covered * 2 >= this.size && ++this.repeats >= 3) {
+      this.phase = "checking";
+    }
+    return this;
+  }
+
+  get fraction() {
+    return this.phase === "checking" ? Math.min(1, this.rechecked / Math.max(1, this.covered)) : this.covered / this.size;
+  }
+
+  // seconds left in this phase from the rate so far (null until there is a rate to go on)
+  get secondsLeft() {
+    const f = this.fraction, t = this.t0 === null ? 0 : (this.now() - this.t0) / 1000;
+    if (this.phase !== "writing" || f < 0.05 || t < 1) return null;
+    return Math.max(0, Math.round(t * (1 - f) / f));
+  }
+}
 
 // errors carry a code the pages translate: notfound, model, stopped, noloader, lost, noreturn,
 // mismatch (detail: the identity the device reports), badreq
@@ -157,9 +211,11 @@ export class Updater {
       /fm-1|felucca|ota|composite|sinco|usb-midi/i.test(o.name || "") && !ins.has(o.name));
   }
 
-  // serve read requests until the device asks for one of the finish addresses; stops early
-  // when the port disappears (lost: true) instead of waiting out idleMs
-  async serve(link, image, finishAddr, idleMs, onProgress) {
+  // serve read requests until the device asks for one of the finish addresses; stops early when the port disappears
+  // (lost: true) instead of waiting out idleMs. ESTAMPIE (after FM1Kit): every read answered at once (the loader paces
+  // itself: no pause, about twice as fast), onRead(addr, len) for each; the finish answered "success", then the port kept
+  // 600 ms for a repeated finish (settle); a finish for the other step stops the update
+  async serve(link, image, finishAddr, idleMs, onRead) {
     let served = 0, last = Date.now();
     for (;;) {
       const pkt = await link.read(1000);
@@ -172,22 +228,35 @@ export class Updater {
       if (!r) continue;
       last = Date.now();
       if (r.addr === 0xE0000000 || r.addr === 0xF0000000) {
-        link.send(response(r.addr, [...new TextEncoder().encode("success"), 0]));
-        if (r.addr === finishAddr) return { served, finished: true };
-        continue;
+        link.send(response(r.addr, FINISHED));
+        if (r.addr !== finishAddr) throw fail("stopped", `the device finished ${r.addr === 0xE0000000 ? "staging" : "writing"} out of turn`);
+        await this.settle(link);
+        return { served, finished: true };
       }
       if (r.len > MAXDATA || r.addr + r.len > image.length) throw fail("badreq", `bad request ${r.addr.toString(16)}+${r.len}`);
-      await sleep(10);
       if (!link.send(response(r.addr, Array.from(image.subarray(r.addr, r.addr + r.len)), r.fl))) {
         return { served, finished: false, lost: true };
       }
       served++;
-      if (onProgress) onProgress(served, r.addr);
+      if (onRead) onRead(r.addr, r.len);
     }
   }
 
-  // full install: running firmware -> loader -> new firmware
-  async install(image, product, onStep) {
+  // after a finish: 600 ms more answering a repeated finish (a loader can ask again), then the port is closed
+  async settle(link) {
+    const end = Date.now() + 600;
+    while (Date.now() < end && !link.lost) {
+      const pkt = await link.read(end - Date.now());
+      const r = pkt && parseRequest(pkt);
+      if (r && (r.addr === 0xE0000000 || r.addr === 0xF0000000)) link.send(response(r.addr, FINISHED));
+    }
+  }
+
+  // full install: running firmware -> loader -> new firmware. onStep(name, detail): start (identity), prepare (requests:
+  // the running firmware stages the loader, no percentage), loader (waiting for it), found (its identity), write (a
+  // WriteProgress: writing or checking, fraction, seconds left), reboot, done (identity). range: the application area
+  // (fm1pkg.js applicationRange; default the whole image)
+  async install(image, product, onStep, range = null) {
     const step = onStep || (() => {});
     const dev = await this.find((id) => !IS_OTA(id));
     if (!dev) throw fail("notfound", "FM-1 not found (USB cable, and no other app using it?)");
@@ -196,18 +265,25 @@ export class Updater {
     step("start", dev.id.text);
     dev.link.send(UPGRADE);
     await sleep(2000);
-    const s1 = await this.serve(dev.link, image, 0xE0000000, 8000, (n) => step("verify", n));
+    let staged = 0;
+    const s1 = await this.serve(dev.link, image, 0xE0000000, 8000, () => step("prepare", ++staged));
     dev.link.close();
     if (!s1.finished) throw fail(s1.lost ? "lost" : "stopped", `the device ${s1.lost ? "was disconnected" : "stopped"} after ${s1.served} requests: nothing was written`);
     step("loader");
     await sleep(3000);
     const ota = await this.waitFor((id) => id.model === "ota-" + model, 30000, true);
     if (!ota) throw fail("noloader", "the update loader did not appear. Replug the USB cable and press Install again: the device stays in update mode until it is finished.");
-    const s2 = await this.write(ota, image, step);
+    step("found", ota.id.text);
+    const s2 = await this.write(ota, image, step, range);
     if (!s2.finished) throw fail(s2.lost ? "lost" : "stopped", `the loader ${s2.lost ? "was disconnected" : "stopped"} after ${s2.served} requests. Replug and press Install again to resume.`);
+    return this.back(model, product, step);
+  }
+
+  // the new firmware answering again, and reporting the package's identity
+  async back(model, product, step) {
     step("reboot");
     await sleep(3000);
-    const back = await this.waitFor((id) => !IS_OTA(id), 40000);
+    const back = await this.waitFor((id) => !IS_OTA(id) && id.model === model, 40000);
     if (!back) throw fail("noreturn", "the device did not come back: power-cycle it");
     back.link.close();
     if (back.id.text !== product) throw fail("mismatch", `installed, but the device reports ${back.id.text}`, back.id.text);
@@ -215,34 +291,28 @@ export class Updater {
     return back.id.text;
   }
 
-  // step 2 with the loader found by find()/waitFor()
-  async write(ota, image, step) {
+  // step 2 with the loader found by find()/waitFor(): its reads into a WriteProgress, reported as "write"
+  async write(ota, image, step, range = null) {
+    const progress = new WriteProgress(range || { start: 0, end: image.length });
     ota.link.send(UPGRADE);
     await sleep(2000);
-    const s2 = await this.serve(ota.link, image, 0xF0000000, 180000, (n) => step("write", n));
+    const s2 = await this.serve(ota.link, image, 0xF0000000, 60000, (addr, len) => step("write", progress.read(addr, len)));
     ota.link.close();
     return s2;
   }
 
   // resume: the device is already in update mode (loader) -> true when the write finished
   // waitMs (GHOULBOX): look for the loader that long (a page reloaded to reach it can list it a moment late); 0: once
-  async resume(image, onStep, product = null, waitMs = 0) {
+  async resume(image, onStep, product = null, waitMs = 0, range = null) {
     const model = product && product.split("_")[0];
     const isOta = (id) => model ? id.model === "ota-" + model : IS_OTA(id);
     const ota = waitMs ? await this.waitFor(isOta, waitMs) : await this.find(isOta);
     if (!ota) return false;
     const step = onStep || (() => {});
-    const result = await this.write(ota, image, step);
+    step("found", ota.id.text);
+    const result = await this.write(ota, image, step, range);
     if (!result.finished) return false;
-    if (product) {
-      step("reboot");
-      await sleep(3000);
-      const back = await this.waitFor((id) => id.model === model, 40000);
-      if (!back) throw fail("noreturn", "The FM-1 did not return after resuming the write.");
-      back.link.close();
-      if (back.id.text !== product) throw fail("mismatch", "The FM-1 reports a different firmware after resuming.", back.id.text);
-      step("done", back.id.text);
-    }
+    if (product) await this.back(model, product, step);
     return true;
   }
 }

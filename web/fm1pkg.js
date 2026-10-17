@@ -219,6 +219,14 @@ export function productOf(fwsc) {
   return s;
 }
 
+// ESTAMPIE: the part of that image a loader writes, for the installer's progress (fm1ota.js WriteProgress): flash.bin's
+// application area, its first 16 KB (the boot area) left out. flash.bin's place in the image is its entry's dataOff (the
+// .fwsc offset less the 20 markers before it); from the package, as packages differ (after FM1Kit's applicationRange)
+export function applicationRange(fwsc) {
+  const p = new Package(fwsc);
+  return { start: p.flashEntry.dataOff + 0x4000, end: p.flashEntry.dataOff + p.flashEntry.size };
+}
+
 // the image the device addresses during an update: the .fwsc without the 20 marker bytes
 export function logicalImage(fwsc) {
   const out = new Uint8Array(fwsc.length - BLOCKS);
@@ -242,7 +250,7 @@ export async function validateStockPackage(bytes) {
       pkg.appBase !== 16384 || pkg.appOff !== 16672 || pkg.app.size !== STOCK_APP_SIZE ||
       !pkg.entries.some((e) => e.type === 100 && e.name === "ota.bin" && e.size === 19969))
     throw new Error("The official firmware has an unsupported FM-1 layout.");
-  return { product: pkg.product, image: logicalImage(bytes), sha256: STOCK_V15_SHA256 };
+  return { product: pkg.product, image: logicalImage(bytes), sha256: STOCK_V15_SHA256, range: applicationRange(bytes) };
 }
 
 // official V15 + Felucca app -> installable package (Uint8Array)

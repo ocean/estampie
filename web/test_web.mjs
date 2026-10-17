@@ -16,7 +16,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import vm from "node:vm";
 import { logicalImage, productOf } from "./fm1pkg.js";
-import { Updater, pack7, unpack7 } from "./fm1ota.js";
+import { Updater, WriteProgress, pack7, unpack7 } from "./fm1ota.js";
 
 let failed = 0;
 const ok = (cond, what) => { console.log(`${what.padEnd(64)} ${cond ? "ok" : "FAIL"}`); if (!cond) failed++; };
@@ -1723,12 +1723,48 @@ class FakeFM1 {
   }
 }
 
+/* ESTAMPIE: the write's progress (after FM1Kit's WriteProgress): the share of the application area read, whatever the
+ * loader's order; the check once half is read and three full reads in a row cover nothing new */
+function writeProgress() {
+  const R = { start: 0x4400, end: 0x93400 }, n = (R.end - R.start) / 512;
+  const fwd = new WriteProgress(R);
+  fwd.read(0, 64).read(0x400, 0x4000);                               /* the header, the boot area: no progress */
+  const before = fwd.fraction;
+  for (let i = 0; i < n / 2; i++) fwd.read(R.start + i * 512, 512);
+  const half = fwd.fraction;
+  for (let i = n / 2; i < n; i++) fwd.read(R.start + i * 512, 512);
+  const written = fwd.fraction, wPhase = fwd.phase;
+  for (let i = 0; i < 3; i++) fwd.read(R.start + i * 512, 512);      /* Felucca's loader reads it all again: the check */
+  const checking = fwd.phase;
+  for (let i = 3; i < n / 2; i++) fwd.read(R.start + i * 512, 512);
+  ok(before === 0 && Math.abs(half - 0.5) < 0.001 && written === 1 && wPhase === "writing" && checking === "checking" &&
+     Math.abs(fwd.fraction - 0.5) < 0.01, "WriteProgress: forwards, headers and boot area left out, then the check of what was read again");
+  const back = new WriteProgress(R);                                 /* V15's loader: from the end backwards */
+  for (let i = n - 1; i >= 0; i--) back.read(R.start + i * 512, 512);
+  ok(back.fraction === 1 && back.phase === "writing", "WriteProgress: backwards reads reach 100 %, no check");
+  const early = new WriteProgress(R);                                /* re-reads before half, or short ones: no check */
+  for (let i = 0; i < 10; i++) early.read(R.start + i * 512, 512);
+  for (let i = 0; i < 4; i++) early.read(R.start, 512);
+  const mid = new WriteProgress(R);
+  for (let i = 0; i < n * 0.6; i++) mid.read(R.start + i * 512, 512);
+  for (let i = 0; i < 5; i++) mid.read(R.start, 64);
+  ok(early.phase === "writing" && mid.phase === "writing", "WriteProgress: re-reads before half, or short ones, are not the check");
+  let t = 0;
+  const timed = new WriteProgress(R, () => t);
+  for (let i = 0; i < n / 4; i++) { timed.read(R.start + i * 512, 512); t += 10; }
+  const left = timed.secondsLeft;                                    /* a quarter in n / 4 * 10 ms: three times that left */
+  ok(left !== null && Math.abs(left - Math.round(n / 4 * 10 * 3 / 1000)) <= 1, `WriteProgress: the time left from the rate (${left} s)`);
+}
+
 async function updater() {
+  writeProgress();
   const image = Uint8Array.from({ length: 0x2000 }, (_, i) => (i * 7) & 0xFF);
   const dev = new FakeFM1(image);
   const steps = [];
-  const got = await new Updater(dev.access).install(image, "FM-1_900", (k) => steps.push(k));
-  ok(got === "FM-1_900" && dev.bad === 0 && steps.includes("write") && steps.at(-1) === "done",
+  const fractions = [];
+  const got = await new Updater(dev.access).install(image, "FM-1_900", (k, a) => { steps.push(k); if (k === "write") fractions.push(a.fraction); });
+  ok(got === "FM-1_900" && dev.bad === 0 && steps.includes("prepare") && steps.includes("found") && steps.includes("write") &&
+     steps.at(-1) === "done" && fractions.at(-1) > 0 && fractions.every((f, i) => !i || f >= fractions[i - 1]),
     `fm1ota.js: install: running firmware -> loader -> Felucca (${dev.served} reads)`);
 
   const dev2 = new FakeFM1(image, { unplugAfter: 3 });
