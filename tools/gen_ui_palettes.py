@@ -68,7 +68,12 @@ OLD_TO_NEW = {"GREEN": "GREEN", "AMBER": "AMBER", "CYAN": "ICE", "RED": "ROSE", 
               "SAND": "PAPER", "L-HICON": "HI-CON"}
 PAL_TAG = 64                       # stored id = PAL_TAG + index; below 20: an old id
 REC_DARK, REC_LIGHT = (255, 72, 72), (190, 24, 40)
-QR_LIGHT, QR_DARK, CRASH_BG, CRASH_INK = (255, 255, 255), (0, 0, 0), (160, 0, 0), (255, 255, 255)
+CRASH_BG, CRASH_INK = (160, 0, 0), (255, 255, 255)
+# ESTAMPIE: the ABOUT screen's QR code, illuminated in VELLUM's colours whatever the palette (ui_menu.c draw_about_qr): a
+# pale vellum ground, iron-gall ink modules, the finder squares as the boot screen's initial (a lapis frame, a vermilion
+# heart), a gold and vermilion rule around it. Every dark is far below the ground's luminance (tests/about_qr_test.py).
+QR_LIGHT, QR_DARK = (246, 238, 219), (46, 30, 20)
+QR_LAPIS, QR_RED, QR_GOLD = (26, 62, 148), (150, 32, 18), (184, 137, 42)
 PCT = {"MID": 70, "DIM": 42, "LINE": 18, "SEL": 80, "TINT": 12, "KEY": 78}
 RAISE_PCT = 12                     # SURF -> TEXT
 
@@ -202,6 +207,8 @@ def main():
         out += [f"#define UI_{k}_PCT {v}" for k, v in PCT.items()] + [f"#define UI_RAISE_PCT {RAISE_PCT}   /* SURF -> TEXT */"]
         out += [f"#define UI_REC_DARK 0x{to565(REC_DARK):04x}u", f"#define UI_REC_LIGHT 0x{to565(REC_LIGHT):04x}u",
                 f"#define UI_QR_LIGHT 0x{to565(QR_LIGHT):04x}u", f"#define UI_QR_DARK 0x{to565(QR_DARK):04x}u",
+                f"#define UI_QR_LAPIS 0x{to565(QR_LAPIS):04x}u", f"#define UI_QR_RED 0x{to565(QR_RED):04x}u",
+                f"#define UI_QR_GOLD 0x{to565(QR_GOLD):04x}u",
                 f"#define UI_CRASH_BG 0x{to565(CRASH_BG):04x}u", f"#define UI_CRASH_INK 0x{to565(CRASH_INK):04x}u", "",
                 "/* the 20 palettes of earlier firmware: " + " ".join(OLD) + " */",
                 "static const uint8_t UI_PALETTE_MIGRATE[20] = {" +

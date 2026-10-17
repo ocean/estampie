@@ -36,7 +36,7 @@ jobs:
 
       # ESTAMPIE: Python 3.14 and the packages in uv.lock, hash-checked (pyproject.toml).
       - name: Python packages
-        run: uv sync --frozen --no-default-groups && echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+        run: uv sync --frozen --no-default-groups --group qr && echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
 
       # ESTAMPIE: Zig (pinned by SHA-256 in tools/toolchain.lock), so the browser emulator is built and tested too.
       # Cached: the download (setup re-checks its hash every run, so a cache can't slip in another archive) and

@@ -2024,11 +2024,24 @@ static int test_information(void)
     press(B_OCTUP);
     ui_draw();
     bad += check("ABOUT opens one document with scrollable license text and credits", ui.menu == 2 && !ui.menu_scroll && menu_scroll_max() > MENU_DOC_H);
-    for (y = 146; y < 220; y++)
-        for (x = 158; x < 232; x++)
-            if (x < 166 || x >= 224 || y < 154 || y >= 212)
-                quiet &= host_screen[y * 240 + x] == swap16(UI_QR_LIGHT);
-    bad += check("ABOUT QR keeps its complete white quiet zone above the fixed footer", quiet);
+    for (uint32_t q = 0; q < 2u; q++) {             /* ESTAMPIE: its site's code at the top, Felucca's scrolled to */
+        uint32_t y0 = q ? 124u : 57u;                /* (the document's y + 33 at scroll 0; y + 160 at scroll 60; row 24) */
+        uint16_t rule = q ? UI_QR_LAPIS : UI_QR_RED;
+        if (q) {
+            ui.menu_scroll = 60;
+            ui_draw();
+        }
+        for (y = y0; y < y0 + 74u; y++)
+            for (x = 155; x < 229; x++)
+                if (x < 163 || x >= 221 || y < y0 + 8u || y >= y0 + 66u)
+                    quiet &= host_screen[y * 240 + x] == swap16(QR_C(UI_QR_LIGHT));   /* (GREY, MONO: white) */
+        quiet &= host_screen[(y0 - 3u) * 240 + 200] == swap16(QR_C(rule)) &&
+                 host_screen[(y0 - 2u) * 240 + 200] == swap16(QR_C(UI_QR_GOLD)) &&
+                 host_screen[(y0 + 76u) * 240 + 200] == swap16(QR_C(rule));   /* its rule, inside the document's rows */
+    }
+    ui.menu_scroll = 0;
+    ui_draw();
+    bad += check("ABOUT's two QR codes, GHOULBOX's credit between: each whole in its turn, its vellum quiet zone, ruled", quiet);
     memcpy(header, host_screen, sizeof header);
     memcpy(footer, host_screen + 221 * 240, sizeof footer);
     turn(EN_PRESET, 3);

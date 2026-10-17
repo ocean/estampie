@@ -22,10 +22,16 @@ device = [
 audit = [
     "zizmor==1.30.1",
 ]
+# The ABOUT screen's QR code (tools/gen_about_qr.py: segno encodes the address) and its check (tests/about_qr_test.py:
+# zxing-cpp reads the rendered screen, illumination and all, as a phone's camera would).
+qr = [
+    "segno==1.6.6",
+    "zxing-cpp==3.1.1",
+]
 
 [tool.uv]
 package = false
-default-groups = ["device", "audit"]
+default-groups = ["device", "audit", "qr"]
 # A cooldown: nothing newer than a week can be locked, so a hijacked release has time to be noticed and pulled before
 # it reaches this lock (docs/SECURITY.md).
 exclude-newer = "7 days"
