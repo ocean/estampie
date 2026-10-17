@@ -45,8 +45,9 @@ From Felucca 1.5–1.6.1 (merged into ESTAMPIE 0.1):
 - **The panel:** on-screen HELP, SELECT as a page knob, mod wheel or velocity, your own colours, PROJECT ERASE and
   CLEAN INIT, dimmer INV LEDs, and the chip's second core as an opt-in beta (MENU › SYSTEM › 2ND CORE).
 
-The user guide is [docs/guide/guide.html](docs/guide/guide.html) (still GHOULBOX's, with these additions; an
-ESTAMPIE edition is on the roadmap).
+The user guide is [docs/guide/guide.html](docs/guide/guide.html), Jason Persinger's GHOULBOX User Guide reworked for
+ESTAMPIE: `python3 docs/guide/make_guide.py html OUTDIR` builds it as a page (the site has it at `guide/`), `pdf
+OUT.pdf` prints it. `tools/guide_shots.sh` draws its screenshots with the firmware's own UI code.
 
 ## Building
 

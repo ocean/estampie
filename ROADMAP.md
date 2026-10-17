@@ -14,8 +14,8 @@ Plans change; nothing here is a promise. GHOULBOX's own roadmap is kept at
 - **Marginalia**: replace GHOULBOX's wall torches beside the graphs with something from a manuscript's margins.
 - **Installer, editor and tools pages** in the same style.
 - **A brighter power-on scene**: a dance at a dance's tempo, instead of the dungeon.
-- **The user guide, ESTAMPIE's own**: rewritten for mediæval dance music (it is still GHOULBOX's dungeon guide, with
-  Felucca 1.5–1.6.1's features added), and its PDF made again.
+- **The user guide's PDF**, made again from the restyled guide (`docs/guide/make_guide.py pdf`) and attached to a
+  release; and the panel diagram (`docs/controls.jpg`, still Felucca's dark one) in the VELLUM style.
 
 ## The sounds
 

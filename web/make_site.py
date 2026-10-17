@@ -3,7 +3,8 @@
 # Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments
 """Make the site (GitHub Pages):
 
-  CNAME                       GHOULBOX: the site's domain (GitHub Pages' custom domain; a publish must keep it)
+  CNAME                       the site's custom domain, when ESTAMPIE_DOMAIN names one (GitHub Pages; a publish
+                              must keep it). None by default: the site is served at ESTAMPIE_SITE
   index.html                  redirect to the emulator (GHOULBOX; the installer when there is none)
   favicon.ico                 ESTAMPIE: the pages' icon (also in webapp/art/, with the home-screen icons)
   firmware/estampie-VER.fwsc   the package (+ LICENSE, LICENSING.md, LICENSES/: the package holds
@@ -12,6 +13,7 @@
   webapp/editor/index.html    editor.html (+ fukiai.ttf, FUKIAI-LICENSE.txt)
   webapp/art/                 ESTAMPIE: the crest the installer and editor show, and the icons (tools/gen_emu_art.py)
   webapp/emu/                 GHOULBOX: the browser emulator, build/emu as web/emu/build.sh made it (when it is there)
+  guide/                      ESTAMPIE: the user guide as a page (docs/guide/make_guide.py html; needs build/host/desc.json)
   src/                        not touched
 
   web/make_site.py build/estampie-X.Y.fwsc X.Y OUT_DIR
@@ -21,6 +23,7 @@ Its identity (FM-1_378xx) is read from the package; the device must report it af
 the install.
 """
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -28,7 +31,7 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-DOMAIN = "ghoulbox.messy.quest"                     # GHOULBOX: GitHub Pages' custom domain (the CNAME file)
+DOMAIN = os.environ.get("ESTAMPIE_DOMAIN", "")      # GitHub Pages' custom domain (the CNAME file); none by default
 BLOCKS, BLK, KEEP = 20, 0x30, 0x2F
 
 
@@ -93,7 +96,14 @@ def main(pkg, version, out):
     for f in ("fukiai.ttf", "FUKIAI-LICENSE.txt", "fm1backup.js"):
         if (HERE / f).exists():
             shutil.copy(HERE / f, ed / f)
-    (out / "CNAME").write_text(DOMAIN, encoding="utf-8")   # (as GitHub writes it: no newline)
+    if DOMAIN:
+        (out / "CNAME").write_text(DOMAIN, encoding="utf-8")   # (as GitHub writes it: no newline)
+    elif (out / "CNAME").exists():
+        (out / "CNAME").unlink()                    # (GHOULBOX's domain is not ours to claim)
+    sys.path.insert(0, str(root / "docs/guide"))   # ESTAMPIE: the user guide
+    import make_guide
+    shutil.rmtree(out / "guide", ignore_errors=True)
+    make_guide.build(out / "guide")
     home = "webapp/emu/" if (out / "webapp/emu/index.html").exists() else "webapp/installer/"   # GHOULBOX: the emulator
     (out / "index.html").write_text(                                                          # first, when it is there
         '<!doctype html><meta charset="utf-8"><title>ESTAMPIE</title>'

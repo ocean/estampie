@@ -1,134 +1,201 @@
 <!doctype html>
-<html lang="en">
+<!-- SPDX-License-Identifier: GPL-3.0-only
+     ESTAMPIE user guide, adapted from the GHOULBOX User Guide by Jason Persinger.
+     Built by docs/guide/make_guide.py (the sound list, the site's address, the crest's art). -->
+<html lang="en-GB">
 <head>
 <meta charset="utf-8">
-<title>GHOULBOX User Guide</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ESTAMPIE User Guide</title>
+<link rel="icon" href="art/favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,700;1,400&family=Alegreya+Sans:wght@500;700&family=Cinzel:wght@600&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=swap">
 <style>
-@font-face { font-family: "Pirata One"; src: url("../../assets/fonts/PirataOne-Regular.ttf"); }
-@font-face { font-family: "VT323"; src: url("../../assets/fonts/VT323-Regular.ttf"); }
-@page { size: Letter; margin: 0; }
-@page :first { margin: 0; }
-@page part { margin: 0; }
-:root { --ink: #e4d8bf; --soft: #a4967e; --rule: #3a332a; --ember: #ee8a3c; --blood: #d9584a; --stone: #15120e; --bone: #ebdfc6; --card: #221d17; --moss: #9cb87e; }
-html { background: var(--stone); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+/* ESTAMPIE: a manuscript leaf, as the site's pages (web/index_pkg.html, web/emu/index.html): VELLUM's colours (vellum,
+ * iron-gall ink, vermilion rubrics, lapis, gold leaf on the rules), headings in IM Fell English, the text in Alegreya,
+ * the FM-1's own labels in Alegreya Sans as on its screen, and Cinzel's Roman capitals for the numbers */
+@page { size: A4; margin: 0; }
+:root { --vellum: #eee2c4; --vellum-dark: #dfcca0; --leaf: #f6eedb; --ink: #2e1e14; --soft: #5b4532; --rule: #cdb88c;
+        --vermilion: #962012; --lapis: #1a3e94; --gold: #b8892a; --moss: #4f6a2a; color-scheme: light; }
+html { background: #c9b48a; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 * { box-sizing: border-box; }
-body { background: var(--stone); font-family: "Georgia", "Times New Roman", serif; color: var(--ink); font-size: 10.5pt; line-height: 1.5; margin: 0; }
+body { margin: 0; color: var(--ink); font: 10.5pt/1.55 "Alegreya", Georgia, "Times New Roman", serif;
+       background: var(--vellum); font-variant-numeric: oldstyle-nums; hyphens: auto; }
 h1, h2, h3 { font-weight: normal; break-after: avoid; }
-h2 { font-family: "Pirata One", serif; font-size: 25pt; color: var(--blood); margin: 0 0 6pt; line-height: 1.1; }
-h3 { font-family: "VT323", monospace; font-size: 16pt; letter-spacing: .04em; color: var(--ember); margin: 16pt 0 3pt; }
+h2 { font: 26pt/1.1 "IM Fell English", Georgia, serif; color: var(--vermilion); margin: 0 0 8pt; }
+h2 .no { font: 600 19pt/1 "Cinzel", Georgia, serif; color: var(--lapis); margin-right: 6pt; }
+h4 { font: italic 12pt/1.3 "IM Fell English", Georgia, serif; color: var(--vermilion); margin: 12pt 0 3pt; }
+h3 { font: 15pt/1.2 "IM Fell English SC", "IM Fell English", Georgia, serif; letter-spacing: .03em; color: var(--lapis);
+     margin: 16pt 0 4pt; }
 p { margin: 0 0 7pt; }
-section { break-before: page; padding: 0.7in 0.75in 0.75in; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
-.lede { font-size: 11.5pt; color: var(--soft); margin-bottom: 12pt; }
-.k { font-family: "VT323", monospace; font-size: 12.5pt; color: var(--bone); background: #2c261e; border: 1px solid #4a4033; border-radius: 2px; padding: 0 4px; white-space: nowrap; }
-.path { font-family: "VT323", monospace; font-size: 12.5pt; color: var(--ember); white-space: nowrap; }
+b { color: var(--ink); }
+a { color: var(--vermilion); }
+section { break-before: page; padding: 0.75in 0.8in 0.8in; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+/* the chapter's first lines, opened by an illuminated initial: the boot screen's lapis field in a vermilion frame */
+.lede { font-size: 12pt; font-style: italic; color: var(--soft); margin-bottom: 12pt; display: flow-root; }
+.lede::first-letter { float: left; font: normal 600 25pt/1 "Cinzel", Georgia, serif; color: var(--leaf); background: var(--lapis);
+                      padding: 5pt 7pt 3pt; margin: 2pt 8pt 0 0; box-shadow: 0 0 0 2pt var(--leaf), 0 0 0 4pt var(--vermilion); }
+.k { font: 700 9pt/1 "Alegreya Sans", system-ui, sans-serif; letter-spacing: .04em; color: var(--leaf); background: var(--ink);
+     border-radius: 2px; padding: 1.5pt 4pt 1pt; white-space: nowrap; vertical-align: 1pt; }
+.path { font: 500 10pt/1 "Alegreya Sans", system-ui, sans-serif; color: var(--vermilion); white-space: nowrap; }
 ul, ol { margin: 0 0 8pt; padding-left: 16pt; }
 li { margin-bottom: 3pt; }
+li::marker { color: var(--vermilion); }
 table { border-collapse: collapse; width: 100%; margin: 4pt 0 10pt; font-size: 9.8pt; break-inside: auto; }
-th { text-align: left; font-family: "VT323", monospace; font-size: 12.5pt; font-weight: normal; color: var(--soft); border-bottom: 1.5px solid var(--soft); padding: 3pt 6pt 2pt 0; }
+th { text-align: left; font: 11pt "IM Fell English SC", Georgia, serif; font-weight: normal; color: var(--vermilion);
+     border-bottom: 1.5px solid var(--vermilion); padding: 3pt 6pt 2pt 0; }
 td { border-bottom: 1px solid var(--rule); padding: 4pt 8pt 4pt 0; vertical-align: top; }
 tr { break-inside: avoid; }
-.note { background: var(--card); border-left: 3px solid var(--ember); padding: 7pt 10pt; margin: 8pt 0 10pt; font-size: 10pt; break-inside: avoid; }
-.warn { border-left-color: var(--blood); }
-.try { background: #1b2015; border-left: 3px solid var(--moss); padding: 7pt 10pt 4pt; margin: 10pt 0 12pt; font-size: 10pt; break-inside: avoid; }
-.try b.t { font-family: "VT323", monospace; font-size: 13.5pt; font-weight: normal; color: var(--moss); letter-spacing: .05em; display: block; margin-bottom: 2pt; }
+tr:first-child, tr:nth-child(2) { break-after: avoid; }   /* (a header row keeps a row with it) */
+.note { background: rgba(150, 32, 18, .06); border-left: 3px solid var(--gold); padding: 7pt 10pt; margin: 8pt 0 10pt;
+        font-size: 10pt; break-inside: avoid; }
+.warn { border-left-color: var(--vermilion); }
+.try { background: rgba(26, 62, 148, .06); border: 1px solid rgba(26, 62, 148, .35); border-left: 3px solid var(--lapis);
+       padding: 7pt 10pt 4pt; margin: 10pt 0 12pt; font-size: 10pt; break-inside: avoid; }
+.try b.t { font: 13pt "IM Fell English SC", Georgia, serif; font-weight: normal; color: var(--lapis); letter-spacing: .04em;
+           display: block; margin-bottom: 2pt; }
 .try ol { margin-bottom: 4pt; }
-.shots { display: flex; gap: 12pt; margin: 8pt 0 10pt; break-inside: avoid; }
+.shots { display: flex; gap: 14pt; margin: 8pt 0 10pt; break-inside: avoid; }
 .shots figure { margin: 0; flex: 1; text-align: center; }
-.shots img { width: 100%; image-rendering: pixelated; border: 1px solid #4a4033; }
-figcaption { font-size: 8.5pt; color: var(--soft); margin-top: 3pt; }
-.gb { color: var(--blood); font-family: "VT323", monospace; font-size: 11pt; }
-.cover { height: 11in; background: #0d0b08; color: var(--bone); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 1in; }
-.cover img { width: 3.2in; image-rendering: pixelated; }
-.cover .t { font-family: "VT323", monospace; font-size: 22pt; letter-spacing: .12em; color: #ee8a3c; margin-top: 20pt; }
-.cover .s { font-family: "VT323", monospace; font-size: 14pt; color: #a4967e; margin-top: 6pt; }
-.cover .f { font-size: 9pt; color: #a4967e; margin-top: 40pt; max-width: 4.5in; }
-.part { page: part; break-before: page; height: 11in; background: #0d0b08; color: var(--bone); display: flex; flex-direction: column; justify-content: center; padding: 1.2in; }
-.part .n { font-family: "VT323", monospace; font-size: 18pt; letter-spacing: .2em; color: #a4967e; }
-.part h1 { font-family: "Pirata One", serif; font-size: 48pt; color: #ee8a3c; margin: 4pt 0 14pt; line-height: 1; }
-.part p { font-size: 12pt; color: #cfc3aa; max-width: 5in; }
-.part ol { font-family: "VT323", monospace; font-size: 15pt; color: #a4967e; padding-left: 20pt; margin-top: 14pt; }
+.shots img { width: 100%; max-width: 3in; image-rendering: pixelated; border: 3px double var(--vermilion);
+             outline: 1px solid var(--gold); outline-offset: 2px; }
+figcaption { font-size: 8.5pt; font-style: italic; color: var(--soft); margin-top: 4pt; }
+.gb, .es { font: 700 7.5pt "Alegreya Sans", system-ui, sans-serif; letter-spacing: .05em; vertical-align: 1pt; }
+.gb { color: var(--soft); }
+.es { color: var(--vermilion); }
+/* the cover and the parts' title leaves: the crest on vellum in a ruled frame (the site's .plaque) */
+.cover, .part { height: 297mm; display: flex; flex-direction: column; justify-content: center; text-align: center;
+                padding: 1in; position: relative; break-before: page; }
+.cover { break-before: auto; }
+.cover::before, .part::before { content: ""; position: absolute; inset: .45in; border: 3px double var(--vermilion);
+                                outline: 2px solid var(--gold); outline-offset: 6px; pointer-events: none; }
+.crest { display: flex; justify-content: center; align-items: flex-end; gap: 6px; }
+.crest .initial { width: 1.6in; image-rendering: pixelated; }
+.crest .word { height: 1.2in; margin-bottom: .24in; image-rendering: pixelated; }
+.cover .t { font: 28pt "IM Fell English SC", Georgia, serif; letter-spacing: .08em; color: var(--vermilion); margin-top: 24pt; }
+.cover .s { font: italic 15pt "IM Fell English", Georgia, serif; color: var(--ink); margin-top: 4pt; }
+.cover .orn { font: 18pt Georgia, serif; color: var(--gold); margin: 14pt 0; letter-spacing: .4em; }
+.cover .f { font-size: 9pt; color: var(--soft); margin: 30pt auto 0; max-width: 4.6in; }
+.part .n { font: 600 16pt "Cinzel", Georgia, serif; letter-spacing: .25em; color: var(--lapis); }
+.part h1 { font: 50pt/1 "IM Fell English", Georgia, serif; color: var(--vermilion); margin: 6pt 0 16pt; }
+.part p { font-size: 12.5pt; font-style: italic; color: var(--soft); max-width: 4.6in; margin: 0 auto; }
+.part ol { font: 14pt "IM Fell English", Georgia, serif; color: var(--ink); padding: 0; margin: 18pt auto 0;
+           list-style-position: inside; }
 .toc { columns: 2; column-gap: 24pt; padding-left: 0; list-style: none; font-size: 10pt; }
 .toc li { margin-bottom: 1pt; }
-.toc .pt { font-family: "VT323", monospace; font-size: 13pt; color: var(--ember); margin-top: 6pt; break-after: avoid; }
+.toc .pt { font: 13pt "IM Fell English SC", Georgia, serif; color: var(--vermilion); margin-top: 6pt; break-after: avoid; }
+.toc a { color: inherit; text-decoration: none; }
 .panel img { display: block; max-width: 100%; max-height: 6.1in; margin: 0 auto; }
 .small { font-size: 9pt; color: var(--soft); }
-.chain { font-family: "VT323", monospace; font-size: 15pt; text-align: center; letter-spacing: .04em; color: var(--ink); background: var(--card); padding: 6pt; margin: 8pt 0 10pt; break-inside: avoid; }
+.chain { font: 700 11pt "Alegreya Sans", system-ui, sans-serif; text-align: center; letter-spacing: .08em; color: var(--leaf);
+         background: var(--lapis); padding: 7pt; margin: 8pt 0 10pt; break-inside: avoid;
+         box-shadow: 0 0 0 2pt var(--vellum), 0 0 0 3.5pt var(--gold); }
 dl.gl { columns: 2; column-gap: 22pt; font-size: 9.8pt; margin: 0; }
-dl.gl dt { font-weight: bold; break-after: avoid; margin-top: 5pt; }
+dl.gl dt { font-weight: bold; color: var(--vermilion); break-after: avoid; margin-top: 5pt; }
 dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
+/* on a screen: one long leaf, the parts as framed panels */
+@media screen {
+  body { background: radial-gradient(ellipse 80% 70% at 50% 40%, transparent 55%, rgba(120, 82, 30, .25) 100%) fixed,
+                     var(--vellum); }
+  .cover, .part, section { max-width: 820px; margin: 0 auto; }
+  .cover, .part { height: auto; min-height: 0; padding: 70px 40px; margin-top: 36px; }
+  .cover { margin-top: 20px; }
+  section { padding: 36px 40px 28px; }
+  .site-nav { max-width: 820px; margin: 0 auto; padding: 14px 40px 0; font: 15px "IM Fell English", Georgia, serif; }
+  .site-nav a { margin-right: 18px; }
+  @media (max-width: 600px) {
+    body { font-size: 16px; }
+    section { padding: 24px 16px 18px; }
+    .cover, .part { padding: 56px 24px; }
+    .cover::before, .part::before { inset: 10px; }
+    .crest .initial { width: 70px; } .crest .word { height: 52px; margin-bottom: 10px; }
+    .part h1 { font-size: 36pt; }
+    .toc, dl.gl { columns: 1; }
+    .shots { flex-direction: column; align-items: center; }
+    table { display: block; overflow-x: auto; }
+    .site-nav { padding: 12px 16px 0; }
+  }
+}
+@media print { .site-nav { display: none; } }
 </style>
 </head>
 <body>
 
+<nav class="site-nav"><a href="{{SITE_ROOT}}webapp/emu/">Play it in your browser</a><a href="{{SITE_ROOT}}webapp/installer/">Install</a><a href="{{SITE_ROOT}}webapp/editor/">Editor</a><a href="https://github.com/ocean/estampie">Source</a></nav>
+
 <div class="cover">
-  <img src="boot.png" alt="The GHOULBOX boot screen: a skull and the blackletter wordmark">
-  <div class="t">USER GUIDE</div>
-  <div class="s">firmware 2.1 for the M-VAVE FM-1</div>
-  <div class="f">GHOULBOX is built on Felucca by Hügelton Instruments. M-VAVE and FM-1 are trademarks of their owners; GHOULBOX is not affiliated with or endorsed by them or by Hügelton Instruments.</div>
+  <div class="crest"><img class="initial" src="art/initial.png" alt="E"><img class="word" src="art/word.png" alt="stampie"></div>
+  <div class="t">User Guide</div>
+  <div class="s">firmware {{VERSION}} for the M-VAVE FM-1</div>
+  <div class="orn">❦</div>
+  <div class="s">a groovebox for mediæval dance music</div>
+  <div class="f">Adapted from the GHOULBOX User Guide by Jason Persinger. ESTAMPIE is a fork of GHOULBOX, which is built on Felucca by Hügelton Instruments. M-VAVE and FM-1 are trademarks of their owners; ESTAMPIE is not affiliated with or endorsed by them, by Hügelton Instruments or by the makers of GHOULBOX.</div>
 </div>
 
-<section style="break-before: auto;">
-<h2>Welcome to the dungeon</h2>
-<p class="lede">GHOULBOX turns the M-VAVE FM-1 into a dungeon-synth instrument: hurdy-gurdies and drones, crypt pads and monk choirs, organs, harps and recorders, all through a cathedral reverb and a worn cassette.</p>
-<p>It is a fork of <b>Felucca</b>, the open-source FM-1 firmware by Hügelton Instruments. Everything Felucca does still works here: four tracks, a 64-step sequencer, songs, the arpeggiator, chord keys, effects, the web editor and backups. GHOULBOX adds the sounds, the reverb and tape, a hurdy-gurdy engine, dungeon drums and an old-RPG look, and leaves out the sounds that don't fit the genre.</p>
+<section>
+<h2>Welcome to the dance</h2>
+<p class="lede">ESTAMPIE turns the M-VAVE FM-1 into a groovebox for mediæval dance music: a hurdy-gurdy and a bagpipe over their drones, lutes, harps and psalteries, shawms and recorders, a tabor and nakers, and monks' chant, in the church modes and the old tunings.</p>
+<p>It is a fork of <b>GHOULBOX</b>, Jason Persinger's dungeon-synth firmware, which is itself a fork of <b>Felucca</b>, the open-source FM-1 firmware by Hügelton Instruments. Everything they do still works here: four tracks, a 64-step sequencer, songs, the arpeggiator, chord keys, effects, the web editor and backups from Felucca; the hurdy-gurdy, the old tunings, the drone latch, the reverb and tape, and GHOULBOX's sounds and scenes. ESTAMPIE adds a dance to start with (a fourteenth-century trotto), a dance band's drum kit, mediæval sounds and patterns, and a look taken from a manuscript page.</p>
+<p>This guide is GHOULBOX's, by Jason Persinger, reworked for ESTAMPIE: the instrument underneath is the same, so most of it still holds word for word.</p>
 <h3>How to use this guide</h3>
 <ul>
   <li><b>New to synthesizers?</b> Read Part I to get the FM-1 running, then work through Part II. Each chapter there ends in a <b>Try this</b> box: a few steps on the instrument that make the idea audible. Nothing you do in them can break anything, and holding <span class="k">SAVE</span> undoes the last sound or pattern load.</li>
   <li><b>Know synths already?</b> Part III is the reference: every page, every sound, every setting.</li>
-  <li><b>Want to make a piece?</b> Part IV walks through one from an empty track to a recording, with a chord cheat sheet.</li>
-  <li><b>Rather watch?</b> Five short video lessons, on the FM-1's own screen, go from a single drone to a finished piece: <span class="path">youtube.com/playlist?list=PLMUs0QD7QfOw</span> (or search YouTube for GHOULBOX Lessons).</li>
+  <li><b>Want to make a piece?</b> Part IV walks through one from an empty track to a recording, with a cheat sheet of modes and chords.</li>
+  <li><b>Rather watch?</b> GHOULBOX's five short video lessons, on the FM-1's own screen, go from a single drone to a finished piece: <span class="path">youtube.com/playlist?list=PLMUs0QD7QfOw</span> (or search YouTube for GHOULBOX Lessons). They show GHOULBOX's dungeon look and sounds, but the knobs and pages are the same.</li>
 </ul>
 <p>Buttons and knobs are written like <span class="k">PLAY</span>. A path such as <span class="k">SEQ</span> › STEP means "press SEQ until the STEP page shows".</p>
 <ol class="toc">
   <li class="pt">I · The instrument</li>
-  <li>1 · Meet the FM-1</li>
-  <li>2 · Install, back up, go back</li>
-  <li>3 · Five-minute start</li>
-  <li>4 · The panel</li>
-  <li>5 · The screen</li>
+  <li><a href="#ch1">1 · Meet the FM-1</a></li>
+  <li><a href="#ch2">2 · Install, back up, go back</a></li>
+  <li><a href="#ch3">3 · Five-minute start</a></li>
+  <li><a href="#ch4">4 · The panel</a></li>
+  <li><a href="#ch5">5 · The screen</a></li>
   <li class="pt">II · Synth basics</li>
-  <li>6 · What a synthesizer does</li>
-  <li>7 · Notes, keys and scales</li>
-  <li>8 · Tone: oscillators and the filter</li>
-  <li>9 · Shape in time: the envelope</li>
-  <li>10 · Movement: the LFO and modulation</li>
-  <li>11 · Voices: poly, mono and glide</li>
-  <li>12 · Space: effects</li>
-  <li>13 · Time: tempo, steps and the arpeggiator</li>
+  <li><a href="#ch6">6 · What a synthesizer does</a></li>
+  <li><a href="#ch7">7 · Notes, keys and scales</a></li>
+  <li><a href="#ch8">8 · Tone: oscillators and the filter</a></li>
+  <li><a href="#ch9">9 · Shape in time: the envelope</a></li>
+  <li><a href="#ch10">10 · Movement: the LFO and modulation</a></li>
+  <li><a href="#ch11">11 · Voices: poly, mono and glide</a></li>
+  <li><a href="#ch12">12 · Space: effects</a></li>
+  <li><a href="#ch13">13 · Time: tempo, steps and the arpeggiator</a></li>
   <li class="pt">III · Reference</li>
-  <li>14 · Every page</li>
-  <li>15 · The sounds</li>
-  <li>16 · Effects</li>
-  <li>17 · Sequencer, patterns and songs</li>
-  <li>18 · Saving your work</li>
-  <li>19 · The menu</li>
-  <li>20 · MIDI, USB and recording</li>
+  <li><a href="#ch14">14 · Every page</a></li>
+  <li><a href="#ch15">15 · The sounds</a></li>
+  <li><a href="#ch16">16 · Effects</a></li>
+  <li><a href="#ch17">17 · Sequencer, patterns and songs</a></li>
+  <li><a href="#ch18">18 · Saving your work</a></li>
+  <li><a href="#ch19">19 · The menu</a></li>
+  <li><a href="#ch20">20 · MIDI, USB and recording</a></li>
   <li class="pt">IV · Making music</li>
-  <li>21 · What dungeon synth is</li>
-  <li>22 · Your first piece, step by step</li>
-  <li>23 · Minor keys and chords</li>
-  <li>24 · Dungeon recipes</li>
-  <li>25 · Recording and sharing</li>
+  <li><a href="#ch21">21 · What mediæval dance music is</a></li>
+  <li><a href="#ch22">22 · Your first piece, step by step</a></li>
+  <li><a href="#ch23">23 · Modes and chords</a></li>
+  <li><a href="#ch24">24 · Recipes</a></li>
+  <li><a href="#ch25">25 · Recording and sharing</a></li>
   <li class="pt">V · Help</li>
-  <li>26 · Troubleshooting</li>
-  <li>27 · Glossary</li>
-  <li>28 · Credits and licence</li>
+  <li><a href="#ch26">26 · Troubleshooting</a></li>
+  <li><a href="#ch27">27 · Glossary</a></li>
+  <li><a href="#ch28">28 · Credits and licence</a></li>
 </ol>
-<div class="note">GHOULBOX is a hobby project, tested on one FM-1. Install it at your own risk. Save a backup in the web editor first (the installer doesn't), and you can always go back to Felucca or M-VAVE's own firmware.</div>
+<div class="note">ESTAMPIE is a hobby project, tested on one FM-1. Install it at your own risk. Save a backup in the web editor first (the installer doesn't), and you can always go back to GHOULBOX, Felucca or M-VAVE's own firmware.</div>
 </section>
 
 <!-- ============================================================ PART I -->
 <div class="part">
   <div class="n">PART I</div>
   <h1>The instrument</h1>
-  <p>What the FM-1 is, how to put GHOULBOX on it, and how to find your way around its knobs, buttons and screen.</p>
+  <p>What the FM-1 is, how to put ESTAMPIE on it, and how to find your way around its knobs, buttons and screen.</p>
   <ol start="1"><li>Meet the FM-1</li><li>Install, back up, go back</li><li>Five-minute start</li><li>The panel</li><li>The screen</li></ol>
 </div>
 
 <section>
-<h2>1 · Meet the FM-1</h2>
-<p class="lede">The FM-1 is a small battery-powered synthesizer: a keyboard, a screen, eight knobs, a speaker and a computer chip that makes the sound. GHOULBOX is the program that runs on that chip.</p>
-<p>M-VAVE sells the FM-1 with its own firmware, an FM synthesizer. GHOULBOX replaces that program completely, so most of M-VAVE's manual (its pages, presets and buttons) does not apply. The hardware is the same, though, and this chapter covers it.</p>
+<h2 id="ch1"><span class="no">1</span>Meet the FM-1</h2>
+<p class="lede">The FM-1 is a small battery-powered synthesizer: a keyboard, a screen, eight knobs, a speaker and a computer chip that makes the sound. ESTAMPIE is the program that runs on that chip.</p>
+<p>M-VAVE sells the FM-1 with its own firmware, an FM synthesizer. ESTAMPIE replaces that program completely, so most of M-VAVE's manual (its pages, presets and buttons) does not apply. The hardware is the same, though, and this chapter covers it.</p>
 <h3>On the top</h3>
 <ul>
   <li><b>27 keys</b> (silicone, about two and a quarter octaves), each with a light under it. They are not velocity-sensitive: every key plays at the same strength. A MIDI keyboard can add velocity (chapter 20).</li>
@@ -148,25 +215,25 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 </table>
 <h3>Power and battery</h3>
 <ul>
-  <li>A built-in 2000 mAh battery. M-VAVE quotes about 12 hours of play; that figure is for its own firmware, and GHOULBOX's reverb works the chip harder.</li>
+  <li>A built-in 2000 mAh battery. M-VAVE quotes about 12 hours of play; that figure is for its own firmware, and ESTAMPIE's reverb works the chip harder.</li>
   <li>Charge it from any USB-C charger or computer port. It also runs from USB power.</li>
   <li>The battery level is in the top-right corner of the screen.</li>
 </ul>
 <h3>No Bluetooth</h3>
-<p>M-VAVE's firmware offers wireless (Bluetooth) MIDI. Felucca and GHOULBOX don't: use USB or the MIDI IN socket instead.</p>
+<p>M-VAVE's firmware offers wireless (Bluetooth) MIDI. Felucca, GHOULBOX and ESTAMPIE don't: use USB or the MIDI IN socket instead.</p>
 <h3>Specifications</h3>
 <table>
   <tr><td>Size</td><td>161.5 × 96.5 × 28.6 mm</td></tr>
   <tr><td>Weight</td><td>251 g</td></tr>
   <tr><td>Battery</td><td>3.7 V lithium-polymer, 2000 mAh, charged over USB-C</td></tr>
-  <tr><td>Sound under GHOULBOX</td><td>44.1 kHz stereo; four tracks sharing 12 voices</td></tr>
+  <tr><td>Sound under ESTAMPIE</td><td>44.1 kHz stereo; four tracks sharing 12 voices</td></tr>
 </table>
 <div class="note">Look after it as you would a phone: keep it dry, don't leave it in a hot car, and charge it now and then if it sits unused for months, so the battery never runs completely flat.</div>
 </section>
 
 <section>
-<h2>2 · Install, back up, go back</h2>
-<div class="note">Try it first: <span class="path">ghoulbox.messy.quest</span> plays GHOULBOX in your browser, the same firmware on a drawn FM-1, with your computer keyboard as the keys.</div>
+<h2 id="ch2"><span class="no">2</span>Install, back up, go back</h2>
+<div class="note">Try it first: <span class="path">{{SITE}}</span> plays ESTAMPIE in your browser, the same firmware on a drawn FM-1, with your computer keyboard as the keys.</div>
 <h3>What you need</h3>
 <ul>
   <li>A computer with <b>Chrome or Edge</b> (other browsers can't talk MIDI to the FM-1)</li>
@@ -175,10 +242,10 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 </ul>
 <h3>Install</h3>
 <ol>
-  <li>Connect the FM-1 and switch it on. <b>Save a backup first</b>, because the installer doesn't make one: open the web editor at <span class="path">ghoulbox.messy.quest/webapp/editor</span>, allow MIDI access, and on the <b>Settings</b> tab press <b>Save backup</b>. Your music, sounds, samples and settings go to your computer.</li>
-  <li>Open <span class="path">ghoulbox.messy.quest/webapp/installer</span> and press <b>Install</b>. Allow MIDI access when the browser asks.</li>
-  <li>The installer switches the FM-1 to update mode and writes GHOULBOX.</li>
-  <li>When it says done, the FM-1 restarts with the GHOULBOX skull. Hold <span class="k">HOME</span> › SYSTEM › ABOUT shows the version.</li>
+  <li>Connect the FM-1 and switch it on. <b>Save a backup first</b>, because the installer doesn't make one: open the web editor at <span class="path">{{SITE}}/webapp/editor</span>, allow MIDI access, and on the <b>Settings</b> tab press <b>Save backup</b>. Your music, sounds, samples and settings go to your computer.</li>
+  <li>Open <span class="path">{{SITE}}/webapp/installer</span> and press <b>Install</b>. Allow MIDI access when the browser asks.</li>
+  <li>The installer switches the FM-1 to update mode and writes ESTAMPIE.</li>
+  <li>When it says done, the FM-1 restarts with ESTAMPIE's illuminated initial. Hold <span class="k">HOME</span> › SYSTEM › ABOUT shows the version.</li>
 </ol>
 <div class="note">If the installer stops after it says "update mode", unplug the USB cable, plug it back in, and press Install again. The FM-1 stays in update mode until the install is finished, so nothing is lost.</div>
 <h3>Updating later</h3>
@@ -188,16 +255,16 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 <p>Two starts in a row that fail within their first 30 seconds open the rescue on their own. To leave it without installing, switch the FM-1 off and on again.</p>
 <div class="note">The OCT− rescue is part of ESTAMPIE itself, not of the FM-1: it only works once ESTAMPIE is installed. Only some FM-1 firmwares have one: Felucca, for example, simply starts as normal when OCT− is held. If even the rescue can't start, the FM-1's built-in boot mode (a device named WL80UBOOT on a computer) is the last resort; it needs a computer, not a phone. Felucca's README describes it.</div>
 <h3>Going back</h3>
-<p>To return to Felucca, install it from <span class="path">hugelton.github.io/Felucca</span> and restore your backup in its editor. Its <b>Return to official V15</b> button puts back M-VAVE's own firmware.</p>
+<p>To return to GHOULBOX, install it from <span class="path">ghoulbox.messy.quest</span>; to return to Felucca, from <span class="path">hugelton.github.io/Felucca</span>. Then restore your backup in its editor. The installer's <b>Return to official V15</b> button puts back M-VAVE's own firmware.</p>
 <h3>Your old music</h3>
-<p>Projects and user presets from Felucca load in GHOULBOX. Sounds GHOULBOX no longer lists (for example the techno presets) still load and play inside an old project; they are only missing from the menus.</p>
+<p>Projects and user presets from GHOULBOX and Felucca load in ESTAMPIE. Sounds ESTAMPIE no longer lists (for example Felucca's techno presets) still load and play inside an old project; they are only missing from the menus. SAX sounds play on FLUTE, and the SLICE engine is left out of ESTAMPIE.</p>
 </section>
 
 <section>
-<h2>3 · Five-minute start</h2>
-<p class="lede">GHOULBOX powers on ready to play a small dungeon piece.</p>
+<h2 id="ch3"><span class="no">3</span>Five-minute start</h2>
+<p class="lede">ESTAMPIE powers on ready to play a dance.</p>
 <ol>
-  <li><b>Press <span class="k">PLAY</span>.</b> Four tracks play a scene in D minor at 72 BPM: a hurdy-gurdy melody (track 1), a crypt pad (2), chanting monks (3) and a drone (4), through the hall reverb. Press PLAY again to stop.</li>
+  <li><b>Press <span class="k">PLAY</span>.</b> Four tracks play the <b>TROTTO</b>, a fourteenth-century Italian dance (from a manuscript in the British Library), in A Dorian at 112 BPM, with six quick steps to a bar. A hurdy-gurdy plays the tune over its drones (track 1), a lute plucks the root and fifth (2), a tenor recorder holds the tune's main notes (3), and a tabor keeps the dance going (4), in a small room's reverb. Press PLAY again to stop.</li>
   <li><b>Turn <span class="k">MASTER</span></b> for volume. Headphones in the jack silence the speaker.</li>
   <li><b>Turn <span class="k">ALGORITHM</span></b> to choose the track (T1–T4). Everything you do applies to that track.</li>
   <li><b>Turn <span class="k">PRESETS</span></b> to change the track's sound while it plays. Your pattern stays.</li>
@@ -207,18 +274,18 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 </ol>
 <div class="note">Made a mess? Hold <span class="k">SAVE</span> to undo the last sound or pattern load. Switching the FM-1 off and on brings back what you were playing (stop and leave it for a few seconds first, so it can save it).</div>
 <h3>Other scenes</h3>
-<p>This is the <b>DUNGEON</b> scene. Hold <span class="k">HOME</span> for the menu, and on SYSTEM › <b>SCENE</b> choose the scene a new FM-1 starts with (or every power-on, with SYSTEM › RESTORE LAST set to OFF): <b>CRYPT</b> (a low drone, a crypt choir, cave wind and slow tomb drums, 60 BPM), <b>TAVERN</b> (a dance gurdy, a harp, a lute and a light drum kit, 96 BPM), <b>CHAPEL</b> (cathedral organ, monks, a recorder and a fiddle, 66 BPM), or <b>BLANK</b> (DUNGEON's sounds with no notes, for starting from nothing).</p>
+<p>This is the <b>TROTTO</b> scene. Hold <span class="k">HOME</span> for the menu, and on SYSTEM › <b>SCENE</b> choose the scene a new FM-1 starts with (or every power-on, with SYSTEM › RESTORE LAST set to OFF). GHOULBOX's scenes are all still there: <b>CRYPT</b> (a low drone, a crypt choir, cave wind and slow tomb drums, 60 BPM), <b>TAVERN</b> (a dance gurdy, a harp, a lute and a light drum kit, 96 BPM), <b>CHAPEL</b> (cathedral organ, monks, a recorder and a fiddle, 66 BPM), <b>BLANK</b> (a hurdy-gurdy, a pad, monks and a drone with no notes, for starting from nothing) and <b>DUNGEON</b> (GHOULBOX's own: a hurdy-gurdy ballad over a crypt pad, monks and a drone in D minor, 72 BPM, in a hall).</p>
 <div class="shots">
-  <figure><img src="home.png" alt="HOME screen"><figcaption>HOME: four knob cards, the scope between the torches, the track's steps and sound at the bottom</figcaption></figure>
+  <figure><img src="home.png" alt="HOME screen"><figcaption>HOME: four knob cards, the scope between the marginal ornaments, the track's steps and sound at the bottom</figcaption></figure>
   <figure><img src="roll.png" alt="STEP page"><figcaption>SEQ › STEP: the piano roll of the selected track</figcaption></figure>
 </div>
 </section>
 
 <section class="panel">
-<h2>4 · The panel</h2>
-<p>The FM-1's controls, as Felucca (and GHOULBOX) use them. The labels printed on the panel are M-VAVE's; most still fit, and the diagram shows what each one does now.</p>
-<img src="../controls.jpg" alt="FM-1 controls: knobs, page buttons, keys, transport and octave buttons">
-<p class="small">Panel diagram from Felucca's documentation (Hügelton Instruments, GPL-3.0). The screen in it shows Felucca's look; GHOULBOX's is in the next chapter.</p>
+<h2 id="ch4"><span class="no">4</span>The panel</h2>
+<p>The FM-1's controls, as Felucca (and so GHOULBOX and ESTAMPIE) use them. The labels printed on the panel are M-VAVE's; most still fit, and the diagram shows what each one does now.</p>
+<img src="controls.jpg" alt="FM-1 controls: knobs, page buttons, keys, transport and octave buttons">
+<p class="small">Panel diagram from Felucca's documentation (Hügelton Instruments, GPL-3.0). The screen in it shows Felucca's look; ESTAMPIE's is in the next chapter.</p>
 <h3>Three ways to press a button</h3>
 <ul>
   <li><b>Tap</b> a page button for its page, and again for the next page in its group (chapter 14 lists them all). <span class="k">HOME</span> returns to the home screen.</li>
@@ -239,8 +306,8 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 </section>
 
 <section>
-<h2>5 · The screen</h2>
-<p>GHOULBOX draws Felucca's pages as an old role-playing game would: stone windows, a pixel font, flickering wall torches beside the scope, and a <b>sword</b> that points at what is selected.</p>
+<h2 id="ch5"><span class="no">5</span>The screen</h2>
+<p>ESTAMPIE draws Felucca's pages as a page of a manuscript: vellum, iron-gall ink, vermilion headings and lapis blue. The text is set in Alegreya Sans, with Cinzel's Roman capitals for the large figures. A marginal ornament (a crozier's curl with a hanging ivy leaf) stands either side of the scope, and GHOULBOX's little <b>sword</b> still points at what is selected. At power-on the screen shows ESTAMPIE's illuminated initial.</p>
 <div class="shots">
   <figure><img src="presets.png" alt="PRESETS list"><figcaption>PRESETS: the sword marks the current sound</figcaption></figure>
   <figure><img src="menu.png" alt="MENU"><figcaption>The MENU (hold HOME) in five tabs</figcaption></figure>
@@ -250,7 +317,7 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
   <li><b>Knob cards</b>: most pages show four cards in a row, one for each of <span class="k">KNOB 1–4</span>, left to right. Each has a name, a value and a small gauge. The one you just turned is drawn in the accent colour.</li>
   <li><b>The scope</b> on HOME draws the sound itself as a moving line: smooth for soft sounds, jagged for bright ones.</li>
   <li><b>Messages</b> (for example SOUND INIT, STOP TO SAVE or NO SAMPLE) appear in the header for a moment.</li>
-  <li><b>Colours:</b> a new FM-1 starts in <b>CRYPT</b> (stone, bone, torch amber, blood red). If you came from Felucca, your saved palette stays: hold <span class="k">HOME</span> and pick COLOR › CRYPT.</li>
+  <li><b>Colours:</b> a new FM-1 starts in <b>VELLUM</b> (vellum, ink, vermilion and lapis); <b>TAVERN</b> is its dark version, for low light, and GHOULBOX's <b>CRYPT</b> (stone, bone, torch amber, blood red) is still there. If you came from GHOULBOX or Felucca, your saved palette stays: hold <span class="k">HOME</span> and pick COLOR › VELLUM.</li>
 </ul>
 <h3>The lights</h3>
 <p>Idle buttons and keys glow dimly so you can find them in the dark. A button that does something right now breathes slowly. <span class="k">PLAY</span> turns green while playing, and the keys light up with the notes being played, whether by you, the sequencer or MIDI. MENU › LEDS sets how bright the idle glow is.</p>
@@ -265,7 +332,7 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 </div>
 
 <section>
-<h2>6 · What a synthesizer does</h2>
+<h2 id="ch6"><span class="no">6</span>What a synthesizer does</h2>
 <p class="lede">Every sound is air shaking back and forth. A synthesizer is a machine that decides exactly how it shakes.</p>
 <p>Any sound you hear differs from any other in three ways:</p>
 <ul>
@@ -283,19 +350,19 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 </ul>
 <p>On top of that sit <b>modulators</b>, which move the other parts by themselves (a slow wobble, a swell), and a <b>sequencer</b>, which plays notes for you.</p>
 <h3>Engines</h3>
-<p>The FM-1 under GHOULBOX has <b>13 engines</b>: thirteen different ways of making the raw sound. ANALOG copies the classic synthesizers of the 1970s and 80s; VOICE sings vowels; GURDY models a hurdy-gurdy; SAMPLE plays recordings of real instruments. Each engine comes with ready-made settings called <b>presets</b> (or sounds), 59 of them in all.</p>
+<p>The FM-1 under ESTAMPIE has <b>13 engines</b>: thirteen different ways of making the raw sound. ANALOG copies the classic synthesizers of the 1970s and 80s; VOICE sings vowels; GURDY models a hurdy-gurdy; SAMPLE plays recordings of real instruments. Each engine comes with ready-made settings called <b>presets</b> (or sounds), {{NSOUNDS}} of them in all.</p>
 <h3>Tracks</h3>
-<p>GHOULBOX has <b>four tracks</b>, like four musicians. Each has its own engine and sound, its own notes in the sequencer, and its own settings. The <span class="k">ALGORITHM</span> knob chooses which track you are playing and editing; the screen shows T1–T4. All four share <b>12 voices</b> (12 notes sounding at once), so a big chord on one track can cut short a long note on another.</p>
+<p>ESTAMPIE has <b>four tracks</b>, like four musicians in a dance band. Each has its own engine and sound, its own notes in the sequencer, and its own settings. The <span class="k">ALGORITHM</span> knob chooses which track you are playing and editing; the screen shows T1–T4. All four share <b>12 voices</b> (12 notes sounding at once), so a big chord on one track can cut short a long note on another.</p>
 <div class="try"><b class="t">TRY THIS · Hear the parts</b>
 <ol>
-  <li>Press <span class="k">PLAY</span>. Turn <span class="k">ALGORITHM</span> to T2 (the pad).</li>
-  <li>Hold <span class="k">GLO</span> to open its layer. While holding it, the first four black keys (from F♯ in the lower octave) mute and unmute tracks 1–4; their lights show which are sounding. Mute all but track 2 and listen to the pad alone, then bring the others back one at a time.</li>
-  <li>With T2 still selected, turn <span class="k">PRESETS</span> slowly: the pad's part plays on a different sound each time, while the notes stay the same. Hold <span class="k">SAVE</span> to undo the last change.</li>
+  <li>Press <span class="k">PLAY</span>. Turn <span class="k">ALGORITHM</span> to T2 (the lute).</li>
+  <li>Hold <span class="k">GLO</span> to open its layer. While holding it, the first four black keys (from F♯ in the lower octave) mute and unmute tracks 1–4; their lights show which are sounding. Mute all but track 2 and listen to the lute alone, then bring the others back one at a time.</li>
+  <li>With T2 still selected, turn <span class="k">PRESETS</span> slowly: the lute's part plays on a different sound each time, while the notes stay the same. Hold <span class="k">SAVE</span> to undo the last change.</li>
 </ol></div>
 </section>
 
 <section>
-<h2>7 · Notes, keys and scales</h2>
+<h2 id="ch7"><span class="no">7</span>Notes, keys and scales</h2>
 <p class="lede">You don't need to read music to play the FM-1. A few facts about the keyboard go a long way.</p>
 <h3>The keyboard</h3>
 <p>The keys repeat a pattern of 7 white and 5 black keys. Each group of 12 is an <b>octave</b>: the same note names again, twice as high. The white keys are named A to G; the white key just left of each pair of two black keys is <b>C</b>. Each key is one <b>semitone</b> above the key to its left, black or white.</p>
@@ -303,19 +370,21 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 <p>As you play, the screen names what you're playing: the note with its octave (<b>D4</b>), or the chord when you hold several keys (<b>Dm</b>, <b>A7</b>, <b>Gsus4</b>; <b>C/E</b> is C major with E as its lowest note; <b>A5</b> is an open fifth, a drone's). On HOME the name is large in the middle of the screen, the notes under it, and it stays (faded) after you let go, until you play again; notes from MIDI IN are named too. On the other pages it appears at the top of the screen while you hold the keys. It is a quick way to learn the chords in chapter 23 by ear and by name. MENU › CONTROL › NOTE NAMES turns it off.</p>
 <div class="note warn">Don't hold OCT− and OCT+ down together: that starts a countdown to <b>update mode</b>, which the installer uses. If UPDATE MODE IN appears on the screen, let go: it says UPDATE CANCELLED and nothing has changed. If you hold on until the screen says UBOOT, the FM-1 is waiting for new firmware: connect it to the computer and run the installer again.</div>
 <h3>Scales and keys</h3>
-<p>A <b>scale</b> is a choice of 7 of the 12 notes that sound good together. A piece "in D minor" uses mostly the notes of the D minor scale, starts and ends on D, and feels like home on D. Minor scales sound sad, dark or ancient; that's why most dungeon synth is in minor.</p>
-<p>The <b>root</b> is the home note (D in D minor). Every scale has a different mood:</p>
+<p>A <b>scale</b> is a choice of 7 of the 12 notes that sound good together. A piece "in D minor" uses mostly the notes of the D minor scale, starts and ends on D, and feels like home on D. Mediæval tunes use the <b>modes</b>, the scales of the church: Dorian, Phrygian, Lydian and Mixolydian, the white keys started on D, E, F and G. The TROTTO is in A Dorian. (Minor and major came later; GHOULBOX's dungeon synth loves minor for its sadness.)</p>
+<p>The <b>root</b> is the home note (D in D minor, A in A Dorian). Every scale has a different mood:</p>
 <table>
   <tr><th>Scale (SCL)</th><th>Mood</th></tr>
-  <tr><td>MIN (natural minor)</td><td>Sad, plain, the default of dungeon synth</td></tr>
-  <tr><td>DOR (Dorian)</td><td>Minor but hopeful; folk tunes, wandering</td></tr>
+  <tr><td>DOR (Dorian)</td><td>Minor but hopeful, with a bright sixth: the commonest mode of mediæval dances and folk tunes</td></tr>
+  <tr><td>MIX (Mixolydian)</td><td>Major with a flat seventh: bagpipe tunes, a bright, outdoor dance</td></tr>
+  <tr><td>LYD (Lydian)</td><td>Major with a raised fourth: bright and a little strange, like an old hymn</td></tr>
   <tr><td>PHRY (Phrygian)</td><td>Dark and tense, the note above the root a little too close</td></tr>
+  <tr><td>MIN (natural minor)</td><td>Sad and plain (the Aeolian mode); GHOULBOX's dungeon-synth default</td></tr>
   <tr><td>HARM (harmonic minor)</td><td>Old-world, dramatic, "castle" sounding</td></tr>
   <tr><td>PHDOM (Phrygian dominant)</td><td>Desert ruins and old temples: Phrygian with a bright major third</td></tr>
   <tr><td>HUNG (Hungarian minor)</td><td>Gothic and haunted: harmonic minor with a raised fourth</td></tr>
   <tr><td>DHARM (double harmonic)</td><td>Exotic and ceremonial: two wide steps, a sorcerer's tower</td></tr>
   <tr><td>MPEN (minor pentatonic)</td><td>Five notes, nothing clashes: easy to improvise with</td></tr>
-  <tr><td>MAJ (major)</td><td>Bright, happy: a tavern, a sunrise</td></tr>
+  <tr><td>MAJ (major)</td><td>Bright, happy: a tavern, a sunrise (the Ionian mode)</td></tr>
 </table>
 <h3>Let the FM-1 play only the right notes</h3>
 <p>On <span class="k">SCL</span>, set <b>ROOT</b> (KNOB 1) and <b>SCL</b> (KNOB 2), then <b>QNT</b> (KNOB 3) to <b>WHITE</b>. Now the white keys play only the notes of your scale, starting on the root at the C key, and the black keys are silent. You can't hit a wrong note.</p>
@@ -325,13 +394,13 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
   <li>Stop playback. Choose T1 with <span class="k">ALGORITHM</span>.</li>
   <li>Tap <span class="k">SCL</span>. Turn KNOB 1 to ROOT <b>D</b>, KNOB 2 to SCL <b>MIN</b>, KNOB 3 to QNT <b>WHITE</b>.</li>
   <li>Play the white keys from C upwards: you hear the D minor scale. Play a slow, simple tune; finish it on the C key (now D) and hear it come home.</li>
-  <li>Change SCL to <b>PHRY</b> and play the same tune: darker. Try HARM: suddenly a castle.</li>
+  <li>Change SCL to <b>DOR</b> and play the same tune: the sixth note lifts, and it sounds like a dance. Try <b>PHRY</b>: darker. Try HARM: suddenly a castle.</li>
 </ol></div>
 <p class="small">The scale settings belong to the track, so set them on each track you play from the keys. Chords and the scale cheat sheet are in chapter 23.</p>
 </section>
 
 <section>
-<h2>8 · Tone: oscillators and the filter</h2>
+<h2 id="ch8"><span class="no">8</span>Tone: oscillators and the filter</h2>
 <p class="lede">The oscillator makes the raw sound; the filter carves it.</p>
 <h3>Waveforms</h3>
 <p>The oscillator repeats one shape, the <b>waveform</b>, over and over. Its shape decides the raw tone:</p>
@@ -362,7 +431,7 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 </section>
 
 <section>
-<h2>9 · Shape in time: the envelope</h2>
+<h2 id="ch9"><span class="no">9</span>Shape in time: the envelope</h2>
 <p class="lede">An envelope describes how a note changes from the moment you press the key until it falls silent.</p>
 <p>The FM-1's envelope has four stages, called <b>ADSR</b>:</p>
 <table>
@@ -385,7 +454,7 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 </section>
 
 <section>
-<h2>10 · Movement: the LFO and modulation</h2>
+<h2 id="ch10"><span class="no">10</span>Movement: the LFO and modulation</h2>
 <p class="lede">A sound that never changes sounds like a machine. Modulation makes it move.</p>
 <h3>The LFO</h3>
 <p>An <b>LFO</b> (low-frequency oscillator) is an oscillator too slow to hear. Instead of making sound, it moves a control up and down for you, smoothly and endlessly.</p>
@@ -416,7 +485,7 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 </section>
 
 <section>
-<h2>11 · Voices: poly, mono and glide</h2>
+<h2 id="ch11"><span class="no">11</span>Voices: poly, mono and glide</h2>
 <p class="lede">How many notes a track plays at once, and how it moves between them.</p>
 <p>Tap <span class="k">EDIT</span> until the <b>VOICE</b> page shows. Its first knob, <b>VCE</b>, has four settings:</p>
 <table>
@@ -443,11 +512,11 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 </section>
 
 <section>
-<h2>12 · Space: effects</h2>
-<p class="lede">Effects put the instrument in a room. In dungeon synth, the room is half the music.</p>
+<h2 id="ch12"><span class="no">12</span>Space: effects</h2>
+<p class="lede">Effects put the instrument in a room. In a stone church or a great hall, the room is half the music.</p>
 <table>
   <tr><th>Effect</th><th>What it does</th></tr>
-  <tr><td><b>Reverb</b></td><td>The echoes of a room, all blurred together: a closet, a chapel, a cathedral. GHOULBOX's HALL rings for up to 12 seconds.</td></tr>
+  <tr><td><b>Reverb</b></td><td>The echoes of a room, all blurred together: a closet, a chapel, a cathedral. The HALL rings for up to 12 seconds.</td></tr>
   <tr><td><b>Delay</b></td><td>Distinct repeats of what you play, each quieter than the last: a call across a valley.</td></tr>
   <tr><td><b>Chorus</b></td><td>A slightly wavering copy of the sound mixed in, as if several players: wider and shimmering.</td></tr>
   <tr><td><b>Distortion</b></td><td>Overdrives the sound until it breaks up: grit, growl.</td></tr>
@@ -455,7 +524,7 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
   <tr><td><b>Crush</b></td><td>A cheap old sampler: rougher, grainier, robotic at the extreme.</td></tr>
 </table>
 <h3>Sends: one room, four players</h3>
-<p>There is one reverb, one delay and one chorus, shared by all four tracks, just as four musicians share one hall. Each track decides how much of itself to <b>send</b> into each: tap <span class="k">FX</span>, and KNOB 1–4 are the track's distortion, chorus, delay and reverb amounts. A pad drowned in reverb and a dry, close melody in front of it is a classic dungeon-synth picture.</p>
+<p>There is one reverb, one delay and one chorus, shared by all four tracks, just as four musicians share one hall. Each track decides how much of itself to <b>send</b> into each: tap <span class="k">FX</span>, and KNOB 1–4 are the track's distortion, chorus, delay and reverb amounts. A drone drowned in reverb and a dry, close melody in front of it is a classic picture: the band in front of you, the hall behind them.</p>
 <p>Tap <span class="k">FX</span> again to reach the shared effects themselves: <b>SLICER</b>, <b>DLY</b>, <b>REVERB</b>, <b>CHORUS</b> and <b>TAPE</b> (chapter 16).</p>
 <div class="try"><b class="t">TRY THIS · From closet to cathedral</b>
 <ol>
@@ -467,15 +536,15 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 </section>
 
 <section>
-<h2>13 · Time: tempo, steps and the arpeggiator</h2>
+<h2 id="ch13"><span class="no">13</span>Time: tempo, steps and the arpeggiator</h2>
 <p class="lede">Rhythm on the FM-1 comes from a clock that every track follows.</p>
 <h3>Tempo</h3>
-<p>The <b>tempo</b> is measured in <b>BPM</b>, beats per minute: 60 is one beat a second. Dungeon synth usually sits slow, 50 to 90. Turn <span class="k">SELECT</span> to change it.</p>
+<p>The <b>tempo</b> is measured in <b>BPM</b>, beats per minute: 60 is one beat a second. Dances move: a trotto or a saltarello runs at about 100 to 130, a stately procession or a chant at 50 to 80 (and GHOULBOX's dungeon synth sits slow, 50 to 90). Turn <span class="k">SELECT</span> to change it.</p>
 <h3>Steps</h3>
 <p>A <b>step sequencer</b> divides time into equal boxes, <b>steps</b>, and plays what is in each box in turn, round and round. Each track has its own row of up to 64 steps. Two settings decide how it moves; hold <span class="k">SEQ</span> for them (KNOB 1 and 2):</p>
 <ul>
   <li><b>LEN</b>: how many steps before it goes round again.</li>
-  <li><b>DIV</b>: how long each step is, as a fraction of a bar (a bar is four beats). 1/4 is one beat per step, 1/8 half a beat, 1/1 a whole bar. The power-on scene uses 1/8.</li>
+  <li><b>DIV</b>: how long each step is, as a fraction of a bar (a bar is four beats). 1/4 is one beat per step, 1/8 half a beat, 1/1 a whole bar; <b>8T</b> fits three steps in a beat, for the lilt of a dance in 6/8. The TROTTO uses 8T, GHOULBOX's scenes 1/8.</li>
 </ul>
 <p>LEN 16 at 1/8 is two bars; LEN 4 at 1/1 is four bars, one chord each. Each track can have a different length, so parts drift against each other: a 7-step melody over an 8-step bass never repeats the same way twice in a row.</p>
 <p><b>Swing</b> (SWG) delays every second step a little: a lilt, a dance, a limp.</p>
@@ -499,13 +568,13 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 <div class="part">
   <div class="n">PART III</div>
   <h1>Reference</h1>
-  <p>Every page, sound and setting of GHOULBOX, for looking things up.</p>
-  <p class="small"><b>New in ESTAMPIE 0.1, from Felucca 1.5–1.6.1:</b> an INSERT effect on every track, MIDI LEARN, ANALOG's band- and high-pass filter, envelopes in note values, a step's length and velocity, SEQ › DETAIL, conditional steps and FILL, EUCLID / DOUBLE / HALF, Program Change, a MIDI channel per track, dotted delay times, reverb and echo throws, FOLD for PHASE, humanize, three more drum kits, on-screen HELP, your own colours and the second CPU core (a beta). Each is described in its chapter below. ESTAMPIE also brings back PIANO and FLUTE, retires SAX (its sounds play FLUTE) and leaves out the SLICE engine.</p>
+  <p>Every page, sound and setting of ESTAMPIE, for looking things up.</p>
+  <p class="small"><b>New in ESTAMPIE 0.1, from Felucca 1.5–1.6.1:</b> an INSERT effect on every track, MIDI LEARN, ANALOG's band- and high-pass filter, envelopes in note values, a step's length and velocity, SEQ › DETAIL, conditional steps and FILL, EUCLID / DOUBLE / HALF, Program Change, a MIDI channel per track, dotted delay times, reverb and echo throws, FOLD for PHASE, humanize, three more drum kits, on-screen HELP, your own colours and the second CPU core (a beta). Each is described in its chapter below. ESTAMPIE also brings back PIANO and FLUTE, retires SAX (its sounds play FLUTE) and leaves out the SLICE engine. From GHOULBOX 2.3: <b>RING</b>, a hurdy-gurdy's drones sounding on through the sequencer's rests (chapter 15).</p>
   <ol start="14"><li>Every page</li><li>The sounds</li><li>Effects</li><li>Sequencer, patterns and songs</li><li>Saving your work</li><li>The menu</li><li>MIDI, USB and recording</li></ol>
 </div>
 
 <section>
-<h2>14 · Every page</h2>
+<h2 id="ch14"><span class="no">14</span>Every page</h2>
 <p>Each page button opens a group of pages; tap it again for the next (it remembers the last one you used). On every page, <span class="k">KNOB 1–4</span> change the four values shown, left to right.</p>
 <table>
   <tr><th>Button</th><th>Page</th><th>KNOB 1 · 2 · 3 · 4</th></tr>
@@ -529,8 +598,9 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
   <tr><td>TAPE</td><td>TAPE · CRSH · AMB · CRKL</td></tr>
   <tr><td rowspan="2"><span class="k">SCL</span></td><td>SCL</td><td>ROOT · SCL · QNT (OFF, SNAP, WHITE, SEQ, SEQ+T: the sequence follows TRN too) · TRN (transpose)</td></tr>
   <tr><td>CHORD</td><td>CHRD (OFF, DIA3, DIA7, MAJ, MIN, DOM7, MAJ7, MIN7, SUS4, POW) · VOIC (CLOSE, OPEN, INV1, INV2, +OCT) · TEMP (EQUAL, PYTH, MEAN, JUST)</td></tr>
-  <tr><td rowspan="4"><span class="k">EDIT</span></td><td>EDIT 1 · EDIT 2</td><td>The engine's eight controls, four per page (chapter 15)</td></tr>
+  <tr><td rowspan="5"><span class="k">EDIT</span></td><td>EDIT 1 · EDIT 2</td><td>The engine's eight controls, four per page (chapter 15)</td></tr>
   <tr><td>FILTER</td><td>ANALOG only: TYPE (LP, BP, HP: low-, band- or high-pass) · CUT · RES · KTR</td></tr>
+  <tr><td>RING</td><td>GURDY only: RING (OFF, ON: the drones sound on through the rests; chapter 15)</td></tr>
   <tr><td>VOICE</td><td>VCE · GLD · GLMOD · PRIO</td></tr>
   <tr><td>VOICE 2</td><td>ALLOC · DTUNE · PAN · MUTE</td></tr>
   <tr><td><span class="k">GLO</span></td><td>SONG</td><td>SECTION (the row) · TRACK · PAT (A–D, or – for silent) · REPS (1–16)</td></tr>
@@ -551,8 +621,8 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 </section>
 
 <section>
-<h2>15 · The sounds</h2>
-<p class="lede">67 sounds across 13 engines. Hear them all at <span class="path">ghoulbox.messy.quest/sounds</span>. <span class="gb">GB</span> marks GHOULBOX's own; the rest are Felucca's that fit the genre.</p>
+<h2 id="ch15"><span class="no">15</span>The sounds</h2>
+<p class="lede">Every sound, {{NSOUNDS}} across 13 engines. Try them all in the browser at <span class="path">{{SITE}}</span>. <span class="es">ES</span> marks ESTAMPIE's own and <span class="gb">GB</span> GHOULBOX's; the rest are Felucca's.</p>
 {{SOUNDS}}
 <p>To jump between engines quickly: <span class="k">SAVE</span> › PRESETS, KNOB 2. To mark a sound as a favourite, KNOB 3 on the same page; KNOB 4 then shows favourites only. <span class="k">SAVE</span> › TOOLS › SOUND resets the track's sound to its engine's first preset (the notes stay).</p>
 <h3>The engines</h3>
@@ -568,7 +638,7 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
   <tr><td><span class="k">WHEEL</span></td><td>A tonewheel organ with drawbar registrations and a rotating speaker.</td><td>REG (registration), PERC, ROTR (rotary)</td></tr>
   <tr><td><span class="k">GRAIN</span></td><td>Granular: thousands of tiny slices of a recording, smeared into clouds and textures.</td><td>POS, SIZE, DENS (density), SPRD</td></tr>
   <tr><td><span class="k">PHYS</span></td><td>Physical models: strings, bars and drums, simulated as they vibrate. Lutes, bells, dulcimers.</td><td>MODEL, BRIT (brightness), DAMP</td></tr>
-  <tr><td><span class="k">GURDY</span></td><td>A hurdy-gurdy: a melody string over drones, with a buzzing bridge. GHOULBOX's own engine (below).</td><td>DRN, BUZZ, COUP, WHL</td></tr>
+  <tr><td><span class="k">GURDY</span></td><td>A hurdy-gurdy: a melody string over drones, with a buzzing bridge. GHOULBOX's engine (below).</td><td>DRN, BUZZ, COUP, WHL</td></tr>
   <tr><td><span class="k">NOISE</span></td><td>Noise in many colours: wind, rain, crackle, a cave, a fire.</td><td>MODE, COLR, FREQ, RES</td></tr>
   <tr><td><span class="k">DRUM</span></td><td>Synthesized drums on eight lanes (below).</td><td>KIT, TUNE, DECY (decay)</td></tr>
 </table>
@@ -579,7 +649,11 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 <h3 style="margin-top:0">Real recordings (SAMPLE)</h3>
 <p>The SAMPLE engine plays six real instruments, recorded by Versilian Studios and released into the public domain (CC0): a <b>bowed psaltery</b> (a mediæval zither played with a bow), a <b>Renaissance chamber organ</b>, a <b>baroque tenor recorder</b>, a <b>folk harp</b>, a <b>flute</b> and a <b>piano</b>. Held notes on the psaltery, organ, recorder and flute sustain for as long as you hold the key. SAMPLE's SET knob lists them first, then your own samples (USR1–USR3, uploaded or recorded in the web editor). An empty user slot plays a plain tone and the screen says NO SAMPLE.</p>
 <h3>The hurdy-gurdy (GURDY)</h3>
-<p>A hurdy-gurdy is a medieval string instrument played by turning a crank: a rosined wheel rubs the strings, keys on the side stop the melody string, and other strings drone on without stopping. One of them, the <b>trompette</b>, sits on a loose bridge that buzzes when the player jerks the crank, giving the dance its rhythm. GURDY plays one melody note at a time over its drones. Its eight controls (<span class="k">EDIT</span>):</p>
+<p>A hurdy-gurdy is a mediæval string instrument played by turning a crank: a rosined wheel rubs the strings, keys on the side stop the melody string, and other strings drone on without stopping. One of them, the <b>trompette</b>, sits on a loose bridge that buzzes when the player jerks the crank, giving the dance its rhythm. GURDY plays one melody note at a time over its drones. Its eight controls (<span class="k">EDIT</span>):</p>
+<div class="shots">
+  <figure><img src="drone.png" alt="GURDY's DRONE page"><figcaption>EDIT on a GURDY track: the DRONE page (TROTTO GURDY)</figcaption></figure>
+  <figure><img src="ring.png" alt="GURDY's RING page"><figcaption>EDIT twice more: RING</figcaption></figure>
+</div>
 <table>
   <tr><th>Control</th><th>What it does</th></tr>
   <tr><td><span class="k">DRN</span></td><td>The drone's note (C–B): set it to your song's key (D for D minor)</td></tr>
@@ -610,17 +684,17 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 </section>
 
 <section>
-<h2>16 · Effects</h2>
+<h2 id="ch16"><span class="no">16</span>Effects</h2>
 <p>Each track sends to shared effects; the amounts are on the <span class="k">FX</span> page (KNOB 1–4: distortion, chorus, delay, reverb). Tap <span class="k">FX</span> again to reach the effects themselves. Distortion and the slicer belong to each track; the others are shared.</p>
 <h3>REVERB</h3>
 <ul>
-  <li><b>TYPE</b> (KNOB 1): ROOM, SPRING or <b>HALL</b>. GHOULBOX starts in HALL.</li>
+  <li><b>TYPE</b> (KNOB 1): ROOM, SPRING or <b>HALL</b>. The TROTTO scene uses ROOM, a small hall to dance in; GHOULBOX's scenes start in HALL.</li>
   <li><b>SIZE</b>: from a 1.5-second stone chamber to a 12-second cathedral.</li>
   <li><b>DAMP</b>: darkens the tail.</li>
 </ul>
 <h3>TAPE</h3>
 <ul>
-  <li><b>TAPE</b>: the whole mix through a worn cassette: wow and flutter (wavering pitch), saturation, treble loss and hiss. GHOULBOX starts at 40.</li>
+  <li><b>TAPE</b>: the whole mix through a worn cassette: wow and flutter (wavering pitch), saturation, treble loss and hiss. The TROTTO scene starts at 12, a touch of warmth; GHOULBOX's scenes at 30 to 55.</li>
   <li><b>CRSH</b>: a cheap sampler: fewer bits and a lower sample rate. Off by default; a little adds grit, a lot turns to crunch.</li>
   <li><b>AMB</b>: the ambience, a low cave wind that rises and falls, in the same reverb as your tracks. It uses no track and no voice, and plays even when the song is stopped, like the air in a room. Off (0) by default; the first half of the knob is subtle.</li>
   <li><b>CRKL</b>: the torch crackle in the ambience: from 0 (wind only) to a busy fire. AMB sets the level of both.</li>
@@ -644,10 +718,10 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 </section>
 
 <section>
-<h2>17 · Sequencer, patterns and songs</h2>
+<h2 id="ch17"><span class="no">17</span>Sequencer, patterns and songs</h2>
 <p>Each track has its own sequence of up to 64 steps, with chords, ties, accents, slides, per-step chance and ratchets.</p>
 <h3>Load a factory pattern</h3>
-<p><span class="k">SAVE</span> › PHRASES (tap SAVE three times) lists ready-made patterns. Choose one with KNOB 1 (or PRESETS) and press <span class="k">OCT+</span> to load it into the selected track; if the track has notes you wrote, it asks first. GHOULBOX adds nine, all in D minor:</p>
+<p><span class="k">SAVE</span> › PHRASES (tap SAVE three times) lists ready-made patterns. Choose one with KNOB 1 (or PRESETS) and press <span class="k">OCT+</span> to load it into the selected track; if the track has notes you wrote, it asks first. GHOULBOX adds nine, all in D minor, and ESTAMPIE a tenth:</p>
 <table>
   <tr><th>Pattern</th><th>What it is</th><th>Try it on</th></tr>
   <tr><td>DIRGE</td><td>Slow pad chords</td><td>CRYPT PAD, DARK STRINGS, PIPE ORGAN</td></tr>
@@ -659,8 +733,9 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
   <tr><td>ARPEGGIO</td><td>Broken chords</td><td>FOLK HARP, VIRGINAL, a lute</td></tr>
   <tr><td>ANTIPHON</td><td>A call answered an octave lower</td><td>Two voices, a gurdy</td></tr>
   <tr><td>TOMBBEAT</td><td>A slow beat for the CRYPT drums</td><td>CRYPT KIT, TOMB DRUMS</td></tr>
+  <tr><td>TABOR</td><td>A dance: the tabor's long-short (ESTAMPIE)</td><td>DANCE KIT, PROCESSION</td></tr>
 </table>
-<p>Patterns 1–13 are Felucca's. Loading a sound never changes your pattern, and loading a pattern never changes your sound.</p>
+<p>Patterns 1–13 are Felucca's. The TROTTO scene's own parts are longer phrases (36 steps, a whole section of the dance) and are not in the list: to hear them again, start the FM-1 with the TROTTO scene (chapter 18, the note at the end). Loading a sound never changes your pattern, and loading a pattern never changes your sound.</p>
 <h3>Write notes step by step</h3>
 <ol>
   <li>Go to <span class="k">SEQ</span> › STEP. The cursor is the step being edited (KNOB 1 or PRESETS moves it).</li>
@@ -696,7 +771,7 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 </section>
 
 <section>
-<h2>18 · Saving your work</h2>
+<h2 id="ch18"><span class="no">18</span>Saving your work</h2>
 <p>The FM-1 keeps two kinds of things: <b>sounds</b> (one track's sound) and <b>projects</b> (everything). Saving works only while stopped.</p>
 <h3>Save a project (4 slots)</h3>
 <p>A project keeps the whole session: all four tracks, their sounds and sequences, songs, tempo and effects.</p>
@@ -718,24 +793,24 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 <p>On SAVE › PROJECT, KNOB 2 (ERASE) and <span class="k">OCT+</span> twice empties the slot (only while stopped). SAVE › TOOLS › SOUND turned one click past INIT is <b>CLEAN</b>: the engine's plain sound with no sends, no INSERT and no modulation, a blank canvas (in the EDIT layer it is F5, the key after INIT).</p>
 <h3>Backups</h3>
 <p>The web editor (on the installer site) makes a full backup of the FM-1 to your computer and restores it. Do one now and then, and before any experiment you might regret.</p>
-<div class="note">The FM-1 comes back on with your last session: it saves it once you have been stopped for about 10 seconds (MENU › SYSTEM › RESTORE LAST, ON since 2.1). Set RESTORE LAST to OFF to start with the power-on scene (MENU › SYSTEM › SCENE) every time instead. Your saved projects stay in their slots; load one from <span class="k">SAVE</span> › PROJECT.</div>
+<div class="note">The FM-1 comes back on with your last session: it saves it once you have been stopped for about 10 seconds (MENU › SYSTEM › RESTORE LAST, ON by default). Set RESTORE LAST to OFF to start with the power-on scene (MENU › SYSTEM › SCENE) every time instead. Your saved projects stay in their slots; load one from <span class="k">SAVE</span> › PROJECT.</div>
 </section>
 
 <section>
-<h2>19 · The menu</h2>
+<h2 id="ch19"><span class="no">19</span>The menu</h2>
 <p>Hold <span class="k">HOME</span> for the menu. <span class="k">ALGORITHM</span> moves between its five tabs, <span class="k">PRESETS</span> through the rows, and any knob or <span class="k">OCT−</span> / <span class="k">OCT+</span> changes a value. Press <span class="k">HOME</span> to close it.</p>
 <table>
   <tr><th>Tab</th><th>Settings</th></tr>
-  <tr><td>DISPLAY</td><td><b>COLOR</b> (palette; GHOULBOX's is CRYPT) · <b>STYLE</b> (FLAT or LINE) · <b>LARGE</b> (bigger knob cards) · <b>ANIM</b> (rolling digits ON or OFF; IDLE also plays a light show on the keys when you leave it alone) · <b>LEDS</b> (OFF, DIM LO, DIM HI, INV, and INV LO and INV HI: INV with the lit keys dimmed) · <b>SCREEN OFF</b> (after NEVER, 5, 15, 30 or 60 minutes) · <b>SCOPE</b> (OUT draws the sound after MASTER, MIX before it) · <b>HOME</b> (SCOPE; TRACKS: all four tracks at a glance; LEVELS: the same, with KNOB 1–4 the four tracks' levels). COLOR has <b>CUSTOM</b> once you have made your own colours in the web editor (Settings › Custom palette).</td></tr>
+  <tr><td>DISPLAY</td><td><b>COLOR</b> (palette: ESTAMPIE's is VELLUM, TAVERN its dark one, GHOULBOX's CRYPT) · <b>STYLE</b> (FLAT or LINE) · <b>LARGE</b> (bigger knob cards) · <b>ANIM</b> (rolling digits ON or OFF; IDLE also plays a light show on the keys when you leave it alone) · <b>LEDS</b> (OFF, DIM LO, DIM HI, INV, and INV LO and INV HI: INV with the lit keys dimmed) · <b>SCREEN OFF</b> (after NEVER, 5, 15, 30 or 60 minutes) · <b>SCOPE</b> (OUT draws the sound after MASTER, MIX before it) · <b>HOME</b> (SCOPE; TRACKS: all four tracks at a glance; LEVELS: the same, with KNOB 1–4 the four tracks' levels). COLOR has <b>CUSTOM</b> once you have made your own colours in the web editor (Settings › Custom palette).</td></tr>
   <tr><td>CONTROL</td><td><b>HOLD</b> (how long a quick layer takes to open) · <b>KNOB ACCEL</b> (fast turns move further) · <b>FX LATCH</b> · <b>BPM LOCK</b> (SELECT stops changing the tempo) · <b>SCALE LEDS</b> (the keys light the scale) · <b>CHORD ENTRY</b> (HOLD writes the keys held together into a step; ADD adds each key to it) · <b>NOTE NAMES</b> (the note or chord you play, named large on HOME and at the top of the screen on the other pages) · <b>SELECT</b> (what the SELECT knob does: BPM, the tempo; PAGE, the pages of the button you are on; MODW, a mod wheel; VEL, how hard the keys play)</td></tr>
   <tr><td>AUDIO</td><td><b>SPEAKER EQ</b> (FLAT, LOWCUT, BASS+; keep FLAT when recording) · <b>USB LEVEL</b> (MASTER or FIXED) · <b>CLICK</b> (a metronome: OFF, REC while recording, or ON) · <b>CLICK LEVEL</b> · <b>COUNT-IN</b> (OFF, 1 BAR, 2 BARS before recording) · <b>TUNE</b> (±50 cents, saved with the project) · <b>STEP PREVIEW</b> (on STEP, the cursor's step sounds as you move to it)</td></tr>
   <tr><td>MIDI</td><td><b>MIDI IN</b> (which channels play which track: chapter 20; saved with the project) · <b>T1–T4 CHANNEL</b> (with MIDI IN on TRACK) · <b>AUTO SELECT</b> (the track MIDI plays becomes the selected one) · <b>SCREEN WAKE</b> (+MIDI: a note from MIDI wakes the screen; PANEL: only the panel) · <b>LEARN CLEAR</b> (forgets every learned CC)</td></tr>
-  <tr><td>SYSTEM</td><td><b>SCENE</b> (what plays at power-on: DUNGEON, CRYPT, TAVERN, CHAPEL or BLANK; chapter 3) · <b>USB SERIAL</b> (OFF from 1.2 on; turn it ON only for Felucca's developer console, and keep it OFF on macOS 13–15 so the USB audio input appears) · <b>RESTORE LAST</b> (ON, the default: your last session comes back at power-on; OFF: the scene) · <b>HELP</b> (a hint on each page as it opens) · <b>2ND CORE</b> (a beta: ON lets the chip's second processor share the sound work, from the next power-on; it switches itself OFF if it misbehaves) · HARDWARE CALIBRATION · <b>INFO</b> (the firmware, the USB connection and the CPU load) · ABOUT (the version)</td></tr>
+  <tr><td>SYSTEM</td><td><b>SCENE</b> (what plays at power-on: TROTTO, CRYPT, TAVERN, CHAPEL, BLANK or DUNGEON; chapter 3) · <b>USB SERIAL</b> (OFF from 1.2 on; turn it ON only for Felucca's developer console, and keep it OFF on macOS 13–15 so the USB audio input appears) · <b>RESTORE LAST</b> (ON, the default: your last session comes back at power-on; OFF: the scene) · <b>HELP</b> (a hint on each page as it opens) · <b>2ND CORE</b> (a beta: ON lets the chip's second processor share the sound work, from the next power-on; it switches itself OFF if it misbehaves) · HARDWARE CALIBRATION · <b>INFO</b> (the firmware, the USB connection and the CPU load) · ABOUT (the version)</td></tr>
 </table>
 </section>
 
 <section>
-<h2>20 · MIDI, USB and recording</h2>
+<h2 id="ch20"><span class="no">20</span>MIDI, USB and recording</h2>
 <p class="lede"><b>MIDI</b> is the language electronic instruments use to talk to each other: which key went down, how hard, which knob moved. It carries no sound, only instructions.</p>
 <h3>What can talk to the FM-1</h3>
 <ul>
@@ -775,15 +850,39 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 <div class="part">
   <div class="n">PART IV</div>
   <h1>Making music</h1>
-  <p>The genre in a page, a whole piece built step by step, the chords you need, recipes, and how to get it out of the box and into the world.</p>
-  <ol start="21"><li>What dungeon synth is</li><li>Your first piece, step by step</li><li>Minor keys and chords</li><li>Dungeon recipes</li><li>Recording and sharing</li></ol>
+  <p>The music in a page, a whole dance built step by step, the modes and chords you need, recipes, and how to get it out of the box and into the world.</p>
+  <ol start="21"><li>What mediæval dance music is</li><li>Your first piece, step by step</li><li>Modes and chords</li><li>Recipes</li><li>Recording and sharing</li></ol>
 </div>
 
 <section>
-<h2>21 · What dungeon synth is</h2>
-<p class="lede">Slow keyboard music for imagined castles, forests and crypts, usually made by one person at home.</p>
-<p>Dungeon synth grew out of the early-1990s black-metal scene, from the synthesizer intros and side projects of musicians such as Mortiis, and was given its name later. It sounds medieval or fantastical rather than modern: drones, simple modal melodies, choirs, horns, harpsichords, all drowned in reverb, often on cheap keyboards and recorded onto cassette. The roughness is part of the charm.</p>
-<h3>What makes it sound like dungeon synth</h3>
+<h2 id="ch21"><span class="no">21</span>What mediæval dance music is</h2>
+<p class="lede">Tunes for dancing in the halls, squares and taverns of the thirteenth and fourteenth centuries, played by a few musicians from memory.</p>
+<p>Very little mediæval instrumental music was written down: players learned it by ear and made up their own parts. What survives is a few dozen dances in two manuscripts. One, made in France in the thirteenth century, holds eight <b>estampies royales</b>. The other, made in Tuscany around 1390 and now in the British Library, holds the Italian <b>istampitte</b>, <b>saltarelli</b>, a <b>trotto</b> and others. ESTAMPIE's power-on scene is that trotto. Each dance is a single melody line; everything else (the drones, the second parts, the drums) was the players' own, as it is yours here.</p>
+<h3>The dances</h3>
+<table>
+  <tr><th>Dance</th><th>What it is</th></tr>
+  <tr><td><b>Estampie</b> (istampitta)</td><td>The great dance tune of the age, and this firmware's name: several sections, each played twice, first with an "open" ending that leads back, then with a "closed" one that comes home</td></tr>
+  <tr><td><b>Saltarello</b></td><td>A fast leaping dance in a lilting triple time</td></tr>
+  <tr><td><b>Trotto</b></td><td>A running dance in 6/8, built like an estampie: ESTAMPIE's power-on scene</td></tr>
+  <tr><td><b>Ductia</b></td><td>A shorter estampie, with fewer and shorter sections</td></tr>
+  <tr><td><b>Carole</b></td><td>A ring dance sung by the dancers themselves, the most common dance of all</td></tr>
+</table>
+<h3>What makes it sound mediæval</h3>
+<ul>
+  <li><b>One tune, many players.</b> Everyone plays the melody, each in their own way and range: the recorder holds its main notes while the hurdy-gurdy ornaments it (as the TROTTO does). The word for it is <i>heterophony</i>.</li>
+  <li><b>Drones.</b> A low note and its fifth held under everything, by a hurdy-gurdy, a bagpipe or a fiddle's open strings. GURDY with RING on, LOW DRONE, the PEDAL pattern.</li>
+  <li><b>The modes.</b> Dorian above all, then Mixolydian, Lydian and Phrygian (chapter 23), and the old tunings (TEMP PYTH): pure fifths that make a drone ring.</li>
+  <li><b>Lilt.</b> Many dances run in a triple time, three quick notes to a beat (DIV 8T), or swing a straight one (SWG).</li>
+  <li><b>Repetition.</b> Each section twice, the whole dance as often as the dancers want. Let it go round.</li>
+  <li><b>A drum that dances.</b> A tabor or nakers playing a short pattern again and again, often by the same player as the pipe: the DANCE kit and the TABOR pattern.</li>
+  <li><b>Real rooms.</b> A tavern or a hall, not a cathedral: ROOM or a modest HALL, little tape.</li>
+</ul>
+<h3>The instruments</h3>
+<p>Mediæval bands mixed loud instruments for outdoors (shawms, bagpipes, trumpets, drums) and soft ones for indoors (fiddles, harps, lutes, psalteries, recorders, portative organs). On ESTAMPIE: the hurdy-gurdy in TROTTO GURDY, HURDY GURDY, DANCE GURDY and VIELLE; BAGPIPE; SHAWM; TENOR RECORD and RECORDER; LUTE, FOLK HARP and DUNGEON HARP; BOWED PSALT; REN ORGAN and the WHEEL organs; and the DANCE KIT's tabor, nakers, tambourine, bones and bell.</p>
+<h3>GHOULBOX's genre: dungeon synth</h3>
+<p><i>Slow keyboard music for imagined castles, forests and crypts, usually made by one person at home.</i></p>
+<p>Dungeon synth grew out of the early-1990s black-metal scene, from the synthesizer intros and side projects of musicians such as Mortiis, and was given its name later. It sounds mediæval or fantastical rather than modern: drones, simple modal melodies, choirs, horns, harpsichords, all drowned in reverb, often on cheap keyboards and recorded onto cassette. The roughness is part of the charm.</p>
+<h4>What makes it sound like dungeon synth</h4>
 <ul>
   <li><b>Slow.</b> 50–90 BPM, long notes, room to breathe.</li>
   <li><b>Minor and modal.</b> Natural minor, Dorian, Phrygian, harmonic minor (chapter 23).</li>
@@ -791,30 +890,30 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
   <li><b>Few, simple parts.</b> A pad, a melody, a bass or drone, perhaps a drum. Repetition is a feature: let a phrase come round many times.</li>
   <li><b>Huge reverb.</b> HALL with a big SIZE. The space is an instrument.</li>
   <li><b>Lo-fi.</b> TAPE wobble and hiss, a little CRSH. It should sound found, not produced.</li>
-  <li><b>Old-world instruments.</b> Organs, harps, recorders, horns, choirs, bells, the hurdy-gurdy: the sounds GHOULBOX is built around.</li>
+  <li><b>Old-world instruments.</b> Organs, harps, recorders, horns, choirs, bells, the hurdy-gurdy: the sounds GHOULBOX is built around, all still in ESTAMPIE.</li>
 </ul>
-<h3>Its neighbours</h3>
-<p>Dungeon synth borders <b>dark ambient</b> (no melody, only atmosphere), <b>winter synth</b> (colder, more echo), <b>comfy synth</b> (cosy, major-key, pastoral) and old <b>video-game music</b> (try LOFI). Any of them can be made on GHOULBOX.</p>
-<div class="note">The way in is to listen. Pick an album you love, play along with it on the FM-1 in WHITE mode, and notice how few notes it really uses.</div>
+<h4>Its neighbours</h4>
+<p>Dungeon synth borders <b>dark ambient</b> (no melody, only atmosphere), <b>winter synth</b> (colder, more echo), <b>comfy synth</b> (cosy, major-key, pastoral) and old <b>video-game music</b> (try LOFI). Any of them can be made on ESTAMPIE too.</p>
+<div class="note">The way in, for either, is to listen. Pick a recording you love (an early-music ensemble's estampies, a folk band's trotto, a dungeon-synth tape), play along with it on the FM-1 in WHITE mode, and notice how few notes it really uses.</div>
 </section>
 
 <section>
-<h2>22 · Your first piece, step by step</h2>
-<p class="lede">A complete piece in four parts and two sections, from empty tracks to a song. Take your time: it's an hour's work the first time, and ten minutes after that.</p>
+<h2 id="ch22"><span class="no">22</span>Your first piece, step by step</h2>
+<p class="lede">A complete dance in four parts and two sections, from empty tracks to a song. Take your time: it's an hour's work the first time, and ten minutes after that.</p>
 <h3>1. Clear the table</h3>
 <ol>
-  <li>This walk-through starts from the <b>DUNGEON</b> scene, the one a new FM-1 plays. If yours comes back with something else, hold HOME and set SYSTEM › SCENE to DUNGEON and RESTORE LAST to OFF, switch off and on, then set RESTORE LAST back to ON. Don't press PLAY yet.</li>
+  <li>This walk-through starts from GHOULBOX's <b>DUNGEON</b> scene, for its hurdy-gurdy and drone. Hold HOME and set SYSTEM › SCENE to DUNGEON and RESTORE LAST to OFF, switch off and on, then set RESTORE LAST back to ON (and SCENE back to TROTTO, if you like, for next time). Don't press PLAY yet.</li>
   <li>For each track, T1–T4 (<span class="k">ALGORITHM</span>): hold <span class="k">REC</span> and press the lowest F key (CLEAR). The steps are cleared; the sounds stay.</li>
-  <li>Turn <span class="k">SELECT</span> to about 66 BPM.</li>
+  <li>Turn <span class="k">SELECT</span> to about 100 BPM: a walking dance.</li>
 </ol>
 <h3>2. The drone (track 4)</h3>
 <ol>
-  <li>Choose T4. Its sound is DRONE WHEEL, a hurdy-gurdy drone. On <span class="k">EDIT</span>, check DRN is <b>D</b>.</li>
+  <li>Choose T4. Its sound is DRONE WHEEL, a hurdy-gurdy's drones. On <span class="k">EDIT</span>, check DRN is <b>D</b>. Tap EDIT twice more: RING is ON, so the drones will sound on between notes.</li>
   <li>Tap <span class="k">SAVE</span> twice for PHRASES, choose <b>PEDAL</b> and press <span class="k">OCT+</span>. Press PLAY: a low D that never stops. Leave it playing.</li>
 </ol>
 <h3>3. The chords (track 2)</h3>
 <ol>
-  <li>Choose T2 (CRYPT PAD). On <span class="k">SCL</span>: ROOT <b>D</b>, SCL <b>MIN</b>, QNT <b>WHITE</b>.</li>
+  <li>Choose T2 and turn <span class="k">PRESETS</span> to <b>REN ORGAN</b>, a small Renaissance chamber organ (or keep CRYPT PAD, for a darker dance). On <span class="k">SCL</span>: ROOT <b>D</b>, SCL <b>MIN</b>, QNT <b>WHITE</b>.</li>
   <li>Hold <span class="k">SEQ</span> and set LEN (KNOB 1) to <b>4</b> and DIV (KNOB 2) to <b>1/1</b>. Four steps, a bar each.</li>
   <li><span class="k">SEQ</span> › STEP, cursor on step 1 (KNOB 1). Press and release each chord shape in turn; each fills one step:
     <ul>
@@ -823,11 +922,11 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
       <li>B + D + F (C major)</li>
       <li>C + E + G (D minor again)</li>
     </ul></li>
-  <li>The pad now plays <b>Dm – B♭ – C – Dm</b>, one of the oldest progressions in the genre, over the drone.</li>
+  <li>The organ now plays <b>Dm – B♭ – C – Dm</b>, chords folk musicians still play under old dance tunes, over the drone.</li>
 </ol>
 <h3>4. The melody (track 1)</h3>
 <ol>
-  <li>Choose T1 (HURDY GURDY). On <span class="k">SCL</span>: ROOT D, SCL MIN, QNT WHITE. On <span class="k">EDIT</span>, BUZZ to 0 for now: a plain, sad gurdy.</li>
+  <li>Choose T1 (HURDY GURDY). On <span class="k">SCL</span>: ROOT D, SCL MIN, QNT WHITE. On <span class="k">EDIT</span>, set COUP to <b>1/8</b>: the trompette buzzes in strokes, in time, as a player's wrist drives the dance.</li>
   <li>Hold <span class="k">SEQ</span>: LEN <b>32</b>, DIV <b>1/8</b> (four bars, the same length as the chords).</li>
   <li>Play along with the chords, slowly, until a few notes feel right. Simple is good: a handful of notes, mostly stepping to neighbours, ending on the C key (D).</li>
   <li>Press <span class="k">REC</span>, wait for the loop to come round, and play it. Press REC again when you're done. Not right? Hold <span class="k">REC</span> and press the lowest F key to clear, and try again.</li>
@@ -835,19 +934,19 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 <p class="small">Rather not play it live? Load <b>LAMENT</b> or <b>BALLAD</b> from PHRASES instead, or write it a note at a time on STEP (chapter 17).</p>
 <h3>5. The drum (track 3)</h3>
 <ol>
-  <li>Choose T3. Turn <span class="k">PRESETS</span> to <b>TOMB DRUMS</b>. Load <b>TOMBBEAT</b> from PHRASES.</li>
+  <li>Choose T3. Turn <span class="k">PRESETS</span> to <b>DANCE KIT</b>. Load <b>TABOR</b> from PHRASES.</li>
   <li>Too busy? On <span class="k">SEQ</span> › AUTOMATION, add a CHANCE of 50% to a few steps (chapter 17): the beat thins out and never repeats exactly.</li>
 </ol>
 <h3>6. Mix and room</h3>
 <ol>
   <li>Hold <span class="k">GLO</span> and turn KNOB 4 and KNOB 3 (the drone's and the drum's levels) down until the melody and chords sit on top.</li>
-  <li><span class="k">FX</span>: give the pad and drum plenty of REV, the melody a little less. <span class="k">FX</span> › REVERB: SIZE high. <span class="k">FX</span> › TAPE: TAPE 60.</li>
+  <li><span class="k">FX</span>: give the organ and the drone a good amount of REV, the melody and the drum a little less. <span class="k">FX</span> › REVERB: TYPE ROOM, or HALL with a middling SIZE: a hall to dance in. <span class="k">FX</span> › TAPE: TAPE 10 to 20, a touch of warmth.</li>
 </ol>
 <h3>7. Save it, then make section B</h3>
 <ol>
   <li>Stop. Save as <b>project 1</b> (chapter 18). Call it VERSE.</li>
   <li>On T2, go to STEP, move the cursor back to step 1 (KNOB 1) and play new chords over the old ones: <b>Gm – Dm – A – A</b>: keys F + A + C, C + E + G, and for A major, set SCL to HARM first, then G + B + D twice. (Harmonic minor turns the fifth chord major: drama.)</li>
-  <li>On T1, turn BUZZ up and COUP to <b>1/8</b>, and record a new melody, or mute it for a quieter middle.</li>
+  <li>On T1, set COUP to <b>1/4</b> for heavier strokes, and record a new melody, or mute it for a quieter middle.</li>
   <li>Save as <b>project 2</b>, BRIDGE.</li>
 </ol>
 <h3>8. The song</h3>
@@ -857,12 +956,12 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
   <li>On <b>+ ADD</b> again, press <b>A</b> and set every track back to <b>A</b> the same way; REPS 2. The rows read <b>A ×2</b>, <b>B ×1</b>, <b>A ×2</b>.</li>
   <li>Press <span class="k">PLAY</span> on the SONG page. That's a piece.</li>
 </ol>
-<div class="note">The song plays the steps of each section with the sounds loaded right now, so the BUZZ you added in section B stays on when A comes back. Use the tracks' levels, or a track set to – on a row, rather than sound changes to make sections differ, or set the sound back before saving each section.</div>
+<div class="note">The song plays the steps of each section with the sounds loaded right now, so the COUP you changed in section B stays on when A comes back. Use the tracks' levels, or a track set to – on a row, rather than sound changes to make sections differ, or set the sound back before saving each section.</div>
 </section>
 
 <section>
-<h2>23 · Minor keys and chords</h2>
-<p class="lede">A cheat sheet. You need no theory beyond this page to write dungeon synth.</p>
+<h2 id="ch23"><span class="no">23</span>Modes and chords</h2>
+<p class="lede">A cheat sheet. You need no theory beyond this page to write a dance, or a dungeon.</p>
 <h3>Chords in a nutshell</h3>
 <p>A <b>chord</b> is three or more notes played together. The basic chord, a <b>triad</b>, is built by taking every other note of the scale: the 1st, 3rd and 5th; or the 2nd, 4th and 6th; and so on. <b>Major</b> chords sound bright, <b>minor</b> chords sad.</p>
 <h3>Shapes on the white keys</h3>
@@ -888,10 +987,21 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
   <tr><td>i – V (HARM)</td><td>Dm A</td><td>CEG · GBD</td><td>Castle drama</td></tr>
   <tr><td>i – ♭II (PHRY)</td><td>Dm E♭</td><td>CEG · DFA</td><td>Dread</td></tr>
 </table>
+<h3>The church modes</h3>
+<p>Mediæval musicians named their scales by the note they come home to, all on the white keys. With QNT <b>WHITE</b>, the white keys play the mode from ROOT upwards, so the same shapes work in any of them:</p>
+<table>
+  <tr><th>Mode</th><th>White keys from</th><th>SCL</th><th>Character</th></tr>
+  <tr><td><b>Dorian</b></td><td>D</td><td>DOR</td><td>The dance mode: minor, but with a bright sixth (the TROTTO, in A)</td></tr>
+  <tr><td><b>Phrygian</b></td><td>E</td><td>PHRY</td><td>Grave and austere, the note above home very close</td></tr>
+  <tr><td><b>Lydian</b></td><td>F</td><td>LYD</td><td>Bright, with a raised fourth; often softened in practice to major</td></tr>
+  <tr><td><b>Mixolydian</b></td><td>G</td><td>MIX</td><td>Major with a flat seventh: pipes and drones, an outdoor dance</td></tr>
+  <tr><td>Aeolian, Ionian</td><td>A, C</td><td>MIN, MAJ</td><td>Named only in the sixteenth century: today's minor and major</td></tr>
+</table>
+<p>In Dorian the chord shapes above change in two places: F · A · C plays <b>G major</b> (the bright sixth's chord, a lift), and A · C · E a sour diminished chord, best left out. A dance in Dorian often just swings between the home chord and the one a step below: in D Dorian, <b>Dm – C</b> (C · E · G, then B · D · F), over a drone on D. Mediæval players thought less in chords than in a tune over a drone: if a chord sounds wrong, play only the drone and the tune.</p>
 <h3>One finger, whole chords</h3>
 <p>On <span class="k">SCL</span> › CHORD, set CHRD to <b>DIA3</b>: each key plays the triad of the scale that starts on it (DIA7 adds a fourth note for a richer sound). In WHITE mode with ROOT D, one finger on the C key plays D minor, on A plays B♭, and so on. VOIC spreads the notes: OPEN for a wide, airy pad, +OCT to double the bass an octave down.</p>
 <h3>Old tunings</h3>
-<p>A modern keyboard is tuned in <b>equal temperament</b>: every step the same size, so every key sounds equally (slightly) out of tune. Medieval and Renaissance players tuned to pure ratios instead, and their chords shimmer less and ring more. On <span class="k">SCL</span> › CHORD, <b>TEMP</b> (KNOB 3) tunes the track from its ROOT:</p>
+<p>A modern keyboard is tuned in <b>equal temperament</b>: every step the same size, so every key sounds equally (slightly) out of tune. Mediæval and Renaissance players tuned to pure ratios instead, and their chords shimmer less and ring more. On <span class="k">SCL</span> › CHORD, <b>TEMP</b> (KNOB 3) tunes the track from its ROOT:</p>
 <table>
   <tr><th>TEMP</th><th>Sound</th></tr>
   <tr><td>EQUAL</td><td>The default: every note as on any synth</td></tr>
@@ -910,8 +1020,21 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 </section>
 
 <section>
-<h2>24 · Dungeon recipes</h2>
-<p class="lede">Starting points. Load the sound with PRESETS, then adjust.</p>
+<h2 id="ch24"><span class="no">24</span>Recipes</h2>
+<p class="lede">Starting points. Load the sound with PRESETS, then adjust. The dances first, then GHOULBOX's dungeon recipes.</p>
+<h3>The trotto band</h3>
+<p>The power-on scene itself: TROTTO GURDY with the tune, LUTE on root and fifth, TENOR RECORD holding the tune's main notes, DANCE KIT on the tabor, ROOM reverb, 112 BPM in 8T. Make it your own by changing one part's sound with PRESETS: VIELLE or BAGPIPE for the tune, FOLK HARP for the lute.</p>
+<h3>Hurdy-gurdy and tabor</h3>
+<p>DANCE GURDY or TROTTO GURDY on the tune with COUP <b>1/8</b> (the trompette in strokes) and RING ON (the drones through the rests), DANCE KIT on the TABOR pattern, SCL DOR, 100–120 BPM, a little swing. Two players, a whole village dancing.</p>
+<h3>Pipes for a procession</h3>
+<p>BAGPIPE on the tune (its drones ring through the rests), SHAWM doubling it an octave up with HOME › KEYS on LAYER, PROCESSION on the drum, SCL MIX, 80–90 BPM. Outdoors: ROOM reverb, low sends.</p>
+<h3>Lute and psaltery</h3>
+<p>LUTE on an arpeggio (ARP UPDN at 1/8, or the ARPEGGIO pattern) under BOWED PSALT for the tune, TEMP <b>PYTH</b> on both (chapter 23) so the fifths ring pure, a moderate HALL. An indoor dance, for a feast.</p>
+<h3>Pipe and tabor</h3>
+<p>One player's band: TENOR RECORD or RECORDER on the tune with VCE LEG and a little glide, DANCE KIT on TABOR under it. Nothing else. A saltarello at 120 in 8T, or a carole at 90.</p>
+<h3>The chapel</h3>
+<p>MONKS and CRYPT CHOIR an octave apart on the CHANT pattern, REN ORGAN holding the root, TEMP <b>MEAN</b> or PYTH, HALL with a big SIZE. What the dancers heard on Sunday.</p>
+<h3 style="margin-top:20pt">From GHOULBOX: dungeon recipes</h3>
 <h3>Old Tower-style pad</h3>
 <p>CRYPT PAD or DARK STRINGS on a track, the DIRGE pattern from SAVE › PHRASES, REVERB SIZE high, TAPE around 60. Slow everything down: tempo 60–70, DIV 1/4 or 1/2.</p>
 <h3>Lone hurdy-gurdy</h3>
@@ -931,7 +1054,7 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 </section>
 
 <section>
-<h2>25 · Recording and sharing</h2>
+<h2 id="ch25"><span class="no">25</span>Recording and sharing</h2>
 <p class="lede">The FM-1 is its own audio interface: one USB-C cable carries your music to a computer, with no extra hardware.</p>
 <h3>Into a computer</h3>
 <ol>
@@ -949,7 +1072,7 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
   <li>Export as WAV for keeping, MP3 for sharing.</li>
 </ul>
 <h3>Sharing</h3>
-<p>Dungeon synth lives on Bandcamp, YouTube, SoundCloud and small cassette labels. Tag it "dungeon synth" and the instrument (FM-1, GHOULBOX); people do look. If you'd like the GHOULBOX community to hear it, post a link in the project's GitHub discussions or wherever you found GHOULBOX.</p>
+<p>Early music, folk and dungeon synth all live on Bandcamp, YouTube and SoundCloud. Tag it with the dance or the genre ("estampie", "medieval", "dungeon synth") and the instrument (FM-1, ESTAMPIE); people do look. To share it with other ESTAMPIE players, post a link in the project's GitHub discussions (<span class="path">github.com/ocean/estampie</span>).</p>
 </section>
 
 <!-- ============================================================ PART V -->
@@ -961,7 +1084,7 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 </div>
 
 <section>
-<h2>26 · Troubleshooting</h2>
+<h2 id="ch26"><span class="no">26</span>Troubleshooting</h2>
 <table>
   <tr><th>Problem</th><th>What to try</th></tr>
   <tr><td>No sound</td><td>Turn up MASTER; check the track isn't muted (HOME › MIXER, or hold GLO: a muted track's black key is dark) and its level isn't at zero; headphones in the jack silence the speaker.</td></tr>
@@ -980,12 +1103,12 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
   <tr><td>No USB audio on a Mac</td><td>MENU › SYSTEM › USB SERIAL OFF (macOS 13–15).</td></tr>
   <tr><td>The recording sounds thin or boomy</td><td>MENU › AUDIO › SPEAKER EQ to FLAT.</td></tr>
   <tr><td>The screen is black after an interrupted update</td><td>Switch the FM-1 on while holding <span class="k">OCT−</span>: ESTAMPIE starts in its USB rescue (no sound, no menu), and the installer can install again from there; two failed starts in a row open it on their own (chapter 2, <i>If it won't start</i>). If the computer sees a device named WL80UBOOT, the FM-1 is in its boot mode and can be recovered: try another cable and run the installer again. Felucca's README describes further recovery.</td></tr>
-  <tr><td>Something else</td><td>Report it at <span class="path">github.com/jasonpersinger/ghoulbox-fm1-dungeon-synth/issues</span> with your OS, browser and the installer's log text.</td></tr>
+  <tr><td>Something else</td><td>Report it at <span class="path">github.com/ocean/estampie/issues</span> with your OS, browser and the installer's log text.</td></tr>
 </table>
 </section>
 
 <section>
-<h2>27 · Glossary</h2>
+<h2 id="ch27"><span class="no">27</span>Glossary</h2>
 <dl class="gl">
   <dt>Accent</dt><dd>A step played louder than the others (FLAG ACC).</dd>
   <dt>ADSR</dt><dd>Attack, decay, sustain, release: the four stages of an envelope (chapter 9).</dd>
@@ -1003,7 +1126,9 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
   <dt>Delay</dt><dd>An effect that repeats the sound, each repeat quieter.</dd>
   <dt>Detune</dt><dd>Putting two oscillators or voices slightly out of tune with each other, for width.</dd>
   <dt>Drone</dt><dd>A long, unchanging note held under the music.</dd>
-  <dt>Engine</dt><dd>One of GHOULBOX's 13 ways of making sound.</dd>
+  <dt>Ductia</dt><dd>A short mediæval dance tune, built like a small estampie.</dd>
+  <dt>Engine</dt><dd>One of ESTAMPIE's 13 ways of making sound.</dd>
+  <dt>Estampie</dt><dd>The great dance tune of the thirteenth and fourteenth centuries: sections each played twice, with an open then a closed ending. This firmware's name.</dd>
   <dt>Envelope</dt><dd>A shape over time, started by each note, that moves loudness (and more).</dd>
   <dt>Filter</dt><dd>Removes part of a sound's frequencies; changes its tone.</dd>
   <dt>FM</dt><dd>Frequency modulation: oscillators changing each other's pitch very fast, making complex tones.</dd>
@@ -1011,6 +1136,7 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
   <dt>Gate</dt><dd>How long a note sounds within its step.</dd>
   <dt>Glide</dt><dd>A slide in pitch from one note to the next (also portamento).</dd>
   <dt>Granular</dt><dd>Making sound from many tiny overlapping slices of a recording (GRAIN).</dd>
+  <dt>Heterophony</dt><dd>Several players playing the same tune at once, each in their own way.</dd>
   <dt>Legato</dt><dd>Notes joined smoothly, without starting again.</dd>
   <dt>LFO</dt><dd>Low-frequency oscillator: a slow, inaudible wave that moves other controls.</dd>
   <dt>MIDI</dt><dd>The language instruments use to send notes and control moves to each other.</dd>
@@ -1018,6 +1144,7 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
   <dt>Mode (scale)</dt><dd>One of the old scales: Dorian, Phrygian and others.</dd>
   <dt>Modulation</dt><dd>One thing moving another: an LFO moving pitch, an envelope moving the filter.</dd>
   <dt>Mono / poly</dt><dd>One note at a time / several notes at once.</dd>
+  <dt>Nakers</dt><dd>A pair of small kettledrums, played with sticks: in the DANCE kit.</dd>
   <dt>Octave</dt><dd>The distance from a note to the next of the same name: twice the pitch.</dd>
   <dt>Oscillator</dt><dd>The part that makes the raw sound by repeating a waveform.</dd>
   <dt>Overdub</dt><dd>Recording more on top of what is already recorded.</dd>
@@ -1028,11 +1155,13 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
   <dt>Progression</dt><dd>A sequence of chords.</dd>
   <dt>Project</dt><dd>A saved session: all four tracks, sounds, steps and settings.</dd>
   <dt>Quantize</dt><dd>Moving notes onto a grid: of pitch (a scale) or of time (steps).</dd>
+  <dt>Punctum</dt><dd>A section of an estampie (plural puncta).</dd>
   <dt>Ratchet</dt><dd>A step played several times quickly within its length.</dd>
   <dt>Release</dt><dd>How long a note rings after the key is let go.</dd>
   <dt>Resonance</dt><dd>A filter ringing at its cutoff, adding a whistling edge (RES).</dd>
   <dt>Reverb</dt><dd>The blurred echoes of a room.</dd>
   <dt>Root</dt><dd>The home note of a key or chord.</dd>
+  <dt>Saltarello</dt><dd>A fast, leaping Italian dance.</dd>
   <dt>Scale</dt><dd>A set of notes that belong together.</dd>
   <dt>Semitone</dt><dd>The smallest step on the keyboard: one key to the very next.</dd>
   <dt>Send</dt><dd>How much of a track goes into a shared effect.</dd>
@@ -1040,31 +1169,36 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
   <dt>Step</dt><dd>One box of time in the sequencer.</dd>
   <dt>Sustain</dt><dd>The loudness a note holds at while the key stays down.</dd>
   <dt>Swing</dt><dd>Delaying every second step a little, for a lilt.</dd>
+  <dt>Tabor</dt><dd>A small drum with a snare, often played by a piper with the other hand.</dd>
+  <dt>Temperament</dt><dd>A way of tuning the twelve notes; the old ones (TEMP) make some chords pure and others sour.</dd>
   <dt>Tie</dt><dd>A step that holds the previous note on instead of playing a new one.</dd>
   <dt>Timbre</dt><dd>The tone or colour of a sound.</dd>
   <dt>Track</dt><dd>One of the four parts, each with its own sound and steps.</dd>
   <dt>Transpose</dt><dd>Moving notes up or down by a number of semitones.</dd>
+  <dt>Trotto</dt><dd>A running Italian dance in 6/8: ESTAMPIE's power-on scene.</dd>
   <dt>Triad</dt><dd>A three-note chord built from every other note of a scale.</dd>
   <dt>Trompette</dt><dd>The hurdy-gurdy's buzzing string (BUZZ).</dd>
   <dt>Unison</dt><dd>One note played by several detuned voices at once.</dd>
   <dt>Velocity</dt><dd>How hard a key is struck (from a MIDI keyboard).</dd>
-  <dt>Voice</dt><dd>One sounding note; GHOULBOX has 8 shared by the tracks.</dd>
+  <dt>Voice</dt><dd>One sounding note; the FM-1 has 12, shared by the tracks.</dd>
   <dt>Waveform</dt><dd>The shape an oscillator repeats: sine, triangle, square, saw.</dd>
   <dt>Wow and flutter</dt><dd>The slow and fast pitch wavering of old tape (TAPE).</dd>
 </dl>
 </section>
 
 <section>
-<h2>28 · Credits and licence</h2>
-<p>GHOULBOX © 2026 Jason Persinger. Free software under the <b>GPL-3.0-only</b> licence; the source is at <span class="path">github.com/jasonpersinger/ghoulbox-fm1-dungeon-synth</span>.</p>
-<p>Built entirely on <b>Felucca</b> by Leo Kuroshita / Hügelton Instruments (GPL-3.0-only). Please support the original: GitHub Sponsors (hugelton) or itch.io (hugelton.itch.io/felucca).</p>
+<h2 id="ch28"><span class="no">28</span>Credits and licence</h2>
+<p>ESTAMPIE © 2026 Drew Robinson: the mediæval dance sounds and scene, the look and the build. Free software under the <b>GPL-3.0-only</b> licence; the source is at <span class="path">github.com/ocean/estampie</span>.</p>
+<p>Built on <b>GHOULBOX</b> by Jason Persinger (GPL-3.0-only, <span class="path">github.com/jasonpersinger/ghoulbox-fm1-dungeon-synth</span>): the hurdy-gurdy, the old tunings, the drone latch, RING, the reverb and tape, the dungeon sounds and scenes, and <b>this guide</b>, which is his GHOULBOX User Guide reworked for ESTAMPIE. GHOULBOX takes support on Ko-fi (<span class="path">ko-fi.com/ghoulbox</span>).</p>
+<p>Both are built entirely on <b>Felucca</b> by Leo Kuroshita / Hügelton Instruments (GPL-3.0-only), with Felucca's engines from Felucca-Engines (MIT). Please support the original: GitHub Sponsors (hugelton) or itch.io (hugelton.itch.io/felucca).</p>
 <ul>
   <li>Samples: Versilian Studios, VSCO-2 Community Edition and VCSL (CC0 1.0)</li>
-  <li>Fonts: VT323 by Peter Hull and Pirata One by Rodrigo Fuenzalida and Nicolas Massi (SIL OFL 1.1)</li>
+  <li>Fonts on the screen: Alegreya Sans by Juan Pablo del Peral (Huerta Tipográfica), Cinzel by Natanael Gama, Inter Tight by the Inter Project Authors; in the name: UnifrakturMaguntia by J. "Mach" Wust; in this guide and on the site: IM Fell English (the Fell Types, revived by Igino Marini) and Alegreya by Juan Pablo del Peral (all SIL OFL 1.1)</li>
+  <li>The TROTTO is from London, British Library, Add. MS 29987 (Tuscany, about 1390), arranged for the scene</li>
   <li>Felucca's engines draw on Dexed (FM6), DaisySP and Mutable Instruments' code (PHYS), klattsch (VOICE) and CrispyZebra (PHASE); see Felucca's README for the full credits</li>
   <li>Hardware facts in chapter 1 are from M-VAVE's FM-1 manual, in our own words.</li>
 </ul>
-<p class="small">M-VAVE and FM-1 are trademarks of their respective owners. GHOULBOX is not affiliated with or endorsed by them or by Hügelton Instruments.</p>
+<p class="small">M-VAVE and FM-1 are trademarks of their respective owners. ESTAMPIE is not affiliated with or endorsed by them, by Hügelton Instruments or by the makers of GHOULBOX. Inspired by the idea of teenage engineering's EP-1320 <i>medieval</i>; not affiliated with them.</p>
 </section>
 
 </body>
