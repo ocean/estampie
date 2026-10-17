@@ -199,10 +199,42 @@ export AC79_SDK="${AC79_SDK:-$PWD/.toolchain/ac79-sdk}"   # ESTAMPIE: the SDK li
 OUT=build/host
 mkdir -p "$OUT"
 CC="${CC:-cc} -O1 -Wall -Wno-unused-function"
-fail=0
-failed=""                                # the steps that failed, named again at the end
-run() { echo "== $1"; n=$1; shift; "$@" || { fail=1; failed="$failed\n  $n"; }; }
+# The steps that failed, named again at the end (a file: the lanes run in subshells)
+FAILED="$OUT/failed.txt"
+: > "$FAILED"
+run() { echo "== $1"; n=$1; shift; "$@" || printf '  %s\n' "$n" >> "$FAILED"; }
 
+# ESTAMPIE: two lanes at a time (JOBS=1: one after another, as before). Each lane runs its steps in order; no lane
+# reads what the other writes (each test has its own binaries in build/host and its own demo folder). The second
+# pair (the web pages, the browser emulator) starts when the first is done: the web tests read the editor tables
+# the UI lane writes (build/host/desc.json, menu.json). One lane prints as it goes, the other's log follows it
+JOBS="${JOBS:-2}"
+pair() {                                 # pair A B: lanes A and B, together when JOBS > 1
+    if [ "$JOBS" -le 1 ]; then
+        "$1"; "$2"
+    else
+        set +e                           # (a lane's own set -e: a failed build stops that lane, never runs an old binary;
+        ( set -e; t0=$(date +%s); "$2"; echo "== (lane $2: $(( $(date +%s) - t0 )) s)" ) > "$OUT/lane_$2.log" 2>&1 &   # under || it would be ignored)
+        pid=$!
+        ( set -e; t0=$(date +%s); "$1"; echo "== (lane $1: $(( $(date +%s) - t0 )) s)" )
+        [ $? -eq 0 ] || printf '  (lane %s stopped early: a build failed)\n' "$1" >> "$FAILED"
+        wait "$pid"
+        [ $? -eq 0 ] || printf '  (lane %s stopped early: a build failed)\n' "$2" >> "$FAILED"
+        set -e
+        cat "$OUT/lane_$2.log"
+    fi
+}
+
+# HOST_ONLY=1 (CI, GHOULBOX: .github/workflows/host-tests.yml): no JieLi toolchain, only `tools/build.py --gen-only`
+# (build/gen): the tests of the firmware image itself (the update entry and loader, the target cost) are skipped
+IMAGE=1
+if [ ! -f build/felucca.fwsc ]; then
+    [ "${HOST_ONLY:-0}" = 1 ] || { echo "run ./build.sh first"; exit 1; }
+    IMAGE=0
+    echo "== HOST_ONLY: no firmware image (build/felucca.fwsc): the update entry, loader and target cost tests skipped"
+fi
+
+lane_quick() {
 $CC -o "$OUT/storage_test" tests/storage_test.c
 run "flash storage (A/B, torn writes)" "$OUT/storage_test"
 
@@ -247,14 +279,6 @@ EOF
         "$OUT/usb_desc_test"
 done
 
-# HOST_ONLY=1 (CI, GHOULBOX: .github/workflows/host-tests.yml): no JieLi toolchain, only `tools/build.py --gen-only`
-# (build/gen): the tests of the firmware image itself (the update entry and loader, the target cost) are skipped
-IMAGE=1
-if [ ! -f build/felucca.fwsc ]; then
-    [ "${HOST_ONLY:-0}" = 1 ] || { echo "run ./build.sh first"; exit 1; }
-    IMAGE=0
-    echo "== HOST_ONLY: no firmware image (build/felucca.fwsc): the update entry, loader and target cost tests skipped"
-fi
 
 if [ $IMAGE = 1 ]; then
 $CC -DOWN_PKG=1 -o "$OUT/ota_test" tests/ota_test.c
@@ -329,6 +353,53 @@ if [ -f build/gen/felucca_tables.h ]; then
     fi
     $CC -O1 -w -Ibuild/gen -o "$OUT/settings_test" tests/settings_test.c
     run "settings: PER1..PER4 migration, palette ids and preference preservation" "$OUT/settings_test"
+fi
+
+# ASan + UBSan: the stored-data and protocol paths, and short fuzz runs (fixed seeds: the same inputs every run)
+SAN="-O1 -g -fsanitize=address,undefined -fno-sanitize=signed-integer-overflow,shift,bounds,object-size,pointer-overflow"
+SAN="$SAN -fno-sanitize-recover=undefined -w"
+san_ok() {
+    printf 'int main(void){return 0;}\n' > "$OUT/san_probe.c" &&
+        ${CC%% *} $SAN -o "$OUT/san_probe" "$OUT/san_probe.c" 2>/dev/null && "$OUT/san_probe"
+}
+if [ "${SANITIZE:-1}" = 0 ]; then
+    echo "== skip the sanitizer runs (SANITIZE=0)"
+elif [ ! -f build/gen/felucca_tables.h ]; then
+    echo "== skip the sanitizer runs (run ./build.sh once)"
+elif ! san_ok; then
+    echo "== skip the sanitizer runs (the compiler has no ASan / UBSan)"
+else
+    mkdir -p "$OUT/asan"
+    A="$OUT/asan"
+    SCC="${CC%% *} $SAN -Ibuild/gen -Ifirmware/src"
+    export ASAN_OPTIONS="${ASAN_OPTIONS:-detect_leaks=0}"
+    if [ $IMAGE = 1 ]; then
+    $SCC -o "$A/ldr_test" tests/ldr_test.c
+    run "ASan/UBSan: update loader (other app -> this build)" "$A/ldr_test" "$OUT/old.fwsc" build/felucca.fwsc
+    $SCC -DOWN_PKG=1 -o "$A/ota_test" tests/ota_test.c
+    run "ASan/UBSan: M-UPGRADE entry (own loader)" "$A/ota_test" build/felucca.fwsc
+    fi
+    for t in editor_test project_test backup_test robust_test fun10_test fm6bank_test; do
+        $SCC -o "$A/$t" tests/$t.c -lm
+        run "ASan/UBSan: $t" "$A/$t"
+    done
+    $SCC -o "$A/fuzz_ed" tests/fuzz_ed.c -lm
+    run "ASan/UBSan fuzz: editor SysEx and raw USB-MIDI packets (20000, seed 7)" "$A/fuzz_ed" 20000 7
+    $SCC -o "$A/fuzz_proj" tests/fuzz_proj.c -lm
+    run "ASan/UBSan fuzz: project stores -> import -> restore -> render (5000, seed 13)" "$A/fuzz_proj" 5000 13
+    $SCC -o "$A/fuzz_smp" tests/fuzz_smp.c -lm
+    run "ASan/UBSan fuzz: user sample slot headers -> scan -> SAMPLE / GRAIN / SLICE (1000, seed 17)" "$A/fuzz_smp" 1000 17
+fi
+
+if [ $IMAGE = 1 ]; then
+run "regression: target cost of the render loops (pi32v2 disassembly)" python3 tests/target_budget.py \
+    build/felucca.dis tests/target_budget.txt
+fi
+
+run "installer CLI (fm1_install.py) against a simulated FM-1" python3 tests/install_test.py
+
+# (the UI tests, here to even the lanes out)
+if [ -f build/gen/felucca_tables.h ]; then
     $CC -w -Ibuild/gen -Ifirmware/src -o "$OUT/ui_test" tests/ui_test.c -lm
     run "UI: sounds keep steps, undo, recording, MIDI overflow, pending saves, panel recovery, drum grid, song chain, GREY gray, MONO neutral" "$OUT/ui_test"
     $CC -w -DFELUCCA_CPU2=0 -Ibuild/gen -Ifirmware/src -o "$OUT/ui_test_c1" tests/ui_test.c -lm
@@ -338,6 +409,11 @@ if [ -f build/gen/felucca_tables.h ]; then
     run "DRUM grid stress (#211, ASan / UBSan): random grid editing, locks, undo, engines over a playing synth, the ISR anywhere" \
         "$OUT/drumfuzz" 1 6 1500
     run "DRUM grid stress (#211) with a SONG playing" "$OUT/drumfuzz" 101 3 1500 song
+fi
+}
+
+lane_ui() {
+if [ -f build/gen/felucca_tables.h ]; then
     FV=$(sed -n 's/^#define FELUCCA_VERSION "\([^"]*\)".*/\1/p' firmware/src/felucca.c | head -n 1)   # (the splash, ABOUT: the real version)
     $CC -O1 -w "-DFELUCCA_VERSION=\"$FV\"" -Ibuild/gen -Ifirmware/src -Itests -o "$OUT/ui_render" tests/ui_render.c -lm
     mkdir -p build/ui_new/ppm build/ui_slot
@@ -437,14 +513,14 @@ if [ -f build/gen/felucca_tables.h ]; then
     # tables against its golden renders (the same hashes: build/gen/felucca_tables.h has the engines' tables)
     run "Felucca-Engines: its own tables, host and golden renders" sh firmware/engines/tests/run.sh
     $CC -O2 -w '-DFE_TABLES_H="felucca_tables.h"' -Ibuild/gen -o "$OUT/fe_host" firmware/engines/tests/fe_host.c
-    "$OUT/fe_host" > "$OUT/fe_renders.txt" || fail=1
+    "$OUT/fe_host" > "$OUT/fe_renders.txt" || echo "  Felucca-Engines host" >> "$FAILED"
     run "Felucca-Engines with Felucca's tables: the engines' golden renders" diff -u firmware/engines/tests/golden.txt "$OUT/fe_renders.txt"
     $CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/union_test" tests/union_test.c -lm
     run "engine memory (Felucca 1.5's, GHOULBOX): every switch between the engines with per-part state sounds as before (720 sequences)" \
         "$OUT/union_test" tests/union_golden.txt
     $CC -w -Ibuild/gen -Ifirmware/src -o "$OUT/descdump" tests/descdump.c -lm
     echo "== parameter and engine tables as JSON (for the editor mock test)"
-    "$OUT/descdump" > "$OUT/desc.json" || { fail=1; failed="$failed\n  descdump"; }
+    "$OUT/descdump" > "$OUT/desc.json" || echo "  descdump" >> "$FAILED"
     $CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/phys_test" tests/phys_test.c -lm
     mkdir -p build/phys_demo
     run "PHYS: stability C-1..G9 over the parameter corners, worst-case cost against PHASE WIRE, demos" "$OUT/phys_test" build/phys_demo
@@ -480,7 +556,7 @@ if [ -f build/gen/felucca_tables.h ]; then
             "$OUT/slice_test" build/slice_demo/loop build/slice_demo
     else
         echo "== SLICE: no BREAK in build/gen_slice/felucca_samples.h"
-        fail=1; failed="$failed\n  SLICE (no BREAK)"
+        echo "  SLICE (no BREAK)" >> "$FAILED"
     fi
     # SAMPLE's PIANO (1.5: as 1.1.5), SLICE's PIANO (its middle C zone), 1.2's PIANO HD in a user slot
     if grep -q '^    {"PIANO", 0, 5},' build/gen/felucca_samples.h; then
@@ -498,50 +574,9 @@ if [ -f build/gen/felucca_tables.h ]; then
 else
     echo "== skip hostsim (run ./build.sh once)"
 fi
-
-# ASan + UBSan: the stored-data and protocol paths, and short fuzz runs (fixed seeds: the same inputs every run)
-SAN="-O1 -g -fsanitize=address,undefined -fno-sanitize=signed-integer-overflow,shift,bounds,object-size,pointer-overflow"
-SAN="$SAN -fno-sanitize-recover=undefined -w"
-san_ok() {
-    printf 'int main(void){return 0;}\n' > "$OUT/san_probe.c" &&
-        ${CC%% *} $SAN -o "$OUT/san_probe" "$OUT/san_probe.c" 2>/dev/null && "$OUT/san_probe"
 }
-if [ "${SANITIZE:-1}" = 0 ]; then
-    echo "== skip the sanitizer runs (SANITIZE=0)"
-elif [ ! -f build/gen/felucca_tables.h ]; then
-    echo "== skip the sanitizer runs (run ./build.sh once)"
-elif ! san_ok; then
-    echo "== skip the sanitizer runs (the compiler has no ASan / UBSan)"
-else
-    mkdir -p "$OUT/asan"
-    A="$OUT/asan"
-    SCC="${CC%% *} $SAN -Ibuild/gen -Ifirmware/src"
-    export ASAN_OPTIONS="${ASAN_OPTIONS:-detect_leaks=0}"
-    if [ $IMAGE = 1 ]; then
-    $SCC -o "$A/ldr_test" tests/ldr_test.c
-    run "ASan/UBSan: update loader (other app -> this build)" "$A/ldr_test" "$OUT/old.fwsc" build/felucca.fwsc
-    $SCC -DOWN_PKG=1 -o "$A/ota_test" tests/ota_test.c
-    run "ASan/UBSan: M-UPGRADE entry (own loader)" "$A/ota_test" build/felucca.fwsc
-    fi
-    for t in editor_test project_test backup_test robust_test fun10_test fm6bank_test; do
-        $SCC -o "$A/$t" tests/$t.c -lm
-        run "ASan/UBSan: $t" "$A/$t"
-    done
-    $SCC -o "$A/fuzz_ed" tests/fuzz_ed.c -lm
-    run "ASan/UBSan fuzz: editor SysEx and raw USB-MIDI packets (20000, seed 7)" "$A/fuzz_ed" 20000 7
-    $SCC -o "$A/fuzz_proj" tests/fuzz_proj.c -lm
-    run "ASan/UBSan fuzz: project stores -> import -> restore -> render (5000, seed 13)" "$A/fuzz_proj" 5000 13
-    $SCC -o "$A/fuzz_smp" tests/fuzz_smp.c -lm
-    run "ASan/UBSan fuzz: user sample slot headers -> scan -> SAMPLE / GRAIN / SLICE (1000, seed 17)" "$A/fuzz_smp" 1000 17
-fi
 
-if [ $IMAGE = 1 ]; then
-run "regression: target cost of the render loops (pi32v2 disassembly)" python3 tests/target_budget.py \
-    build/felucca.dis tests/target_budget.txt
-fi
-
-run "installer CLI (fm1_install.py) against a simulated FM-1" python3 tests/install_test.py
-
+lane_web() {
 if command -v node >/dev/null 2>&1; then
     run "web pages: editor protocol + samples, package builder, update protocol" node web/test_web.mjs
     run "web backup: capture, validation before writes, restore order" node web/test_backup.mjs
@@ -553,6 +588,9 @@ else
     echo "== skip web tests (no node)"
 fi
 
+}
+
+lane_emu() {
 if [ ! -x "${ZIG:-.toolchain/zig/zig}" ]; then
     echo "== skip the browser emulator (no zig: tools/setup_toolchain.sh)"
 elif ! command -v node >/dev/null 2>&1 || [ ! -f build/gen/felucca_tables.h ]; then
@@ -565,4 +603,9 @@ else
         node web/emu/emu_test.mjs build/emu/felucca.wasm "$OUT/emu_native.f32"
 fi
 
-[ $fail -eq 0 ] && echo "ALL HOST TESTS PASSED" || { printf "HOST TESTS FAILED:%b\n" "$failed"; exit 1; }
+}
+
+pair lane_quick lane_ui
+pair lane_web lane_emu
+
+[ -s "$FAILED" ] && { echo "HOST TESTS FAILED:"; cat "$FAILED"; exit 1; } || echo "ALL HOST TESTS PASSED"
