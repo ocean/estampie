@@ -1,0 +1,288 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-only
+     ESTAMPIE sound lab: the firmware's engines live in the browser (felucca.wasm through lab_worklet.js), playing the
+     TROTTO, with the candidate sounds (lab_sounds.js) and every control of a part on sliders. -->
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ESTAMPIE Sound Lab</title>
+<link rel="icon" href="art/favicon.ico" sizes="16x16 32x32 48x48">
+<meta name="color-scheme" content="light">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:ital@0;1&family=Alegreya+Sans:wght@500;700&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=swap">
+<style>
+/* layout: a manuscript leaf; the parts as tabs, the candidates down the margin, the part's controls as ruled
+ * columns of sliders (one column on a phone). VELLUM's palette, as the FM-1's screen and the site. */
+:root { --vellum: #eee2c4; --leaf: #f6eedb; --ink: #2e1e14; --soft: #5b4532; --rule: #cdb88c; --vermilion: #962012;
+        --lapis: #1a3e94; --gold: #b8892a;
+        --display: "IM Fell English", Georgia, serif; --sc: "IM Fell English SC", Georgia, serif;
+        --body: "Alegreya", Georgia, serif; --label: "Alegreya Sans", system-ui, sans-serif; color-scheme: light; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--vellum); color: var(--ink); font: 17px/1.5 var(--body); padding-inline: 16px; }
+main { max-width: 1120px; margin: 0 auto; padding-block: 22px 48px; }
+header { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 22px; border-bottom: 3px double var(--vermilion);
+         padding-bottom: 14px; }
+header img { width: 64px; height: 64px; image-rendering: pixelated; }
+.title { flex: 1 1 260px; min-width: 0; }
+h1 { font: 40px/1 var(--display); color: var(--vermilion); margin: 0; }
+.sub { font: italic 18px/1.35 var(--display); margin: 4px 0 0; }
+.deck { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+button { font: 17px/1 var(--sc); letter-spacing: .05em; cursor: pointer; border: 0; padding: 10px 18px; color: var(--ink);
+         background: var(--leaf); box-shadow: 0 0 0 2px var(--soft); }
+button.go { color: var(--leaf); background: var(--lapis); box-shadow: 0 0 0 2px var(--leaf), 0 0 0 4px var(--gold); }
+button:disabled { opacity: .45; cursor: default; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--lapis); outline-offset: 3px; }
+.vol { display: flex; align-items: center; gap: 8px; font: 500 14px var(--label); color: var(--soft); }
+.status { font-style: italic; color: var(--vermilion); margin: 10px 0 0; min-height: 1.5em; }
+.parts { display: flex; flex-wrap: wrap; gap: 0; margin: 18px 0 0; border-bottom: 2px solid var(--lapis); }
+.parts button { box-shadow: none; background: transparent; border-bottom: 3px solid transparent; padding: 10px 16px 8px;
+                text-align: left; font: 15px/1.25 var(--sc); }
+.parts button[aria-selected="true"] { border-bottom-color: var(--vermilion); color: var(--vermilion); background: var(--leaf); }
+.parts small { display: block; font: 500 13px/1.3 var(--label); color: var(--soft); letter-spacing: .02em; }
+.layout { display: grid; grid-template-columns: minmax(0, 290px) minmax(0, 1fr); gap: 26px; margin-top: 20px; }
+aside h2, .panel h2 { font: 24px/1.1 var(--display); color: var(--vermilion); margin: 0 0 6px; }
+.grp { font: 15px/1.3 var(--sc); color: var(--lapis); margin: 14px 0 4px; letter-spacing: .03em; }
+.cands { display: grid; gap: 2px; }
+.cands button { box-shadow: none; background: transparent; text-align: left; padding: 6px 8px; font: 16px/1.3 var(--body);
+                border-left: 3px solid transparent; }
+.cands button:hover { background: var(--leaf); }
+.cands button.on { border-left-color: var(--vermilion); background: var(--leaf); }
+.cands small { display: block; font: 500 12.5px/1.35 var(--label); color: var(--soft); }
+.idea { font-style: italic; color: var(--soft); margin: 0 0 12px; }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-bottom: 8px; }
+select { font: 16px var(--body); padding: 4px 6px; background: var(--leaf); color: var(--ink); border: 1px solid var(--rule); }
+.sets { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 6px 26px; }
+fieldset { border: 0; border-top: 1px solid var(--rule); margin: 10px 0 0; padding: 8px 0 0; min-width: 0; }
+legend { font: 15px var(--sc); color: var(--lapis); letter-spacing: .04em; padding: 0 6px 0 0; }
+.ctl { display: grid; grid-template-columns: 58px minmax(0, 1fr) 70px; align-items: center; gap: 8px; padding: 3px 0; }
+.ctl b { font: 700 12.5px/1 var(--label); letter-spacing: .06em; color: var(--vermilion); }
+.ctl output { font: 500 13.5px/1 var(--label); text-align: right; font-variant-numeric: tabular-nums; color: var(--ink); }
+input[type=range] { width: 100%; accent-color: var(--vermilion); }
+.copy { margin-top: 16px; display: grid; gap: 8px; }
+pre { margin: 0; font: 13px/1.45 ui-monospace, Menlo, monospace; background: var(--leaf); border: 1px solid var(--rule);
+      padding: 10px 12px; overflow-x: auto; white-space: pre; }
+.foot { margin-top: 34px; border-top: 3px double var(--vermilion); padding-top: 12px; color: var(--soft); font-size: 15px;
+        max-width: 72ch; }
+a { color: var(--vermilion); }
+.off { opacity: .5; pointer-events: none; }
+@media (max-width: 760px) { .layout { grid-template-columns: minmax(0, 1fr); } h1 { font-size: 32px; } }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+<main>
+<header>
+  <img src="art/initial.png" alt="">
+  <div class="title"><h1>Sound Lab</h1><p class="sub">ESTAMPIE's engines, live: shape the TROTTO's sounds as it plays</p></div>
+  <div class="deck">
+    <button class="go" id="on" type="button">Switch on</button>
+    <button id="play" type="button" disabled>Play</button>
+    <label class="vol">Volume <input id="vol" type="range" min="0" max="1023" value="760"></label>
+  </div>
+</header>
+<p class="status" id="status">Press Switch on: the browser needs a click before it plays sound.</p>
+
+<nav class="parts" id="parts" role="tablist"></nav>
+
+<div class="layout off" id="layout">
+  <aside>
+    <h2>Candidates</h2>
+    <p class="idea">Each loads into the part it was made for. "As now" puts a part back as the TROTTO has it.</p>
+    <div id="cands"></div>
+  </aside>
+  <section class="panel">
+    <h2 id="pname">–</h2>
+    <p class="idea" id="pidea"></p>
+    <div class="row">
+      <label>Engine <select id="engine"></select></label>
+      <label><input type="checkbox" id="solo"> Solo this part</label>
+      <button id="reset" type="button">Put back as the TROTTO has it</button>
+    </div>
+    <div class="sets">
+      <fieldset><legend>The engine's controls</legend><div id="g-engine"></div></fieldset>
+      <div>
+        <fieldset><legend>Envelope</legend><div id="g-env"></div></fieldset>
+        <fieldset><legend>Sends</legend><div id="g-sends"></div></fieldset>
+        <fieldset><legend>The track</legend><div id="g-mix"></div></fieldset>
+      </div>
+    </div>
+    <div class="copy">
+      <div class="row"><button id="copy" type="button">Copy as a preset</button><span class="idea" id="copied"></span></div>
+      <pre id="preset">–</pre>
+    </div>
+  </section>
+</div>
+
+<p class="foot">The sound is the firmware itself (its engines, sequencer, reverb and tape) compiled for the browser, so what you hear is what the FM-1 plays. Copy a sound you like as a preset and send it over: that line goes straight into the firmware. Nothing here changes your FM-1.</p>
+</main>
+
+<script type="module">
+import { CANDIDATES, LINES } from "./lab_sounds.js";
+
+const PARTS = ["The tune", "The lute", "The long notes", "The tabor"];
+const $ = (id) => document.getElementById(id);
+let ac = null, node = null, playing = false, sel = 0, solo = false, engines = [];
+const states = [], chosen = [null, null, null, null];   // the candidate in each part (null: as the TROTTO has it)
+
+function post(ops, want = sel) { node.port.postMessage({ type: "ops", ops, want }); }
+
+// ---- the parts' tabs and the candidates ----
+function drawParts() {
+  $("parts").replaceChildren(...PARTS.map((p, k) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.setAttribute("role", "tab"); b.setAttribute("aria-selected", String(k === sel));
+    const eng = states[k] && engines.find((x) => x.e === states[k].eng);
+    b.innerHTML = `${k + 1} · ${p}<small>${chosen[k] ? chosen[k].name : "as the TROTTO"}${eng ? " · " + eng.name : ""}</small>`;
+    b.onclick = () => { sel = k; drawParts(); drawCands(); post(solo ? soloOps() : [], k); };
+    return b;
+  }));
+}
+function drawCands() {
+  const groups = [...new Set(CANDIDATES.map((c) => c.group))];
+  $("cands").replaceChildren(...groups.flatMap((g) => {
+    const h = document.createElement("div"); h.className = "grp"; h.textContent = g;
+    return [h, ...CANDIDATES.filter((c) => c.group === g).map((c) => {
+      const b = document.createElement("button"); b.type = "button";
+      b.className = chosen[c.part] === c || (!chosen[c.part] && c.group === "As now" && c.part === sel) ? "on" : "";
+      b.innerHTML = `${c.name}<small>${PARTS[c.part].toLowerCase()} · ${c.idea}</small>`;
+      b.onclick = () => load(c);
+      return b;
+    })];
+  }));
+}
+
+// ---- loading a candidate: the part as the TROTTO has it, then the candidate's sound (and its drum line) ----
+function load(c) {
+  const k = c.part, ops = [["part", k]];
+  chosen[k] = c.group === "As now" ? null : c;
+  if (chosen[k] && c.eng !== null) {
+    ops.push(["engine", k, c.eng]);
+    c.e.forEach((v, i) => ops.push(["setE", k, i, v]));   // MODEL first: the rest as that model names them
+    ["ATK", "DEC", "SUS", "REL"].forEach((n, i) => ops.push(["set", k, n, c.env[i]]));
+    ops.push(["set", k, "ED_FLT", c.fenv], ["set", k, "VOICE", c.mono ? 2 : 0]);
+    ["DIST", "CHOR", "DLY", "REV"].forEach((n, i) => ops.push(["set", k, n, c.fx[i]]));
+    ops.push(["set", k, "TEMP", c.temp], ["set", k, "RING", c.ring]);
+    if (c.pat) {
+      for (let i = 0; i < 64; i++) {
+        const n = i < 12 ? LINES[c.pat][i] : 0;
+        ops.push(["step", k, i, n, i % 6 === 0 ? 120 : 90]);
+      }
+      ops.push(["set", k, "SLEN", 12], ["set", k, "SDIV", 4]);
+    }
+  }
+  sel = k;
+  post(ops.concat(soloOps()), k);
+  drawParts(); drawCands();
+}
+function soloOps() { return [0, 1, 2, 3].map((k) => ["set", k, "MUTE", solo && k !== sel ? 1 : 0]); }
+
+// ---- the part's controls ----
+let lastShape = "";
+function ctl(k, c, setter) {
+  const row = document.createElement("label"); row.className = "ctl";
+  const b = document.createElement("b"), r = document.createElement("input"), o = document.createElement("output");
+  b.textContent = c.label || "–";
+  r.type = "range"; r.min = c.min; r.max = c.max; r.value = c.value; r.id = `c-${k}-${c.id}`;
+  r.disabled = c.max <= c.min;
+  o.textContent = c.text;
+  r.oninput = () => post([setter(+r.value)], k);   // (each move: the worklet applies it before its next block)
+  row.append(b, r, o);
+  return row;
+}
+function drawPanel(s) {
+  if (s.k !== sel) return;
+  const c = chosen[sel];
+  $("pname").textContent = `${sel + 1} · ${PARTS[sel]}: ${c ? c.name : "as the TROTTO has it"}`;
+  $("pidea").textContent = c ? c.idea : "The scene's own sound in this part. Change anything below, or load a candidate.";
+  $("engine").value = String(s.eng);
+  const shape = [s.k, s.eng, ...s.engine.map((x) => `${x.label}${x.min}${x.max}`)].join();
+  const groups = { engine: s.engine, env: s.env, sends: s.sends, mix: s.mix.filter((x) => x.label !== "RING" || s.eng === 14) };
+  if (shape !== lastShape) {                         // a new engine or model: the sliders again
+    lastShape = shape;
+    $("g-engine").replaceChildren(...groups.engine.map((x, i) => ctl(s.k, x, (v) => ["setE", s.k, i, v])));
+    for (const g of ["env", "sends", "mix"])
+      $(`g-${g}`).replaceChildren(...groups[g].map((x) => ctl(s.k, x, (v) => ["set", s.k, x.id, v])));
+  } else {                                           // the same sliders: values and their text
+    for (const g of Object.values(groups))
+      for (const x of g) {
+        const r = document.getElementById(`c-${s.k}-${x.id}`);
+        if (!r) continue;
+        if (document.activeElement !== r) r.value = x.value;
+        r.nextElementSibling.textContent = x.text;
+        r.previousElementSibling.textContent = x.label || "–";
+      }
+  }
+  $("preset").textContent = presetLine(s, c);
+}
+function presetLine(s, c) {
+  const v = (g, n) => g.find((x) => x.label === n || x.id === n);
+  const env = s.env.slice(0, 4).map((x) => x.value), fenv = s.env[4].value;
+  const mono = (v(s.mix, "VCE") || s.mix[2]).value ? 1 : 0;
+  const fx = s.sends.map((x) => x.value);
+  const name = c ? c.name : "MY SOUND", eng = engines.find((x) => x.e === s.eng);
+  const temp = s.mix.find((x) => x.label === "TEMP"), ring = s.mix.find((x) => x.label === "RING");
+  return `/* ${eng ? eng.name : s.eng}${temp && temp.value ? `, TEMP ${temp.text}` : ""}${s.eng === 14 && ring && ring.value ? ", RING ON" : ""} */\n` +
+    `{"${name}", {${s.engine.map((x) => x.value).join(", ")}}, {${env.join(", ")}}, ${fenv}, ${mono}, FX(${fx.join(", ")})},`;
+}
+
+// ---- the deck ----
+$("on").onclick = async () => {
+  $("on").disabled = true;
+  $("status").textContent = "Starting the engines…";
+  try {
+    ac = new AudioContext({ sampleRate: 44100, latencyHint: "interactive" });
+    const resumed = ac.resume();
+    const [wasm] = await Promise.all([
+      fetch("felucca.wasm").then((r) => { if (!r.ok) throw new Error(`felucca.wasm: ${r.status}`); return r.arrayBuffer(); }),
+      ac.audioWorklet.addModule("lab_worklet.js"), resumed]);
+    node = new AudioWorkletNode(ac, "estampie-lab", { numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [2] });
+    node.connect(ac.destination);
+    await new Promise((res, rej) => {
+      node.port.onmessage = (e) => {
+        const m = e.data;
+        if (m.type === "ready") {
+          engines = m.engines;
+          m.states.forEach((s) => { states[s.k] = s; });
+          $("engine").replaceChildren(...engines.map((x) => new Option(x.name, String(x.e))));
+          res();
+        } else if (m.type === "state") {
+          states[m.k] = m;
+          drawPanel(m);
+          drawParts();
+        } else if (m.type === "error") rej(new Error(m.message));
+      };
+      node.port.postMessage({ type: "load", wasm, master: +$("vol").value }, [wasm]);
+    });
+    $("layout").classList.remove("off");
+    $("play").disabled = false;
+    $("on").hidden = true;
+    $("status").textContent = "On. Press Play to hear the TROTTO, then load a candidate or move a slider.";
+    drawParts(); drawCands(); drawPanel(states[sel]);
+  } catch (err) {
+    $("on").disabled = false;
+    $("status").textContent = /WebAssembly|wasm|CSP|Content Security/i.test(String(err))
+      ? `This page could not run the engines here (${err.message}). Open it from the ESTAMPIE site or the local build instead.`
+      : `The engines did not start: ${err.message}`;
+  }
+};
+$("play").onclick = () => {
+  playing = !playing;
+  post([["transport", playing ? 1 : 2]]);
+  $("play").textContent = playing ? "Stop" : "Play";
+  $("play").classList.toggle("go", playing);
+};
+$("vol").oninput = () => node && node.port.postMessage({ type: "master", value: +$("vol").value });
+$("engine").onchange = () => { chosen[sel] = null; post([["engine", sel, +$("engine").value]]); drawCands(); };
+$("solo").onchange = () => { solo = $("solo").checked; post(soloOps()); };
+$("reset").onclick = () => { chosen[sel] = null; post([["part", sel]]); drawCands(); };
+$("copy").onclick = async () => {
+  const t = $("preset").textContent;
+  try { await navigator.clipboard.writeText(t); $("copied").textContent = "Copied."; }
+  catch { getSelection().selectAllChildren($("preset")); $("copied").textContent = "Selected: copy it with your keyboard."; }
+};
+drawParts();
+</script>
+</body>
+</html>

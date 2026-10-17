@@ -424,6 +424,91 @@ EXPORT void web_enc(uint32_t role, int32_t n)
         web_enc_steps[panel.enc[role] % 7u] += n * panel.dir[role];
 }
 EXPORT void web_master(uint32_t v) { web_master_adc = v > 1023u ? 1023u : v; }
+
+/* ESTAMPIE: the sound lab (web/emu/lab.html) sets a track's sound and steps directly, between audio blocks (this build
+ * is one thread). web_track_engine: as a sound load's engine change (ui.c set_engine_of: its first preset, the fade);
+ * web_track_set: parameter id of track k, clamped to its range as the track's engine names it (PHYS's per-model
+ * controls too); returns the value kept. web_track_step: step i one note (0 a rest) at velocity vel; web_transport:
+ * 1 start, 2 stop, 3 restart (seq.c transport_req) */
+EXPORT void web_track_engine(uint32_t k, uint32_t e)
+{
+    if (k < NTRK && e < NENGINES && eng_ok(e))
+        set_engine_of(&trk[k], e);
+}
+EXPORT int32_t web_track_set(uint32_t k, uint32_t id, int32_t v)
+{
+    const param_desc_t *d;
+    if (k >= NTRK || id >= P_COUNT)
+        return 0;
+    d = track_desc(&trk[k], id);
+    if (d->max > d->min)
+        trk[k].p[id] = (int16_t)clamp(v, d->min, d->max);
+    ui.force = 1;
+    return trk[k].p[id];
+}
+EXPORT void web_track_step(uint32_t k, uint32_t i, uint32_t note, uint32_t vel)
+{
+    step_t *s;
+    if (k >= NTRK || i >= NSTEP)
+        return;
+    s = &trk[k].step[i];
+    memset(s, 0, sizeof *s);
+    s->note[0] = (uint8_t)(note & 127u);
+    s->n = note ? 1 : 0;
+    s->time = note ? ST_NOTE : ST_REST;
+    s->vel = (uint8_t)(note ? (vel ? vel & 127u : 96u) : 0u);
+}
+EXPORT void web_transport(uint32_t req) { if (req >= 1u && req <= 3u) transport_req = (uint8_t)req; }
+EXPORT int32_t web_track_get(uint32_t k, uint32_t id) { return k < NTRK && id < P_COUNT ? trk[k].p[id] : 0; }
+EXPORT uint32_t web_track_engine_of(uint32_t k) { return k < NTRK ? trk[k].eng_req : 0u; }
+/* parameter id's descriptor as track k's engine names it: format, range, label, and value i's name (0 = none) */
+static const param_desc_t *web_desc(uint32_t k, uint32_t id) { return track_desc(&trk[k % NTRK], id % P_COUNT); }
+EXPORT uint32_t web_desc_fmt(uint32_t k, uint32_t id) { return web_desc(k, id)->fmt; }
+EXPORT int32_t web_desc_min(uint32_t k, uint32_t id) { return web_desc(k, id)->min; }
+EXPORT int32_t web_desc_max(uint32_t k, uint32_t id) { return web_desc(k, id)->max; }
+EXPORT const char *web_desc_label(uint32_t k, uint32_t id) { return web_desc(k, id)->label; }
+/* value v of parameter id as the device shows it (params.c param_format: "55 %", "4.3 ms", an enum's name) */
+static char web_fmt_buf[24];
+EXPORT const char *web_desc_format(uint32_t k, uint32_t id, int32_t v)
+{
+    char val[16];
+    const char *unit = 0;
+    uint32_t n;
+    memset(val, 0, sizeof val);
+    param_format(web_desc(k, id), v, val, &unit);
+    n = (uint32_t)strlen(val);
+    memcpy(web_fmt_buf, val, n);
+    if (unit && *unit && n + 1u + strlen(unit) < sizeof web_fmt_buf) {
+        web_fmt_buf[n++] = ' ';
+        memcpy(web_fmt_buf + n, unit, strlen(unit));
+        n += (uint32_t)strlen(unit);
+    }
+    web_fmt_buf[n] = 0;
+    return web_fmt_buf;
+}
+EXPORT const char *web_engine_name(uint32_t e) { return e < NENGINES && eng_ok(e) ? ENGINES[e]->name : 0; }
+EXPORT uint32_t web_engine_count(void) { return NENGINES; }
+/* power-on scene s (engines.c GB_SCENES, 0 = TROTTO) with its sounds and phrases, as at power-on */
+EXPORT void web_scene(uint32_t s) { gb_scene_load(s); }
+/* part k of the TROTTO alone: its sound, phrase and level, as gb_scene_load sets them */
+EXPORT void web_scene_part(uint32_t k)
+{
+    const uint8_t *p;
+    track_t *t;
+    if (k >= NPART)
+        return;
+    p = GB_SCENES[0].part[k];
+    t = &trk[k];
+    set_engine_of(t, p[0]);
+    apply_preset_to(t, p[1]);
+    es_phrase_load(t, p[2] - ES_PHR(0));
+    t->p[P_LEVEL] = GB_SCENES[0].lvl[k] ? GB_SCENES[0].lvl[k] : TP[P_LEVEL].def;
+    ui.force = 1;
+}
+/* the lab's parameters by number (lab.html PIDS: the same order), so the page never holds P_* values of its own */
+static const uint8_t WEB_PIDS[] = {P_LEVEL, P_ATK, P_DEC, P_SUS, P_REL, P_ED_FLT, P_VOICE, P_PAN, P_MUTE, P_DIST,
+                                   P_CHOR, P_DLY, P_REV, P_SLEN, P_SDIV, P_TEMP, P_RING, P_E0};
+EXPORT int32_t web_pid(uint32_t n) { return n < sizeof WEB_PIDS ? WEB_PIDS[n] : -1; }
 /* a channel message from Web MIDI, as a USB-MIDI packet arrives (usb.c midi_enqueue): 0 = the ring was full */
 EXPORT uint32_t web_midi(uint32_t status, uint32_t d1, uint32_t d2)
 {

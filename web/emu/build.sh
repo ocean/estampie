@@ -6,7 +6,7 @@
 # ESTAMPIE: compiled with zig cc (clang with a bundled wasi-libc, one signed download; tools/setup_toolchain.sh)
 # rather than Emscripten: no Node, Python or npm in the build. A WASI reactor with no imports: the worklet calls
 # _initialize, then the exports. ZIG=path uses another zig; its caches stay in the repo.
-#   web/emu/build.sh   ->  build/emu/{index.html, tools.html, worklet.js, felucca.wasm, fonts/}
+#   web/emu/build.sh   ->  build/emu/{index.html, tools.html, lab.html, worklet.js, felucca.wasm, fonts/}
 # Run after one ./build.sh (build/gen: the tables, the fonts, the CC0 samples).
 # -ffp-contract=off: no fused multiply-adds, as the host build. EMU_OPT replaces -O2, EMU_CFLAGS adds flags
 # (EMU_CFLAGS=-msimd128: let the compiler vectorise; every browser with AudioWorklet has wasm SIMD).
@@ -34,6 +34,7 @@ cp web/emu/audio_export.js build/emu/
 cp web/emu/audio_encode.js web/emu/audio_encode_worker.js build/emu/
 cp web/emu/audio_session.js build/emu/
 cp web/emu/tools.html build/emu/
+cp web/emu/lab.html web/emu/lab_worklet.js web/emu/lab_sounds.js build/emu/   # ESTAMPIE: the sound lab
 cp web/emu/vendor/libflac/libflac.min.wasm.js web/emu/vendor/libflac/libflac.min.wasm.wasm build/emu/vendor/libflac/
 cp web/emu/vendor/mp3/WasmMediaEncoder.min.js web/emu/vendor/mp3/mp3.wasm build/emu/vendor/mp3/
 cp web/emu/vendor/README.md build/emu/vendor/
