@@ -33,6 +33,7 @@ static const struct { const char *title, *hint; } HELP_PAGE[] = {
     {"EDIT 1", H_EDIT},
     {"EDIT 2", H_EDIT},
     {"FILTER", "[K1]LP BP HP[K2]CUTOFF[EDIT]VOICE"},
+    {"RING", "[K1]DRONES IN RESTS[EDIT]VOICE"},   /* GHOULBOX 2.3: a GURDY track's RING */
     {"LANES", H_LANES},
     {"LANES 2", H_LANES},
     {"SLICES", "[K1]SLICE[K2]MOVE[OCT+]SPLIT/JOIN"},   /* (ESTAMPIE: VT323's widths) */

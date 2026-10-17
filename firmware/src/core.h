@@ -50,8 +50,10 @@
 /* ------------------------------------------------------- parameters --- */
 /* the engine interface (Felucca-Engines, MIT: firmware/engines/, vendored at c46e008): param_desc_t and F_*, voice_t,
  * vmod_t, preset_t with FX() / PAT(), engine_t, NELEM */
-#define ESTAMPIE_VOICE_FIELDS int8_t tfine;   /* GHOULBOX: TEMP's rest below 1/16 semitone (pitch16 has the whole steps),
-                                             * 1/4096 (temper.c); in voice_t (felucca_engine.h's hook) */
+/* GHOULBOX's voice fields, in voice_t's padding (felucca_engine.h's hook): tfine, TEMP's rest below 1/16 semitone
+ * (pitch16 has the whole steps), 1/4096 (temper.c); ring, RING's level of the GURDY's melody string after its note
+ * (eng_gurdy.c), 255 = still playing */
+#define ESTAMPIE_VOICE_FIELDS int8_t tfine; uint8_t ring;
 #include "../engines/src/felucca_engine.h"
 
 enum {                          /* per-track parameters */
@@ -86,6 +88,8 @@ enum {                          /* per-track parameters */
     P_ESYNC,                                   /* 1.5 (#175): ENV SYNC: ATK DEC REL as note values of the tempo (voice.c);
                                                 * GHOULBOX reserved these ids before the merge, so they keep Felucca's meaning */
     P_TEMP,                                    /* GHOULBOX: TEMP, the track's temperament from ROOT (temper.c) */
+    P_RING,                                    /* GHOULBOX 2.3: RING, a GURDY's drones sound on through the sequencer's
+                                                * rests (eng_gurdy.c gurdy_rings) */
     P_E0, P_E1, P_E2, P_E3, P_E4, P_E5, P_E6, P_E7,
     P_COUNT
 };
@@ -329,13 +333,13 @@ typedef struct track {
     uint8_t cond_loop;           /* 1.5.5 (#209): the loop of its LEN playing (0..COND_LOOPS - 1, seq.c seq_tick) */
 #if FELUCCA_CPU2
     /* the second core: a part's render state, its own, so the two cores' parts share nothing (fx.c mix_block); in
-     * the pad that keeps sizeof(track_t) a multiple of 16 (14 bytes before) */
+     * the pad that keeps sizeof(track_t) a multiple of 16 (10 bytes without it) */
     uint8_t lfo_wrap;            /* the LFO's phase wrapped this block: its S&H is drawn after the parts (voice.c) */
     uint32_t esync_k[3];         /* ATK's step, DEC's and REL's coefficient (Q16) this block (voice.c esync_coef) */
     uint8_t spread_on;           /* SPREAD this block (fx.c mix_part, voice.c track_render) */
-    uint8_t rsv_sz[1];           /* (sizeof(track_t) a multiple of 16: below) */
+    uint8_t rsv_sz[12];          /* (sizeof(track_t) a multiple of 16: below) */
 #else
-    uint8_t rsv_sz[14];          /* (sizeof(track_t) a multiple of 16: below) */
+    uint8_t rsv_sz[10];          /* (sizeof(track_t) a multiple of 16: below) */
 #endif
     int16_t armp, aholdp;        /* P_AMODE / P_AHOLD as last seen by the ISR */
     /* engine switch (voice.c engine_block): the old engine's voices fade out, then it switches */

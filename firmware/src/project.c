@@ -65,7 +65,8 @@
  * at its defaults (P_ITYPE .. P_ESYNC, 96..102: a merge of 1.5 keeps their meaning), and TEMP (P_TEMP, 103), before
  * the engine values (P_COUNT 112, P_E0 104; 12 spare, room for 3). A FUN10 of 1.2 .. 1.4.1 (104) or of Felucca 1.5
  * (111) loads by count: TEMP EQUAL, the seven at their defaults. Firmware before refuses a FUN10 of 112 (np >
- * P_COUNT): it shows EMPTY there. FUN9 / FUN8 / FUN7 load as before (their 64 records of 4 bytes read by proj_motion_v9, every
+ * P_COUNT): it shows EMPTY there. GHOULBOX 2.3: RING (P_RING, 104), P_COUNT 113, P_E0 105, the same way: a FUN10 of
+ * 2.0 .. 2.2 (112) loads with RING OFF; 2.2 and before refuse a FUN10 of 113 (EMPTY there). FUN9 / FUN8 / FUN7 load as before (their 64 records of 4 bytes read by proj_motion_v9, every
  * step's nudge 0: the timing they always had; parameters mapped by count, the four new ones at their defaults:
  * SYNC OFF, TRIG NOTE, POL BI, QUANTIZE ON, SPREAD 0, which play as before 1.2), and so do FUN6..FUN1. Firmware before 1.2
  * refuses a FUN10 everywhere (its size and magic are no format it knows): a slot holding one shows EMPTY there (the
@@ -164,8 +165,8 @@ _Static_assert(sizeof(project_v5_t) == 3352u && sizeof(project_v6_t) == 3388u, "
  * tail's last two before the patches: track parameters can still grow by two (8 bytes) before them */
 #define PROJ_AMB_OFF (PROJ_FM6_OFF - 2u)
 /* GHOULBOX 2.1: HOME > KEYS (G_KMODE .. G_KOCT), one little-endian word below the ambience: 0 (every FUN10 before:
- * KEYS OFF, its defaults) or 1 + MODE + 3 x (TRK + 4 x (OCT + 5 x SPLIT)), up to 1440. Track parameters can still
- * grow by two (8 bytes) before it */
+ * KEYS OFF, its defaults) or 1 + MODE + 3 x (TRK + 4 x (OCT + 5 x SPLIT)), up to 1440. Track parameters could
+ * grow by two (8 bytes) before it; Felucca 1.5.5's MIDI IN TRACK (below) took 3 of them */
 #define PROJ_KEYS_OFF (PROJ_AMB_OFF - 2u)
 /* Felucca 1.5.5 (#202): MIDI IN TRACK, 3 bytes just below GHOULBOX's KEYS word (Felucca puts them at the tail's end, where
  * GHOULBOX's ambience is: the merge keeps GHOULBOX's bytes where they were). 24 bits LE: bits 5k..5k+4 track k's channel
@@ -173,7 +174,8 @@ _Static_assert(sizeof(project_v5_t) == 3352u && sizeof(project_v6_t) == 3388u, "
  * is TRACK. Then the globals' G_ROUTE holds the block TRACK falls back to (proj_route_fallback: the block its four
  * channels make, else CH1-4), which is all a firmware before reads (these bytes it never did): a TRACK project plays
  * there as that block. Every project before has them 0: channels 1..4, MIDI IN as its G_ROUTE says. Track parameters
- * can still grow by one (4 bytes) before them */
+ * could grow by one (4 bytes) before them: GHOULBOX 2.3's RING took it, so the next track parameter needs room
+ * made elsewhere (proj_pack checks it) */
 #define PROJ_MIDI_OFF (PROJ_KEYS_OFF - 3u)
 typedef union { uint32_t align; uint8_t raw[PROJ_STORE_SIZE]; } project_store_t;
 _Static_assert(PROJ_NG == 27u && G_COUNT == PROJ_NG + 6u, "FUN7 globals retain original IDs; GHOULBOX's six in the tail");
