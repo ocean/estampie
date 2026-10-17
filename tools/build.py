@@ -61,7 +61,13 @@ SDK_SHA256 = {
     "cfg/eq_cfg_hw.bin": "41167491bffed4651750719c973d2758adeb9021a5670d02d6a53c85ed80ea7d",
 }
 
-PRODUCT = "FM-1_37800"              # package identity: FM-1_378XY ("EST" on a phone keypad), 00 for dev builds
+PRODUCT = "FM-1_378000"             # package identity: FM-1_378 ("EST" on a phone keypad) and the release's number, three
+                                    # digits (M-VAVE's own pattern: Open V12 is FM-1_8000012); 000 for dev builds
+# ESTAMPIE's releases and their numbers (the identity's last three digits): one each, never reused, so every release has
+# its own identity (FM1Kit and FM-SWITCH see an update, not a reinstall). Every build of a version keeps its number until
+# that version is released (tagged on GitHub); the next version's line comes after, with the next number. Its
+# pre-releases (0.2-rc1) share it
+RELEASES = {"0.1": 1}
 VERSION = None                      # ESTAMPIE_VERSION for release builds (default: firmware/src/core.h)
 # FELUCCA_CPU2 (firmware/src/felucca.c), unset or 1, the default (1.6.1): the second core is built in, its entry and
 # stacks (firmware/hal/fm1_cpu1.S) linked and its waiting loop (.c1_text) checked; MENU > SYSTEM > 2ND CORE starts it
@@ -393,7 +399,7 @@ def mmio_check():
 def main():
     global PRODUCT, VERSION
     ap = argparse.ArgumentParser()
-    ap.add_argument("--release", metavar="X.Y", help="release build: identity FM-1_378XY, version string X.Y")
+    ap.add_argument("--release", metavar="X.Y", help="release build: identity FM-1_378NNN (RELEASES), version string X.Y")
     ap.add_argument("--sdk", type=Path, help="JieLi AC79 SDK checkout (default: $AC79_SDK)")
     ap.add_argument("--gen-only", action="store_true",
                     help="GHOULBOX: only the generated headers (build/gen), no toolchain or SDK: the host tests (CI)")
@@ -403,11 +409,14 @@ def main():
         print(f"gen      {GEN}")
         return 0
     name = "felucca.fwsc"
-    if a.release:                   # one digit each: the identity has room for two (X.Y.Z and X.Y.Z.W keep X.Y's)
-        m = re.fullmatch(r"(\d)\.(\d)(?:\.\d){0,2}(-[A-Za-z0-9]+)?", a.release)
+    if a.release:                   # its number from RELEASES (a pre-release, X.Y-suffix: X.Y's)
+        m = re.fullmatch(r"(\d+(?:\.\d+){1,3})(-[A-Za-z0-9]+)?", a.release)
         if not m:
-            raise SystemExit(f"--release {a.release}: use X.Y, X.Y.Z, X.Y.Z.W or X.Y-suffix, one digit each")
-        PRODUCT = "FM-1_378" + m[1] + m[2]
+            raise SystemExit(f"--release {a.release}: use X.Y, X.Y.Z, X.Y.Z.W or X.Y-suffix")
+        if m[1] not in RELEASES:
+            raise SystemExit(f"--release {a.release}: add \"{m[1]}\": {max(RELEASES.values()) + 1} to RELEASES in tools/build.py "
+                             "(each release its own number)")
+        PRODUCT = f"FM-1_378{RELEASES[m[1]]:03d}"
         VERSION = a.release.lower()            # e.g. 0.1, 0.2-rc1
         name = f"estampie-{a.release}.fwsc"
     if not (FW / "engines" / "src" / "felucca_engine.h").exists():

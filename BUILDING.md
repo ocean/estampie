@@ -54,8 +54,12 @@ On Linux x86-64 the toolchain runs natively and Docker is not needed.
 `JIELI_TOOLCHAIN` and `AC79_SDK` override the default locations
 (`.toolchain/jieli/toolchain`, `.toolchain/ac79-sdk`); `JIELI_DOCKER_IMAGE` overrides the pinned container.
 
-`./build.sh --release 0.1` makes a release build: the package identity becomes `FM-1_37801`
-(378 spells "EST" on a phone keypad; dev builds are `FM-1_37800`) and the version string `0.1`;
+`./build.sh --release 0.1` makes a release build: the package identity becomes `FM-1_378001` (378 spells "EST" on a
+phone keypad, then the release's own number from `RELEASES` in `tools/build.py`, three digits, as M-VAVE numbers its
+Open firmware; dev builds are `FM-1_378000`) and the version string `0.1`. Every build of a version keeps its number
+while it is worked on (reinstalling the same identity is fine: neither the update entry nor the loader compares it);
+once that version is released (tagged on GitHub), the next version gets the next number, a new line in `RELEASES`. So
+each release has its own identity, and apps such as FM1Kit and FM-SWITCH see an update rather than a reinstall;
 the package is `build/estampie-0.1.fwsc`, and `build/release-0.1/` holds what a release ships:
 the package, the app (`estampie-0.1-app.bin`), `SHA256SUMS`, the sample attribution, `LICENSE`,
 `LICENSING.md` and
