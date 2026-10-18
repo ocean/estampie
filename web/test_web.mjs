@@ -11,11 +11,12 @@
 // - fm1ota.js: a full install and an unplug during the write against a simulated FM-1
 
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import vm from "node:vm";
-import { buildIdOf, logicalImage, productOf } from "./fm1pkg.js";
+import { Package, buildIdOf, logicalImage, productOf } from "./fm1pkg.js";
 import { Updater, WriteProgress, buildOf, pack7, unpack7 } from "./fm1ota.js";
 
 let failed = 0;
@@ -1658,11 +1659,19 @@ async function packages() {
 sys.stdout.buffer.write(b"".join(raw[i * 48:i * 48 + 47] for i in range(20)) + raw[960:])`, pkg);
   ok(eq(logicalImage(raw), logical), "fm1pkg.js logicalImage");
   ok(/^FM-1_378\d{3}$/.test(productOf(raw)), "fm1pkg.js productOf");
-  /* ESTAMPIE: the build ID tools/build.py stamped into the app (felucca.bin), found again in the package */
-  const app = readFileSync(join(FW_ROOT, "build/felucca.bin")), at = app.indexOf("ESTB");
-  const stamped = app.subarray(at + 4, at + 20).toString("hex");
-  ok(at >= 0 && app.indexOf("ESTB", at + 1) < 0 && /^[0-9a-f]{32}$/.test(stamped) && stamped !== "0".repeat(32) &&
-     buildIdOf(raw) === stamped, `fm1pkg.js buildIdOf: the stamped build (${stamped.slice(0, 8)})`);
+  /* ESTAMPIE: the build ID tools/build.py stamped into the app, found again in the package and true to its rule: the
+   * first 16 bytes of the image's SHA-256 with the ID zero (the image: the app slot less its 0xFF fill) */
+  const pk = new Package(raw), app = Buffer.from(pk.dec.subarray(pk.appOff, pk.appOff + pk.app.size));
+  const id = buildIdOf(raw), at = app.indexOf("ESTB");
+  const blank = Buffer.from(app);
+  blank.fill(0, at + 4, at + 20);
+  let end = blank.length;
+  while (end > 0 && blank[end - 1] === 0xFF) end--;
+  let rule = false;
+  for (let n = end; n <= Math.min(blank.length, end + 8) && !rule; n++)
+    rule = createHash("sha256").update(blank.subarray(0, n)).digest("hex").slice(0, 32) === id;
+  ok(id && id !== "0".repeat(32) && app.indexOf("ESTB", at + 1) < 0 && app.subarray(at + 4, at + 20).toString("hex") === id && rule,
+     `fm1pkg.js buildIdOf: the stamped build (${id && id.slice(0, 8)}), the image's SHA-256`);
   const stock = join(FW_ROOT, "assets/m-vave/FM-1_015.fwsc");
   ok(buildIdOf(readFileSync(stock)) === null, "fm1pkg.js buildIdOf: official V15 has none");
 }

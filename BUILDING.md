@@ -176,8 +176,9 @@ sh web/emu/build.sh                        # build/emu: the emulator
 python3 web/make_site.py build/estampie-0.1.fwsc 0.1 build/site
 ```
 
-`build/site/` then holds `index.html` (to the emulator), `webapp/emu/`, `webapp/installer/`, `webapp/editor/`, `guide/`
-and `firmware/`; copy it to `estampie/` in the FM-1 site. Every link inside it is relative, so it works in any folder
+`build/site/` then holds `index.html` (the front page, `web/home.html`), `llms.txt` and `llms-full.txt` (the pages,
+the README and the guide's text, for language models), `webapp/emu/`, `webapp/installer/`, `webapp/editor/`, `guide/`
+and `firmware/` (with `firmware/stock/`, official V15). Every link inside it is relative, so it works in any folder
 (and from `localhost`); the address the guide's text shows is `ESTAMPIE_SITE` (default `fm-1.drewr.dev/estampie`).
 It has no `CNAME`: the domain belongs to the site above it. The projects share one origin, so the pages' browser
 storage is named for ESTAMPIE (`estampie-…`: the emulator's saves, the editor's library and tab, the installer's
@@ -185,3 +186,13 @@ resume), never Felucca's or GHOULBOX's names, which the other projects' pages ma
 
 Installing firmware is at your own risk. If an install fails and the FM-1 no longer
 starts, recovery needs [FM-1-transporter](https://github.com/kurogedelic/FM-1-transporter).
+
+### Releasing
+
+`tools/release.sh X.Y` does all of the above for a version: the release build, the emulator, the site, and
+`build/estampie-site-X.Y.zip` (the site, `index.html` at its root) with `estampie-site-X.Y.zip.sha256`.
+`tools/release.sh X.Y --publish` then tags `vX.Y` and creates the GitHub release with the package, the app,
+`SHA256SUMS` and the site zip. The FM-1 site ([ocean/fm1-site](https://github.com/ocean/fm1-site)) publishes it:
+its update workflow finds the newest release's site zip, checks its SHA-256, pins it in `estampie.json` and opens a
+pull request, whose checks (accessibility, contrast, links) run over `/estampie/` before it goes live. Keep the zip's
+and the `.sha256`'s names. After a release, the next version gets its own number in `RELEASES`.

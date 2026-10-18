@@ -35,6 +35,7 @@ body { margin: 0; color: var(--ink); font: 17px/1.6 "IM Fell English", Georgia, 
 main { max-width: 1240px; margin: 0 auto; padding: 24px 16px 32px; }
 /* the crest: the boot screen's illuminated initial and word, drawn at 4x, shown at 2x */
 .crest { display: flex; justify-content: center; align-items: flex-end; gap: 6px; margin: 8px 0 14px; }
+.crest h1 { display: flex; align-items: flex-end; gap: 6px; margin: 0; font-size: inherit; }
 .crest .initial { width: 120px; height: 120px; }
 .crest .word { height: 90px; width: auto; margin-bottom: 18px; }
 .tagline { margin: 0 0 18px; text-align: center; font: italic 22px/1.4 "IM Fell English", Georgia, serif; color: var(--ink); }
@@ -173,11 +174,10 @@ body.focus-mode .audio-recovery { position: fixed; top: max(16px, env(safe-area-
 <body>
 <main>
 <header class="crest">
-  <img class="initial" src="art/initial.png" alt="E">
-  <img class="word" src="art/word.png" alt="stampie">
+  <h1 class="crest-title"><img class="initial" src="art/initial.png" alt="E"><img class="word" src="art/word.png" alt="stampie"></h1>
 </header>
 <p class="tagline">A <b>mediæval groovebox</b> for the FM-1 · lutes, shawms, hurdy-gurdies &amp; tabors · play it here, in your browser</p>
-<nav class="calls"><a class="slab" href="../installer/">Install on your FM-1</a>
+<nav class="calls" aria-label="Get ESTAMPIE"><a class="slab" href="../installer/">Install on your FM-1</a>
   <a class="slab bone" href="../../guide/">User guide</a>
   <a class="slab bone" href="https://github.com/ocean/estampie">Source &amp; notes</a></nav>
 <div class="stage">
@@ -231,7 +231,7 @@ body.focus-mode .audio-recovery { position: fixed; top: max(16px, env(safe-area-
 <footer>
   <small class="version">ESTAMPIE @ESVERSION@@PREVIEW@ · on GHOULBOX @GBVERSION@ · on Felucca @VERSION@</small><br>
   ESTAMPIE is a fork of <a href="https://github.com/jasonpersinger/ghoulbox-fm1-dungeon-synth">GHOULBOX</a> by Jason Persinger, itself on <a href="https://github.com/hugelton/Felucca">Felucca</a> by Leo Kuroshita, Hügelton Instruments: with thanks to both · <a href="https://www.gnu.org/licenses/gpl-3.0.html">GPL-3.0</a> · browser build after charlesvestal's <a href="https://github.com/charlesvestal/fm1-x0x">X0X</a> · DotGothic16 font, <a href="fonts/OFL.txt">SIL OFL 1.1</a> · the name in UnifrakturMaguntia, the screen in Alegreya Sans and Cinzel, the page in IM Fell (SIL OFL 1.1)<br>
-  <nav><a href="../installer/">Install</a><a href="../editor/">Editor</a><a href="../../guide/">User guide</a><a href="lab.html">Sound lab</a><a href="https://github.com/ocean/estampie">Source</a></nav>
+  <nav aria-label="ESTAMPIE pages"><a href="../installer/">Install</a><a href="../editor/">Editor</a><a href="../../guide/">User guide</a><a href="lab.html">Sound lab</a><a href="https://github.com/ocean/estampie">Source</a></nav>
   <small>M-VAVE and FM-1 are trademarks of their respective owners. ESTAMPIE, GHOULBOX and Felucca are not affiliated with or endorsed by them. Not affiliated with teenage engineering.</small>
 </footer>
 </main>
@@ -395,7 +395,13 @@ function build(name) {
     device.insertBefore(d, document.getElementById("start"));
     c.hit = d;
   };
-  knobs.forEach((k) => { hit(k, "knob", "slider"); bindKnob(k); drawKnob(k); });
+  // ESTAMPIE: MASTER a slider with its level; the others endless knobs (spinbuttons: no value to report)
+  knobs.forEach((k) => {
+    hit(k, "knob", k.role === "master" ? "slider" : "spinbutton");
+    if (k.role === "master") { k.hit.setAttribute("aria-valuemin", "0"); k.hit.setAttribute("aria-valuemax", "100"); }
+    else k.hit.setAttribute("aria-roledescription", "endless knob");
+    bindKnob(k); drawKnob(k);
+  });
   buttons.forEach((b) => { hit(b, "", "button"); bindButton(b); });
   keys.forEach((k, i) => { hit(k, "", "button"); bindKey(k, i); });
   syncButtons(true);
@@ -452,7 +458,14 @@ function release(e) {
 }
 for (const t of ["pointerup", "pointercancel", "lostpointercapture"]) device.addEventListener(t, release);
 
-function drawKnob(k) { if (k.ind) k.ind.setAttribute("transform", `rotate(${angle[k.name]} ${k.x} ${k.y})`); }
+function drawKnob(k) {
+  if (k.ind) k.ind.setAttribute("transform", `rotate(${angle[k.name]} ${k.x} ${k.y})`);
+  if (k.role === "master" && k.hit) {
+    const pc = Math.round(masterValue / 1023 * 100);
+    k.hit.setAttribute("aria-valuenow", String(pc));
+    k.hit.setAttribute("aria-valuetext", `${pc} %`);
+  }
+}
 function setMaster(value) {
   masterValue = Math.max(0, Math.min(1023, value | 0));
   angle.MASTER = -135 + 270 * masterValue / 1023;

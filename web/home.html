@@ -1,0 +1,166 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-only -->
+<!-- ESTAMPIE: the site's front page (web/make_site.py fills the {{...}}): a manuscript leaf in VELLUM's colours, as the
+     installer and the emulator pages, and as fm-1.drewr.dev's illuminated hover theme for ESTAMPIE. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ESTAMPIE · a mediæval groovebox for the FM-1</title>
+<meta name="description" content="ESTAMPIE {{VERSION}}: custom firmware that makes the M-VAVE FM-1 a groovebox for mediæval dance music. Play it in your browser, install it, edit its sounds and read the guide.">
+<link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="icon" type="image/png" sizes="32x32" href="webapp/art/favicon-32.png">
+<link rel="apple-touch-icon" href="webapp/art/icon-180.png">
+<meta name="color-scheme" content="light">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=swap">
+<style>
+  :root { --vellum: #eee2c4; --vellum-dark: #dfcca0; --ink: #2e1e14; --ink-soft: #5b4532; --vermilion: #962012;
+          --lapis: #1a3e94; --gold: #b8892a; --verdigris: #3f6b3a; color-scheme: light; }
+  html { background: #c9b48a; }
+  body { margin: 0; color: var(--ink); min-height: 100vh; font: 18px/1.65 "IM Fell English", Georgia, "Times New Roman", serif;
+         background:
+           radial-gradient(ellipse 80% 70% at 50% 40%, transparent 55%, rgba(120, 82, 30, .28) 100%) fixed,
+           url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .32 0 0 0 0 .15 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23f)'/%3E%3C/svg%3E"),
+           var(--vellum); }
+  main { max-width: 780px; margin: 0 auto; padding: 16px 16px 48px; }
+  a { color: var(--vermilion); text-underline-offset: 2px; }
+  a:focus-visible { outline: 2px solid var(--lapis); outline-offset: 3px; }
+  strong, b { font-weight: 400; color: var(--vermilion); }   /* (IM Fell has no bold: rubricated) */
+  p { margin: 0 0 14px; }
+  .up { display: inline-block; margin: 4px 0 8px; padding: 4px 0; font: 17px/1.4 "IM Fell English SC", Georgia, serif; letter-spacing: .04em; }
+  /* the crest: the boot screen's illuminated initial and word */
+  .crest { display: flex; justify-content: center; margin: 4px 0 8px; }
+  .crest h1 { display: flex; align-items: flex-end; gap: 6px; margin: 0; font-size: inherit; }
+  .crest .initial { width: 120px; height: 120px; }
+  .crest .word { height: 90px; width: auto; margin-bottom: 18px; }
+  .tagline { margin: 0; text-align: center; font: italic 24px/1.4 "IM Fell English", Georgia, serif; }
+  .version { margin: 6px 0 26px; text-align: center; font: 16px/1.4 "IM Fell English SC", Georgia, serif; color: var(--ink-soft); letter-spacing: .05em; }
+  /* the leaves: a vermilion double rule, a gold one outside it, quatrefoils in the corners */
+  .leaf { position: relative; padding: 28px 28px 18px; border: 3px double var(--vermilion); outline: 2px solid var(--gold);
+          outline-offset: 5px; background: rgba(255, 248, 228, .45); }
+  .leaf + .leaf { margin-top: 36px; }
+  .leaf::before, .leaf::after { content: "❖"; position: absolute; color: var(--gold); font-size: 18px; line-height: 1; }
+  .leaf::before { top: -14px; left: -14px; }
+  .leaf::after { bottom: -14px; right: -14px; }
+  h2 { margin: 0 0 12px; font: 400 24px/1.3 "IM Fell English SC", Georgia, serif; color: var(--vermilion); letter-spacing: .04em; }
+  /* the opening's initial: lapis on gold, as a manuscript's */
+  .opening::first-letter { float: left; margin: 6px 10px 0 0; padding: 4px 10px 2px; font: 58px/0.9 "IM Fell English", Georgia, serif;
+                           color: var(--vellum); background: var(--lapis); box-shadow: 0 0 0 2px var(--vellum), 0 0 0 4px var(--gold); }
+  .small { font-size: 16px; color: var(--ink-soft); }
+  /* the doors: one line each, the first a lapis plate */
+  .doors { list-style: none; margin: 4px 0 6px; padding: 0; }
+  .doors li { padding: 12px 0; border-bottom: 1px solid rgba(150, 32, 18, .35); }
+  .doors li:last-child { border-bottom: 0; }
+  .doors a { font: 22px/1.3 "IM Fell English SC", Georgia, serif; letter-spacing: .04em; text-decoration: none; }
+  .doors a:hover { text-decoration: underline; }
+  .doors a::before { content: "❧ "; color: var(--gold); }
+  .doors .first a { display: inline-block; padding: 10px 26px; color: var(--vellum); background: var(--lapis);
+                    box-shadow: 0 0 0 2px var(--vellum), 0 0 0 4px var(--gold), 0 3px 8px rgba(60, 40, 10, .3); margin: 4px 0 6px; }
+  .doors .first a::before { content: ""; }
+  .doors .what { display: block; margin-top: 2px; }
+  .doors code { font: 14px/1.4 ui-monospace, Menlo, Consolas, monospace; word-break: break-all; color: var(--ink-soft); }
+  ul.feats { padding-left: 22px; margin: 0 0 14px; }
+  ul.feats li { margin-bottom: 6px; }
+  ul.feats li::marker { content: "✠  "; color: var(--vermilion); }
+  dl.line { margin: 0 0 12px; }
+  dl.line dt { font: 19px/1.4 "IM Fell English SC", Georgia, serif; color: var(--vermilion); letter-spacing: .03em; margin-top: 10px; }
+  dl.line dd { margin: 0 0 0 18px; }
+  footer { margin-top: 30px; text-align: center; }
+  footer p { margin: 0 0 8px; }
+  @media (max-width: 600px) {
+    body { font-size: 17px; }
+    .crest .initial { width: 60px; height: 60px; } .crest .word { height: 45px; margin-bottom: 9px; }
+    .tagline { font-size: 19px; }
+    .leaf { padding: 22px 16px 12px; }
+    .doors a { font-size: 20px; }
+    .opening::first-letter { font-size: 46px; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <a class="up" href="../">← FM-1 projects</a>
+  <header>
+    <div class="crest"><h1><img class="initial" src="webapp/art/initial.png" alt="E"><img class="word" src="webapp/art/word.png" alt="stampie"></h1></div>
+    <p class="tagline">a mediæval groovebox for the M-VAVE FM-1</p>
+    <p class="version">Version {{VERSION}} · firmware {{PRODUCT}}</p>
+  </header>
+
+  <section class="leaf" aria-labelledby="what">
+    <h2 id="what">The dance</h2>
+    <p class="opening">ESTAMPIE is custom firmware for the M-VAVE FM-1, named after the <i>estampie</i>, a fast dance of the
+      thirteenth and fourteenth centuries. It turns the little synthesiser into a groovebox for lively mediæval music:
+      tavern and court dances rather than the crypt, with plucked lutes and citoles, buzzing hurdy-gurdies, shawms and
+      bagpipes over drones, frame drums, tabors and nakers, chant, and the church modes.</p>
+    <p>It is a fork of <a href="https://github.com/jasonpersinger/ghoulbox-fm1-dungeon-synth">GHOULBOX</a> by Jason
+      Persinger, the dungeon-synth firmware, which is itself a fork of <a href="https://github.com/hugelton/Felucca">Felucca</a>
+      by Leo Kuroshita (Hügelton Instruments). Nearly everything underneath is their work.</p>
+    <p class="small"><b>Early work.</b> Version {{VERSION}} has the VELLUM look, the illuminated screens and a first set of
+      mediæval sounds, scenes and drum kits; more sounds are on the way.</p>
+  </section>
+
+  <section class="leaf" aria-labelledby="doors">
+    <h2 id="doors">Ways in</h2>
+    <ul class="doors">
+      <li class="first"><a href="webapp/emu/">Play it in your browser</a>
+        <span class="what">The real firmware, compiled for the web: knobs, keys, screen and sound, nothing to install.</span></li>
+      <li><a href="webapp/installer/">Install it on your FM-1</a>
+        <span class="what">Over USB from Chrome or Edge; save a backup first. The way back to official V15 is there too.</span></li>
+      <li><a href="webapp/editor/">Edit sounds and sequences</a>
+        <span class="what">From the computer once it's installed: presets, patterns, songs, samples and backups.</span></li>
+      <li><a href="guide/">Read the user guide</a>
+        <span class="what">From your first notes to every page and setting (adapted from GHOULBOX's guide).</span></li>
+      <li><a href="{{PKG}}">Download the firmware</a>
+        <span class="what">{{PKG_NAME}}, {{PKG_KB}} KB, for FM1Kit, FM-SWITCH or other installers. SHA-256
+          <code>{{PKG_SHA256}}</code></span></li>
+    </ul>
+  </section>
+
+  <section class="leaf" aria-labelledby="does">
+    <h2 id="does">What it does</h2>
+    <ul class="feats">
+      <li>Thirteen sound engines on four tracks: virtual analog, six-operator FM, phase distortion, chiptune, real
+        recordings, sung vowels, three oscillators, a tonewheel organ, granular, physical models, GHOULBOX's
+        hurdy-gurdy, noise and drums.</li>
+      <li>A 64-step sequencer on every track, with an arpeggiator, chord keys, scales and mediæval temperaments
+        (Pythagorean, meantone, just).</li>
+      <li>Drones that keep sounding through the sequencer's rests, as a hurdy-gurdy's do while the wheel turns.</li>
+      <li>Insert effects, chance, ratchets and conditional steps, Euclidean patterns, songs, MIDI learn and more,
+        from Felucca.</li>
+      <li>A screen like a manuscript page: parchment, iron-gall ink, vermilion rubrics and lapis.</li>
+    </ul>
+  </section>
+
+  <section class="leaf" aria-labelledby="thanks">
+    <h2 id="thanks">With thanks</h2>
+    <dl class="line">
+      <dt>GHOULBOX</dt>
+      <dd>by Jason Persinger: the hurdy-gurdy, the old tunings, the drone latch, the browser synth and the guide this
+        one is adapted from. <a href="https://github.com/jasonpersinger/ghoulbox-fm1-dungeon-synth">Source</a>,
+        <a href="https://ko-fi.com/ghoulbox">support it on Ko-fi</a>.</dd>
+      <dt>Felucca</dt>
+      <dd>by Leo Kuroshita, <a href="https://hugelton.com">Hügelton Instruments</a>: the engines, sequencer, effects,
+        editor, installer and tests, and the Felucca-Engines (MIT). <a href="https://github.com/hugelton/Felucca">Source</a>.</dd>
+      <dt>And</dt>
+      <dd>Charles Vestal's <a href="https://github.com/charlesvestal/fm1-x0x">X0X</a> (the browser emulator's design and
+        the second core), Kerem Kilic's <a href="https://github.com/keremimo/melodee">Melodee</a> (the chord readout),
+        zednaked's <a href="https://github.com/zednaked/jangada">Jangada</a> and gospodindilly-ops (the second core),
+        Versilian Studios' VSCO-2 and VCSL samples (CC0), and the fonts: IM Fell English, Alegreya Sans, Cinzel,
+        Inter Tight and UnifrakturMaguntia (SIL OFL 1.1). The full list is in the
+        <a href="firmware/LICENSING.md">licensing notes</a>.</dd>
+    </dl>
+  </section>
+
+  <footer>
+    <p><a href="https://github.com/ocean/estampie">Source</a> · <a href="https://github.com/ocean/estampie/issues">Report a problem</a>
+      · <a href="firmware/LICENSE">GPL-3.0</a> · <a href="firmware/LICENSING.md">Licences</a> · <a href="llms.txt">llms.txt</a></p>
+    <p class="small">ESTAMPIE by Drew Robinson. Free software under GPL-3.0, with no warranty: use it at your own risk.</p>
+    <p class="small">M-VAVE and FM-1 are trademarks of their respective owners. ESTAMPIE is not affiliated with or endorsed
+      by them, by Hügelton Instruments or by the makers of GHOULBOX. Inspired by the idea of teenage engineering's EP-1320
+      <i>medieval</i>; not affiliated with them.</p>
+  </footer>
+</main>
+</body>
+</html>

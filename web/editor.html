@@ -176,6 +176,8 @@
   .strip button.selb:disabled { opacity: 1; background: none; color: var(--dim); }
   #sysinfo th { padding-right: 16px; }
   [hidden] { display: none !important; }
+/* ESTAMPIE: read by screen readers, not shown (the crest above is the visible title) */
+.vh { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 </style>
 </head>
 <body>
@@ -187,7 +189,7 @@
 <div class="stage">
 <main>
   <button class="lang" id="lang"></button>
-  <h1 hidden>ESTAMPIE Editor</h1>
+  <h1 class="vh">ESTAMPIE Editor</h1>
   <p class="links"><a href="../installer/" data-t="installer"></a> <a href="../emu/" data-t="tryit"></a> <a href="../../guide/" data-t="guide"></a>
     <a href="https://ko-fi.com/ghoulbox" target="_blank" rel="noopener" data-t="support"></a></p>
   <!-- always visible: connection, version, sync mode, the tabs and (Sound / Sequencer / Tracks) the track selector -->

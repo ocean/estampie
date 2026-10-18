@@ -29,6 +29,7 @@
   strong, b { font-weight: 400; color: var(--vermilion); }   /* (IM Fell has no bold: rubricated) */
   /* the crest: the boot screen's illuminated initial and word, drawn at 4x, shown at 2x */
   .crest { display: flex; justify-content: center; align-items: flex-end; gap: 6px; margin: 8px 0 12px; }
+  .crest h1 { display: flex; align-items: flex-end; gap: 6px; margin: 0; font-size: inherit; }
   .crest .initial { width: 120px; height: 120px; }
   .crest .word { height: 90px; width: auto; margin-bottom: 18px; }
   .tagline { margin: 0 0 24px; text-align: center; font: italic 22px/1.4 "IM Fell English", Georgia, serif; }
@@ -77,8 +78,7 @@
 <body>
 <main>
   <header class="crest">
-    <img class="initial" src="../art/initial.png" alt="E">
-    <img class="word" src="../art/word.png" alt="stampie">
+    <h1><img class="initial" src="../art/initial.png" alt="E"><img class="word" src="../art/word.png" alt="stampie"></h1>
   </header>
   <p class="tagline" data-t="tagline"></p>
   <section class="plaque">

@@ -5,7 +5,8 @@
 /estampie/ is this one). Every link is relative, so OUT_DIR works anywhere; ESTAMPIE_SITE changes only the address
 the guide's text shows (docs/guide/make_guide.py). No CNAME: the domain belongs to the site above this folder.
 
-  index.html                  redirect to the emulator (GHOULBOX; the installer when there is none)
+  index.html                  ESTAMPIE: the front page (web/home.html): what it is, the ways in, the thanks
+  llms.txt, llms-full.txt     ESTAMPIE: the site for language models (llmstxt.org): the pages; the README and the guide
   favicon.ico                 ESTAMPIE: the pages' icon (also in webapp/art/, with the home-screen icons)
   firmware/estampie-VER.fwsc   the package (+ LICENSE, LICENSING.md, LICENSES/: the package holds
                               JieLi SDK files under Apache-2.0, see LICENSING.md)
@@ -30,6 +31,8 @@ import re
 import shutil
 import subprocess
 import sys
+from html import escape as html_escape
+from html.parser import HTMLParser
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -45,6 +48,70 @@ def strip_module(src):
 def product_of(raw):
     """the package identity: one marker byte after each of the first 20 blocks (fm1pkg.js productOf)"""
     return "".join(chr((m - i - 1) & 0xFF) for i in range(BLOCKS) if (m := raw[i * BLK + KEEP]) != 0x7D)
+
+
+README_LINKS = re.compile(r"\]\((?!https?:|#)([^)]+)\)")
+SRC_URL = "https://github.com/ocean/estampie"
+
+
+def guide_text(page):
+    """the guide's <main> as plain text, its headings as Markdown ones (for llms-full.txt)"""
+    class Text(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.out, self.on, self.skip, self.head = [], False, 0, False
+        def handle_starttag(self, tag, attrs):
+            if tag == "main":
+                self.on = True
+            elif tag in ("script", "style"):
+                self.skip += 1
+            elif self.on and tag in ("h1", "h2", "h3", "h4"):
+                self.out.append("\n\n" + "#" * (int(tag[1]) + 2) + " ")    # (under "## User guide")
+                self.head = True
+            elif self.on and tag in ("td", "th"):
+                self.out.append(" · ")
+            elif self.on and tag in ("p", "li", "tr", "dt", "dd", "div", "br"):
+                self.out.append("\n" + ("- " if tag == "li" else ""))
+        def handle_endtag(self, tag):
+            if tag == "main":
+                self.on = False
+            elif tag in ("script", "style"):
+                self.skip -= 1
+            elif tag in ("h1", "h2", "h3", "h4"):
+                self.head = False
+            elif self.head and tag == "span":
+                self.out.append(" ")                                  # (a chapter's number, then its name)
+        def handle_data(self, data):
+            if self.on and not self.skip:
+                self.out.append(re.sub(r"\s+", " ", data))
+    t = Text()
+    t.feed(page)
+    lines = [ln.strip().removeprefix("· ") for ln in "".join(t.out).splitlines()]
+    return re.sub(r"\n{3,}", "\n\n", "\n".join(lines)).strip()
+
+
+def write_llms(out, version, product, name, sha):
+    """llms.txt (llmstxt.org: what the site is and its pages) and llms-full.txt (that, the README and the guide's text)"""
+    head = (f"# ESTAMPIE\n\n> A mediæval groovebox: custom firmware for the M-VAVE FM-1 synthesiser. Version {version} "
+            f"(firmware identity {product}). GPL-3.0-only; not affiliated with M-VAVE.\n\n"
+            "Part of Drew Robinson's FM-1 projects: https://fm-1.drewr.dev/ . Source: " + SRC_URL + "\n\n"
+            "## Pages\n\n"
+            "- [Front page](index.html): what ESTAMPIE is, the ways in, credits\n"
+            "- [Play it in your browser](webapp/emu/): the firmware compiled to WebAssembly, with its panel and sound\n"
+            "- [Install it on your FM-1](webapp/installer/): the web installer (Web MIDI with SysEx; Chrome or Edge); "
+            "also returns the FM-1 to official firmware V15\n"
+            "- [Editor](webapp/editor/): edit sounds, patterns, songs and samples, and make backups, over USB MIDI\n"
+            "- [User guide](guide/): from first notes to every page and setting\n"
+            f"- [Firmware download](firmware/{name}): the .fwsc package, SHA-256 {sha}\n"
+            "- [Licences](firmware/LICENSING.md)\n\n")
+    (out / "llms.txt").write_text(head + "## Optional\n\n- [Full text](llms-full.txt): the README and the user guide\n",
+                                  encoding="utf-8")
+    readme = (HERE.parent / "README.md").read_text(encoding="utf-8")
+    readme = README_LINKS.sub(lambda m: f"]({SRC_URL}/blob/main/{m[1]})", readme)
+    readme = re.sub(r"^#", "###", readme, flags=re.M)            # (under "## README")
+    guide = guide_text((out / "guide" / "index.html").read_text(encoding="utf-8"))
+    (out / "llms-full.txt").write_text(head + "## README\n\n" + readme.strip() + "\n\n## User guide\n\n" + guide + "\n",
+                                       encoding="utf-8")
 
 
 def main(pkg, version, out):
@@ -119,12 +186,17 @@ def main(pkg, version, out):
     import make_guide
     shutil.rmtree(out / "guide", ignore_errors=True)
     make_guide.build(out / "guide")
-    home = "webapp/emu/" if (out / "webapp/emu/index.html").exists() else "webapp/installer/"   # GHOULBOX: the emulator
-    (out / "index.html").write_text(                                                          # first, when it is there
-        '<!doctype html><meta charset="utf-8"><title>ESTAMPIE</title>'
-        '<link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">'
-        f'<meta http-equiv="refresh" content="0; url={home}">'
-        f'<a href="{home}">ESTAMPIE</a>\n', encoding="utf-8")
+    if not (out / "webapp/emu/index.html").exists():
+        print("site: warning: no webapp/emu: the front page's 'Play it in your browser' leads nowhere")
+    front = {"VERSION": html_escape(version), "PRODUCT": product, "PKG": "firmware/" + name, "PKG_NAME": name,
+             "PKG_KB": str(round(len(raw) / 1024)), "PKG_SHA256": hashlib.sha256(raw).hexdigest()}
+    page = (HERE / "home.html").read_text(encoding="utf-8")
+    for k, v in front.items():
+        page = page.replace("{{" + k + "}}", v)
+    if re.search(r"\{\{[A-Z_0-9]+\}\}", page):
+        raise SystemExit("home.html: a {{...}} make_site.py does not fill")
+    (out / "index.html").write_text(page, encoding="utf-8")
+    write_llms(out, version, product, name, front["PKG_SHA256"])
     shutil.copy(out / "webapp/art/favicon.ico", out / "favicon.ico")   # ESTAMPIE: where a browser looks for it first
     print(f"site: {out}: webapp/installer ({len(html)} B), webapp/editor, firmware/{name} ({len(raw)} B, {product})")
 
