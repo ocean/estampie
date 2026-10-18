@@ -4,6 +4,7 @@
  *
  * The updater talks SysEx (F0 pack7(00 59 cmd len24 body chk) F7):
  *   cmd 0x11  handshake -> we answer our package identity (FELUCCA_ID)
+ *   cmd 0x12  ESTAMPIE: build -> "ESTB" and this build's ID (ota_build_id)
  *   F0 22 24 35 7F F7  upgrade -> ota_session(): pull parts of the package
  *     with cmd 0x30 read requests, check them, stage the package's update
  *     loader at 0xE0000 (outside Felucca's store), ask 0xE0000000 ("success"),
@@ -140,6 +141,20 @@ static void ota_reply_identity(void)
     ota_send_msg(0x11, id, sizeof id);
 }
 
+/* ESTAMPIE: this build's ID, after M-VAVE fm1_open's build hash: "ESTB" and 16 bytes tools/build.py fills in, the
+ * first 16 of the image's SHA-256 taken with them zero, so an installer can tell the exact build on the device before
+ * and after an update (web/fm1ota.js buildOf). Volatile: the zeros here are never the answer */
+const volatile uint8_t ota_build_id[20] = {'E', 'S', 'T', 'B'};
+
+static void ota_reply_build(void)
+{
+    uint8_t b[sizeof ota_build_id];
+    uint32_t i;
+    for (i = 0; i < sizeof b; i++)
+        b[i] = ota_build_id[i];
+    ota_send_msg(0x12, b, sizeof b);
+}
+
 /* decode the pending frame; returns its decoded length (0 = not ours) */
 static uint32_t ota_take(void)
 {
@@ -164,6 +179,8 @@ static void ota_service(void)
     uint32_t d = ota_take();
     if (d == 7u && ota_dec[2] == 0x11)
         ota_reply_identity();
+    else if (d == 7u && ota_dec[2] == 0x12)
+        ota_reply_build();
 }
 
 /* one read request (3 tries x 5 s); data -> dst */

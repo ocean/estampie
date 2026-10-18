@@ -75,6 +75,7 @@ All by Hügelton Instruments (Leo Kuroshita), in this tree:
 | wasm-media-encoders 0.7.0 by arseneyr (<https://github.com/arseneyr/wasm-media-encoders>): the web synth's MP3 encoder wrapper | MIT | `web/emu/vendor/mp3/WasmMediaEncoder.min.js`, `LICENSES/MIT-wasm-media-encoders.txt` |
 | LAME by the LAME project (<https://github.com/arseneyr/lame/tree/98db548e8e851defbba3184125ce10725355c332>): compiled into the web synth's separately loaded MP3 WebAssembly module | LGPL-2.0-or-later | `web/emu/vendor/mp3/mp3.wasm`, `LICENSES/LGPL-2.0-LAME.txt`, `LICENSES/LAME-NOTICE.txt` |
 | JieLi AC79 SDK by JieLi Technology: three of its files go into every `.fwsc` package (below); none are in this tree | Apache-2.0 | `LICENSES/Apache-2.0.txt` |
+| Official FM-1 V15 firmware by M-VAVE (<https://github.com/m-vave/fm1_open>): installed, unmodified, by the installer's "Return to official V15" (below); not part of the firmware | Apache-2.0 | `assets/m-vave/FM-1_015.fwsc`, `assets/m-vave/README.md`, `LICENSES/Apache-2.0.txt` |
 
 The exact browser-codec versions, source commits, build-source links and binary SHA-256 hashes are recorded in
 `web/emu/vendor/README.md`. The LAME WebAssembly file is loaded as a separate runtime module and can be replaced
@@ -104,13 +105,16 @@ Every distribution of a package carries the licence texts with it: the release f
 (`tools/build.py --release`) and the site (`web/make_site.py`, next to the package in
 `firmware/` and linked from the installer page).
 
-## No vendor material
+## No vendor material in the firmware
 
-No M-VAVE material is part of Felucca. The firmware links no vendor code and contains no vendor
-data, and the packages hold only Felucca and the three SDK files above. The installer's
-"Return to official V15" holds only the official file's size and SHA-256: you select the
-official firmware file you downloaded yourself, and it is checked and installed in your browser,
-never uploaded or redistributed.
+No M-VAVE material is part of the firmware. It links no vendor code and contains no vendor
+data, and the packages hold only the firmware and the three SDK files above.
+
+ESTAMPIE: the installer's "Return to official V15" installs M-VAVE's own official V15 firmware,
+`assets/m-vave/FM-1_015.fwsc`, unmodified. M-VAVE publish it under the Apache License, Version 2.0
+(<https://github.com/m-vave/fm1_open>, `THIRD_PARTY.md`); the site carries it in `firmware/stock/`
+with that licence and its provenance (`assets/m-vave/README.md`). The installer checks its SHA-256
+before writing anything, and still accepts a copy you downloaded from M-VAVE yourself.
 
 ## Contributions
 

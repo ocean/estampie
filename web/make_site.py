@@ -9,6 +9,8 @@ the guide's text shows (docs/guide/make_guide.py). No CNAME: the domain belongs 
   favicon.ico                 ESTAMPIE: the pages' icon (also in webapp/art/, with the home-screen icons)
   firmware/estampie-VER.fwsc   the package (+ LICENSE, LICENSING.md, LICENSES/: the package holds
                               JieLi SDK files under Apache-2.0, see LICENSING.md)
+  firmware/stock/             ESTAMPIE: official V15 for "Return to official V15", M-VAVE's, unmodified (Apache-2.0,
+                              with the licence and assets/m-vave/README.md)
   webapp/installer/index.html index_pkg.html, self-contained (fm1pkg.js, fm1ota.js, metadata inlined)
   webapp/editor/index.html    editor.html (+ fukiai.ttf, FUKIAI-LICENSE.txt)
   webapp/art/                 ESTAMPIE: the crest the installer and editor show, and the icons (tools/gen_emu_art.py)
@@ -22,6 +24,7 @@ The package must be one made by tools/fm1pkg_make.py (Felucca's own loader, no v
 Its identity (FM-1_378NNN) is read from the package; the device must report it after
 the install.
 """
+import hashlib
 import json
 import re
 import shutil
@@ -31,6 +34,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 BLOCKS, BLK, KEEP = 20, 0x30, 0x2F
+STOCK_V15_SHA256 = "db1642b2b6fa5c2cccb11ffd13878068bb28601678d3644049f99dc40e7edb8a"   # (fm1pkg.js STOCK_V15_SHA256)
 
 
 def strip_module(src):
@@ -57,7 +61,11 @@ def main(pkg, version, out):
         strip_module((HERE / "fm1ota.js").read_text(encoding="utf-8")) + "\n" + \
         strip_module((HERE / "fm1backup.js").read_text(encoding="utf-8"))
     name = f"estampie-{re.sub(r'[^A-Za-z0-9.-]', '-', version)}.fwsc"
-    meta = json.dumps({"version": version, "product": product, "pkg": "../../firmware/" + name})
+    stock = HERE.parent / "assets/m-vave/FM-1_015.fwsc"
+    if hashlib.sha256(stock.read_bytes()).hexdigest() != STOCK_V15_SHA256:
+        raise SystemExit(f"{stock}: not official V15 (assets/m-vave/README.md has its SHA-256)")
+    meta = json.dumps({"version": version, "product": product, "pkg": "../../firmware/" + name,
+                       "stock": "../../firmware/stock/FM-1_015.fwsc"})
     for mark in ("/*LIB*/", "/*META*/"):
         if html.count(mark) != 1:
             raise SystemExit(f"index_pkg.html must contain {mark} once; update make_site.py")
@@ -81,6 +89,17 @@ def main(pkg, version, out):
         encoding="utf-8")
     for doc in ("LICENSE", "LICENSING.md"):
         shutil.copy(HERE.parent / doc, fw / doc)
+    st = fw / "stock"                               # ESTAMPIE: official V15, as M-VAVE publish it (Apache-2.0)
+    shutil.rmtree(st, ignore_errors=True)
+    st.mkdir()
+    shutil.copy(stock, st / stock.name)
+    shutil.copy(lic / "Apache-2.0.txt", st / "LICENSE-Apache-2.0.txt")
+    shutil.copy(stock.with_name("README.md"), st / "README.md")
+    (st / "index.html").write_text(                 # the installer links this folder: Pages lists no folders
+        '<!doctype html><meta charset="utf-8"><title>Official FM-1 V15</title><h1>Official FM-1 V15 (M-VAVE)</h1>'
+        f'<ul><li><a href="{stock.name}">{stock.name}</a> (SHA-256 {STOCK_V15_SHA256})</li>'
+        '<li><a href="README.md">README.md</a>: where it comes from, its terms</li>'
+        '<li><a href="LICENSE-Apache-2.0.txt">Apache License, Version 2.0</a></li></ul>\n', encoding="utf-8")
     shutil.copy(HERE / "editor.html", ed / "index.html")
     root = HERE.parent                              # GHOULBOX: the art, and the emulator when it was built
     subprocess.run([sys.executable, str(root / "tools/gen_emu_art.py"), str(root / "build/gen"), str(out / "webapp/art")],

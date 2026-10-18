@@ -15,8 +15,8 @@ import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import vm from "node:vm";
-import { logicalImage, productOf } from "./fm1pkg.js";
-import { Updater, WriteProgress, pack7, unpack7 } from "./fm1ota.js";
+import { buildIdOf, logicalImage, productOf } from "./fm1pkg.js";
+import { Updater, WriteProgress, buildOf, pack7, unpack7 } from "./fm1ota.js";
 
 let failed = 0;
 const ok = (cond, what) => { console.log(`${what.padEnd(64)} ${cond ? "ok" : "FAIL"}`); if (!cond) failed++; };
@@ -1658,26 +1658,38 @@ async function packages() {
 sys.stdout.buffer.write(b"".join(raw[i * 48:i * 48 + 47] for i in range(20)) + raw[960:])`, pkg);
   ok(eq(logicalImage(raw), logical), "fm1pkg.js logicalImage");
   ok(/^FM-1_378\d{3}$/.test(productOf(raw)), "fm1pkg.js productOf");
+  /* ESTAMPIE: the build ID tools/build.py stamped into the app (felucca.bin), found again in the package */
+  const app = readFileSync(join(FW_ROOT, "build/felucca.bin")), at = app.indexOf("ESTB");
+  const stamped = app.subarray(at + 4, at + 20).toString("hex");
+  ok(at >= 0 && app.indexOf("ESTB", at + 1) < 0 && /^[0-9a-f]{32}$/.test(stamped) && stamped !== "0".repeat(32) &&
+     buildIdOf(raw) === stamped, `fm1pkg.js buildIdOf: the stamped build (${stamped.slice(0, 8)})`);
+  const stock = join(FW_ROOT, "assets/m-vave/FM-1_015.fwsc");
+  ok(buildIdOf(readFileSync(stock)) === null, "fm1pkg.js buildIdOf: official V15 has none");
 }
 
 /* ------------------------------------------------- update protocol (fm1ota.js) --- */
 const HS = [0xF0, 0x00, 0x32, 0x45, 0x00, 0x00, 0x00, 0x40, 0x7F, 0xF7];
 const UPGRADE = [0xF0, 0x22, 0x24, 0x35, 0x7F, 0xF7];
+const BUILD_Q = [0xF0, ...pack7([0, 0x59, 0x12, 0, 0, 0, 0xFF]), 0xF7];
 
 /* an FM-1 on WebMIDI: identity, then "device asks, host answers" reads of the image */
 class FakeFM1 {
-  constructor(image, { unplugAfter = Infinity, halfLoader = false } = {}) {
+  constructor(image, { unplugAfter = Infinity, halfLoader = false, build = null, name = "FM-1", openMs = 0 } = {}) {
     this.image = image; this.unplugAfter = unplugAfter; this.served = 0; this.bad = 0;
+    this.build = build;     // ESTAMPIE: the build the restarted firmware reports (cmd 0x12), hex; null: no answer
+    this.openMs = openMs;   // ESTAMPIE: how long its ports take to open
     this.halfLoader = halfLoader;   // GHOULBOX: Chrome on Linux shows the open page the loader's output, not its input
     this.access = { inputs: new Map(), outputs: new Map() };
-    this.boot("FM-1_015", "FM-1");
+    this.boot("FM-1_015", name);
   }
   boot(identity, name) {
     this.identity = identity; this.waiting = null; this.queue = [];
     for (const m of [this.access.inputs, this.access.outputs]) { for (const p of m.values()) p.state = "disconnected"; m.clear(); }
     const id = Math.random().toString(36).slice(2);
-    this.input = { id: "i" + id, name, state: "connected", onmidimessage: null, open: async () => {} };
-    this.output = { id: "o" + id, name, state: "connected", open: async () => {}, send: (d) => {
+    const open = () => new Promise((r) => setTimeout(r, this.openMs));
+    this.closed = 0;
+    this.input = { id: "i" + id, name, state: "connected", onmidimessage: null, open, close: async () => { this.closed++; } };
+    this.output = { id: "o" + id, name, state: "connected", open, close: async () => { this.closed++; }, send: (d) => {
       if (this.output.state !== "connected") throw new Error("InvalidStateError");
       setTimeout(() => this.rx(Array.from(d)), 1);
     } };
@@ -1691,6 +1703,12 @@ class FakeFM1 {
       const t = [...new TextEncoder().encode(this.identity)];
       const body = [0, 0x59, 0x11, 0, 0, 0, ...t, ...new Array(28 - t.length).fill(0)];
       this.tx([0xF0, ...pack7(body), 0xF7]);
+    } else if (eq(d, BUILD_Q)) {
+      const b = this.identity.startsWith("ota-") || this.identity === "FM-1_015" ? null : this.build;
+      if (!b) return;
+      const body = [...new TextEncoder().encode("ESTB"), ...b.match(/../g).map((x) => parseInt(x, 16))];
+      const sum = body.reduce((a, x) => a + x, 0);
+      this.tx([0xF0, ...pack7([0, 0x59, 0x12, 20, 0, 0, ...body, ~sum & 0xFF]), 0xF7]);
     } else if (eq(d, UPGRADE)) {
       this.queue = this.identity.startsWith("ota-")
         ? [...Array.from({ length: 6 }, (_, k) => [k * 512, 512]), [0xF0000000, 8]]
@@ -1706,7 +1724,7 @@ class FakeFM1 {
       this.served++;
       if (this.served >= this.unplugAfter) { this.input.state = this.output.state = "disconnected"; return; }
       if (addr === 0xE0000000) setTimeout(() => this.boot("ota-FM-1_900", "Felucca Update"), 300);
-      else if (addr === 0xF0000000) setTimeout(() => this.boot("FM-1_900", "Felucca"), 300);
+      else if (addr === 0xF0000000) setTimeout(() => this.boot(this.after || "FM-1_900", "Felucca"), 300);
       else this.next();
     }
   }
@@ -1756,6 +1774,53 @@ function writeProgress() {
   ok(left !== null && Math.abs(left - Math.round(n / 4 * 10 * 3 / 1000)) <= 1, `WriteProgress: the time left from the rate (${left} s)`);
 }
 
+/* ESTAMPIE: after M-VAVE fm1_open's updater: two FM-1s are refused, not guessed between; a port slow to open is given
+ * up on (and closed when it opens late); Cancel stops the looking; the build is checked after the restart */
+async function updaterChecks(image) {
+  const BUILD = "0123456789abcdef0123456789abcdef";
+  const a = new FakeFM1(image), b = new FakeFM1(image, { name: "FM-1 #2" });
+  const both = { inputs: new Map([...a.access.inputs, ...b.access.inputs]), outputs: new Map([...a.access.outputs, ...b.access.outputs]) };
+  const up = new Updater(both);
+  const e1 = await up.install(image, "FM-1_900").then(() => null, (x) => x);
+  ok(e1 && e1.code === "ambiguous" && a.served === 0 && b.served === 0 && up.diagnostics().some((l) => l.includes("FM-1 #2")),
+     `fm1ota.js: two FM-1s -> 'ambiguous', nothing sent (${e1 && e1.detail})`);
+
+  const slow = new FakeFM1(image, { openMs: 7000 });
+  const t0 = Date.now(), up2 = new Updater(slow.access);
+  const e2 = await up2.install(image, "FM-1_900").then(() => null, (x) => x);
+  const quick = Date.now() - t0;
+  await sleep(2500);
+  ok(e2 && e2.code === "notfound" && quick < 6500 && slow.closed > 0 && up2.diagnostics().some((l) => l.includes("could not open")),
+     `fm1ota.js: a port slow to open -> given up after 5 s, closed when it opens (${Math.round(quick / 100) / 10} s)`);
+
+  const ctl = new AbortController(), none = { inputs: new Map(), outputs: new Map() };
+  setTimeout(() => ctl.abort(), 300);
+  const t3 = Date.now();
+  const e3 = await new Updater(none, null, ctl.signal).waitFor(() => true, 20000).then(() => null, (x) => x);
+  ok(e3 && e3.code === "cancelled" && Date.now() - t3 < 1500, "fm1ota.js: Cancel stops the wait for the device");
+
+  const good = new FakeFM1(image, { build: BUILD });
+  good.after = "FM-1_378001";
+  const steps = [];
+  const got = await new Updater(good.access).install(image, "FM-1_378001", (k, x) => steps.push([k, x]), null, BUILD);
+  ok(got === "FM-1_378001" && steps.some(([k, x]) => k === "build" && x === BUILD), "fm1ota.js: the restarted FM-1 reports the package's build");
+  const other = new FakeFM1(image, { build: "f".repeat(32) });
+  other.after = "FM-1_378001";
+  const e5 = await new Updater(other.access).install(image, "FM-1_378001", null, null, BUILD).then(() => null, (x) => x);
+  ok(e5 && e5.code === "buildmismatch" && e5.detail === "f".repeat(32), "fm1ota.js: another build after the restart -> 'buildmismatch'");
+  const mute = new FakeFM1(image);
+  mute.after = "FM-1_378001";
+  const r6 = await new Updater(mute.access).install(image, "FM-1_378001", null, null, BUILD).then((x) => x, (x) => x);
+  ok(r6 === "FM-1_378001", "fm1ota.js: a firmware that does not report its build is let be (the identity is right)");
+
+  const running = new FakeFM1(image, { build: BUILD });
+  running.boot("FM-1_378001", "Felucca");
+  const now = await new Updater(running.access).current();
+  const link = { q: [], waiter: null, drain() {}, send: () => false, read: async () => null };
+  ok(now && now.id === "FM-1_378001" && now.build === BUILD && await buildOf(link) === null,
+     "fm1ota.js: current() reports the running build; no port, no build");
+}
+
 async function updater() {
   writeProgress();
   const image = Uint8Array.from({ length: 0x2000 }, (_, i) => (i * 7) & 0xFF);
@@ -1797,6 +1862,7 @@ async function updater() {
   const t6 = Date.now();
   const r6 = await new Updater(dev6.access).resume(image, null, "FM-1_900", 4000).then((x) => x, (x) => x);
   ok(r6 === false && Date.now() - t6 < 8000, `fm1ota.js: a loader still half seen -> resume gives up in its time, no reload loop (${r6 && r6.code || r6})`);
+  await updaterChecks(image);
 }
 
 await editorMock();

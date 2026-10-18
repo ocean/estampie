@@ -2,6 +2,8 @@ build/
 .DS_Store
 __pycache__/
 *.fwsc
+# (but official V15, M-VAVE's, for the installer's Return to official V15: assets/m-vave/README.md)
+!/assets/m-vave/FM-1_015.fwsc
 
 # ESTAMPIE: local build artefacts and the in-repo toolchain.
 /.artifacts/

@@ -91,15 +91,18 @@
   <p class="small"><span data-t="brick"></span>
     <a href="https://github.com/kurogedelic/FM-1-transporter" target="_blank" rel="noopener">FM-1-transporter</a></p>
   <div class="go-row"><button id="go" disabled data-t="install"></button>
+    <button id="cancel" hidden data-t="cancel"></button>
     <a class="try" href="../emu/" data-t="tryit"></a></div>
   <details style="margin-top:24px">
     <summary data-t="stockTitle"></summary>
-    <p class="small" data-t="back"></p>
-    <p class="small"><a href="https://www.m-vave.com/download" target="_blank" rel="noopener">M-VAVE Downloads</a></p>
-    <p><label><span data-t="stockFile"></span><br><input id="stock-file" type="file" accept=".fwsc"></label></p>
+    <p class="small"><span data-t="back"></span>
+      <a href="https://github.com/m-vave/fm1_open" target="_blank" rel="noopener">m-vave/fm1_open</a>,
+      <a href="../../firmware/stock/">Apache-2.0</a>.</p>
     <p><button id="stock-go" disabled data-t="stockGo"></button></p>
     <p class="small" data-t="stockBackup"></p>
     <p class="small"><label><input id="stock-recovery" type="checkbox"> <span data-t="stockRecovery"></span></label></p>
+    <p class="small"><label><span data-t="stockFile"></span><br><input id="stock-file" type="file" accept=".fwsc"></label>
+      (<a href="https://www.m-vave.com/download" target="_blank" rel="noopener">M-VAVE Downloads</a>)</p>
   </details>
   <ol class="phases" id="phases" hidden>
     <li data-p="prepare" data-t="phPrepare"></li><li data-p="loader" data-t="phLoader"></li><li data-p="write" data-t="phWrite"></li><li data-p="check" data-t="phCheck"></li><li data-p="reboot" data-t="phReboot"></li>
@@ -119,6 +122,7 @@
     On Felucca by Leo Kuroshita (@kurogedelic), <a href="https://hugelton.com" target="_blank" rel="noopener">Hügelton Instruments</a>, with its PHASE engine and drum voices, the Hügelton Sample Pack (CC0 1.0) and Fukiai icons (MIT).<br>
     Fonts: Alegreya Sans and Cinzel on the screen, Inter Tight on its keycaps, UnifrakturMaguntia in the name, IM Fell English and Alegreya on these pages (all SIL OFL 1.1). Samples: Versilian Studios VSCO-2 Community Edition and VCSL (CC0 1.0).<br>
     FM6 engine: msfa from Dexed (Google Inc., Pascal Gauthier, Apache-2.0). The package also holds three JieLi AC79 SDK files, uboot.boot, cfg_tool.bin and eq_cfg_hw.bin (JieLi Technology, Apache-2.0). <a href="../../firmware/LICENSING.md">Licences</a>: <a href="../../firmware/LICENSE">GPL-3.0</a>, <a href="../../firmware/LICENSES/Apache-2.0.txt">Apache-2.0</a>, <a href="../../firmware/LICENSES/">all</a>.<br>
+    Return to official V15 installs M-VAVE's official FM-1 V15 firmware, unmodified (<a href="https://github.com/m-vave/fm1_open" target="_blank" rel="noopener">m-vave/fm1_open</a>, <a href="../../firmware/stock/">Apache-2.0</a>).<br>
     M-VAVE and FM-1 are trademarks of their respective owners.<br>
     <span data-t="license"></span> <a href="https://github.com/ocean/estampie" target="_blank" rel="noopener">ESTAMPIE</a> · <a href="https://github.com/jasonpersinger/ghoulbox-fm1-dungeon-synth" target="_blank" rel="noopener">GHOULBOX</a> · <a href="https://github.com/hugelton/Felucca" target="_blank" rel="noopener">Felucca</a></p>
   </section>
@@ -140,8 +144,9 @@ const TEXT = {
     direct: "USB ケーブルはパソコンに直接つないでください。Probe や Transporter などの機材は不要です。",
     brick: "万一インストールに失敗して起動しなくなった場合は、復旧に Transporter が必要です:",
     beta: "ESTAMPIE は 1 台の FM-1 でテストしています。不具合は GitHub で知らせてください。このカスタムファームウェアを使ったことで FM-1 が壊れたり不具合が起きたりしても、作者は一切の責任を負いません。自己責任でお使いください。",
-    back: "M-VAVEから公式FM-1 V15を取得し、未変更のFM-1.fwscを選んでください。ファイルはこのブラウザ内で検証し、サーバーへ送りません。",
-    stockTitle: "公式V15に戻す", stockFile: "公式FM-1.fwsc", stockGo: "バックアップして公式V15へ戻す",
+    back: "公式 FM-1 V15 ファームウェアはこのページに同梱しています（M-VAVE が公開しているもの、書き込む前に SHA-256 で確認します）:",
+    stockTitle: "公式V15に戻す", stockFile: "または M-VAVE から入手した未変更の FM-1.fwsc を使う", stockGo: "バックアップして公式V15へ戻す",
+    stockLoading: "公式V15を読み込み中…",
     stockBackup: "現在の曲・保存曲・音色バンク・サンプル・設定を先に保存します。全体バックアップ非対応版は、Feluccaを更新してから行ってください。復元はFeluccaを再インストールしてエディタから行います。",
     stockRecovery: "更新中断の再開：全体バックアップはすでにパソコンへ保存済み",
     stockValid: "公式V15を確認しました", stockConfirm: "全体バックアップファイルをパソコンに保存できましたか？ 続けると公式V15へ戻します。Feluccaの曲は公式V15では開けません。",
@@ -166,6 +171,11 @@ const TEXT = {
     badpkg: "インストールするファイルが壊れています。ページを再読み込みしてください。",
     leave: "書き込み中です。ページを閉じないでください。",
     license: "GPL-3.0、無保証。ソース:",
+    cancel: "キャンセル", cancelled: "キャンセルしました。FM-1 がすでに書き込みモードなら、そのまま待っています。インストールを押すと続けます。",
+    ambiguous: "FM-1 が 2 台以上応答しました。更新する 1 台だけをつないで、もう一度押してください: ",
+    same: "この FM-1 にはすでに同じビルドが入っています。もう一度インストールしますか？",
+    buildmismatch: "書き込みは終わりましたが、FM-1 が別のビルドを報告しています: ",
+    build: "ビルド ", conn: "接続の詳細（不具合を報告するときに添えてください）:",
   },
   en: {
     tagline: "Install ESTAMPIE {v} on your FM-1",
@@ -180,8 +190,9 @@ const TEXT = {
     direct: "Connect the USB cable directly to the computer. No probe or Transporter is needed.",
     brick: "If an install fails and the FM-1 no longer starts, recovering it needs a Transporter:",
     beta: "ESTAMPIE is tested on one FM-1; please report problems on GitHub. The authors accept no responsibility if your FM-1 is damaged or misbehaves because of this custom firmware. Use it at your own risk.",
-    back: "Get official FM-1 V15 from M-VAVE and select the unmodified FM-1.fwsc. The browser validates it locally; it is not sent to a server.",
-    stockTitle: "Return to official V15", stockFile: "Official FM-1.fwsc", stockGo: "Back up and return to official V15",
+    back: "The official FM-1 V15 firmware comes with this page, as M-VAVE publish it, and is checked against its SHA-256 before anything is written:",
+    stockTitle: "Return to official V15", stockFile: "Or use your own unmodified FM-1.fwsc from M-VAVE", stockGo: "Back up and return to official V15",
+    stockLoading: "Loading official V15…",
     stockBackup: "Current music, saved music, sound banks, samples and settings are saved first. Older firmware needs a Felucca update for complete backups. To restore an archive later, reinstall Felucca and use the editor.",
     stockRecovery: "Resume an interrupted update: I already saved a complete backup to this computer",
     stockValid: "Official V15 verified", stockConfirm: "Has the complete backup file been saved to this computer? Continue to return to official V15. Official V15 cannot open Felucca music.",
@@ -206,6 +217,11 @@ const TEXT = {
     badpkg: "The file to install is damaged. Reload the page.",
     leave: "Writing. Do not close the page.",
     license: "GPL-3.0, no warranty. Source:",
+    cancel: "Cancel", cancelled: "Cancelled. If the FM-1 was already in update mode it stays there, waiting: press Install to carry on.",
+    ambiguous: "More than one FM-1 answered. Connect only the one to update and press Install again: ",
+    same: "This FM-1 already has this exact build. Install it again anyway?",
+    buildmismatch: "Written, but the FM-1 reports another build: ",
+    build: "build ", conn: "Connection details (please include them when reporting a problem):",
   },
 };
 let lang = (navigator.language || "en").toLowerCase().startsWith("ja") ? "ja" : "en";
@@ -241,11 +257,14 @@ function progressDisplay(range) {
     }
   };
   const waiting = () => $("bar").removeAttribute("value");   // (an indeterminate bar)
+  const cancellable = (on) => { $("cancel").hidden = !on; };  // ESTAMPIE: only while the page waits for the device
   return (k, a) => {
-    if (k === "start") { log(`start: ${a}`); phase("prepare"); sayK("prepare"); waiting(); }
+    if (k === "start") { log(`start: ${a}`); phase("prepare"); sayK("prepare"); waiting(); cancellable(false); }
     else if (k === "prepare") staged = a;
-    else if (k === "loader") { log(`prepare: ${staged} reads, ${secs(since)}`); since = Date.now(); phase("loader"); sayK("loader"); waiting(); }
+    else if (k === "loader") { log(`prepare: ${staged} reads, ${secs(since)}`); since = Date.now(); phase("loader"); sayK("loader"); waiting(); cancellable(true); }
+    else if (k === "build") log(`build: ${a || "not reported"}`);
     else if (k === "found") {
+      cancellable(false);
       log(`update mode: ${a}${range ? `, writing 0x${range.start.toString(16)}..0x${range.end.toString(16)}` : ""}, ${secs(since)}`);
       since = Date.now(); phase("write"); sayK("write", "0 %"); $("bar").value = 0; $("hint").hidden = false;
     } else if (k === "write") {
@@ -259,18 +278,46 @@ function progressDisplay(range) {
       sayK(ph, `${pct} %${left !== null ? t("left").replace("{s}", left) : ""}`);
     } else if (k === "reboot") {
       log(`${cur}: ${reads - base} reads, ${secs(since)}`); since = Date.now(); phase("reboot"); sayK("reboot"); waiting();
-      $("hint").hidden = true;
-    } else if (k === "done") { log(`restart: ${secs(since)}`); log(`done: ${a}, ${secs(t0)} in all`); phase(null, true); $("bar").value = 100; sayK("done"); }
+      $("hint").hidden = true; cancellable(true);
+    } else if (k === "done") { log(`restart: ${secs(since)}`); log(`done: ${a}, ${secs(t0)} in all`); phase(null, true); $("bar").value = 100; sayK("done"); cancellable(false); }
   };
 }
 let image = null, range = null;   // range: the application area the loader writes (fm1pkg.js applicationRange)
+let build = null;                 // ESTAMPIE: the package's build ID (fm1pkg.js buildIdOf), checked on the device
 
 let writing = false, stock = null, stockFileEpoch = 0, resumed = false;   // resumed: GHOULBOX, the page came back from a "reload"
-const lockInstaller = (on) => { writing = on; $("go").disabled = on || !image; $("stock-go").disabled = on || !stock; $("stock-file").disabled = on; $("stock-recovery").disabled = on; };
+let abort = null;                 // ESTAMPIE: the running update's AbortController (the Cancel button)
+const lockInstaller = (on) => {
+  writing = on; $("go").disabled = on || !image; $("stock-go").disabled = on; $("stock-file").disabled = on;
+  $("stock-recovery").disabled = on;
+  if (!on) { $("cancel").hidden = true; abort = null; }
+};
 window.addEventListener("beforeunload", (e) => { if (writing) { e.preventDefault(); e.returnValue = t("leave"); } });
+// a new update's Updater, cancellable while it looks for the device (fm1ota.js: never during a transfer)
+function newUpdater(midi) {
+  abort = new AbortController();
+  $("cancel").hidden = false;
+  return new Updater(midi, log, abort.signal);
+}
+$("cancel").addEventListener("click", () => { if (abort) abort.abort(); $("cancel").hidden = true; });
+// ESTAMPIE: a failed update in words, and, when the device could not be found or told apart, what the page saw of the
+// MIDI ports (after M-VAVE fm1_open's connection details), the details opened
+const CONNECTION = new Set(["notfound", "ambiguous", "noloader", "noreturn", "model", "cancelled"]);
+function failed(e, up) {
+  if (e && e.code && TEXT[lang][e.code]) sayK(e.code, e.detail || "");
+  else sayK("error", e && e.message);
+  if (up && e && CONNECTION.has(e.code)) {
+    log(t("conn"));
+    for (const line of up.diagnostics()) log(line);
+    $("details").hidden = false;
+    $("details").open = true;
+  }
+  if (!(e && CONNECTION.has(e.code))) log(String(e && e.stack || e));   // (a device not found needs no stack)
+}
 
 (async () => {
   if (!navigator.requestMIDIAccess) { sayK("nomidi"); return; }
+  $("stock-go").disabled = false;
   try {
     const r = await fetch(meta.pkg);
     if (!r.ok) throw new Error(`${meta.pkg}: HTTP ${r.status}`);
@@ -278,7 +325,8 @@ window.addEventListener("beforeunload", (e) => { if (writing) { e.preventDefault
     if (productOf(pkg) !== meta.product) { sayK("badpkg"); return; }
     image = logicalImage(pkg);
     range = applicationRange(pkg);
-    say(`ESTAMPIE ${VER}`);
+    build = buildIdOf(pkg);
+    say(`ESTAMPIE ${VER}${build ? ` · ${t("build")}${build.slice(0, 8)}` : ""}`);
     $("go").disabled = false;
     let resume = null;
     try { resume = sessionStorage.getItem("estampie-resume"); sessionStorage.removeItem("estampie-resume"); } catch (_) {}
@@ -292,12 +340,12 @@ $("go").addEventListener("click", async () => {
   let midi;
   try { midi = await navigator.requestMIDIAccess({ sysex: true }); }
   catch (e) { sayK("denied"); lockInstaller(false); return; }
+  const up = newUpdater(midi);
   try {
-    const up = new Updater(midi, log);
     const step = progressDisplay(range);
     if (resumed) {                                   // GHOULBOX: reloaded to reach the loader: wait for it (its ports can be
       resumed = false;                               // listed a moment late), never fall back to looking for a running FM-1
-      const ok = await up.resume(image, step, meta.product, 15000, range);
+      const ok = await up.resume(image, step, meta.product, 15000, range, build);
       if (ok) { try { sessionStorage.removeItem("estampie-reloads"); } catch (_) {} }
       sayK(ok ? "done" : "noloader");
       lockInstaller(false);
@@ -306,9 +354,12 @@ $("go").addEventListener("click", async () => {
     const ota = await up.find((id) => /^ota-/i.test(id.model));
     if (ota) {
       ota.link.close();
-      sayK((await up.resume(image, step, meta.product, 0, range)) ? "done" : "stopped");
+      sayK((await up.resume(image, step, meta.product, 0, range, build)) ? "done" : "stopped");
     } else {
-      await up.install(image, meta.product, step, range);
+      const now = await up.current();                 // ESTAMPIE: this exact build already there? (after M-VAVE fm1_open)
+      if (now) log(`running: ${now.id}${now.build ? `, build ${now.build}` : ""}`);
+      if (now && build && now.build === build && !confirm(t("same"))) { sayK("cancelled"); lockInstaller(false); return; }
+      await up.install(image, meta.product, step, range, build);
     }
   } catch (e) {
     let reloads = 0;
@@ -327,13 +378,19 @@ $("go").addEventListener("click", async () => {
       setTimeout(() => location.reload(), 500);
       return;
     }
-    if (e && e.code && TEXT[lang][e.code]) sayK(e.code, e.detail || "");
-    else sayK("error", e && e.message);
-    log(String(e && e.stack || e));
+    failed(e, up);
   }
   lockInstaller(false);
 });
 
+// ESTAMPIE: official V15 comes with the site (firmware/stock/, as M-VAVE publish it under Apache-2.0 in m-vave/fm1_open),
+// fetched when it is needed and checked like a chosen file (fm1pkg.js validateStockPackage: its SHA-256)
+async function bundledStock() {
+  sayK("stockLoading");
+  const r = await fetch(meta.stock);
+  if (!r.ok) throw new Error(`${meta.stock}: HTTP ${r.status}`);
+  return validateStockPackage(new Uint8Array(await r.arrayBuffer()));
+}
 $("stock-file").addEventListener("change", async () => {
   const epoch = ++stockFileEpoch, file = $("stock-file").files[0]; stock = null; lockInstaller(false);
   if (!file) return;
@@ -360,13 +417,18 @@ function archiveInfo(a) {
   return {version,supported};
 }
 $("stock-go").addEventListener("click", async () => {
-  if (!stock || writing) return;
-  const selected = stock; lockInstaller(true);
-  let link = null;
+  if (writing) return;
+  lockInstaller(true);
+  let link = null, up = null;
   try {
+    let selected = stock;
+    if (!selected) {
+      try { selected = await bundledStock(); } catch (e) { sayK("stockError", e.message); return; }
+      sayK("stockValid");
+    }
     let midi;
     try { midi = await navigator.requestMIDIAccess({sysex:true}); } catch (e) { sayK("denied"); return; }
-    const up = new Updater(midi, log);
+    up = newUpdater(midi);
     const step = progressDisplay(selected.range);
     const loader = await up.find(id => id.model === "ota-FM-1");
     if (loader) {
@@ -376,8 +438,9 @@ $("stock-go").addEventListener("click", async () => {
       sayK(await up.resume(selected.image, step, selected.product, 0, selected.range) ? "done" : "stopped");
     } else {
       const device = await up.find(id => id.model === "FM-1");
-      if (!device) { sayK("notfound"); return; }
+      if (!device) throw Object.assign(new Error("FM-1 not found"), { code: "notfound" });
       const input = device.link.input, output = device.link.output; device.link.close();
+      $("cancel").hidden = true;                     // (the backup runs to its end; the install looks again)
       link = new BackupConnection(input, output);
       const info = archiveInfo(await link.request([1,[]]));
       if (!info.supported) { sayK("stockUnsupported"); return; }
@@ -388,8 +451,7 @@ $("stock-go").addEventListener("click", async () => {
       await up.install(selected.image, selected.product, step, selected.range);
     }
   } catch (e) {
-    if (e.code && TEXT[lang][e.code]) sayK(e.code,e.detail || ""); else sayK("error",e.message);
-    log(String(e.stack || e));
+    failed(e, up);
   } finally { if (link) link.close(); lockInstaller(false); }
 });
 </script>

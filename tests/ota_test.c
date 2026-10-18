@@ -19,7 +19,7 @@ static uint8_t *logical;
 static size_t logical_len;
 static uint8_t rx[1024];                 /* one pending host frame (7-bit bytes) */
 static uint32_t rx_len, rx_full;
-static uint32_t now_ms, requests, ident_replies, mute_after = 0xFFFFFFFFu, bad_erase, erases;
+static uint32_t now_ms, requests, ident_replies, build_replies, mute_after = 0xFFFFFFFFu, bad_erase, erases;
 static int committed;
 static uint8_t committed_parm[112];
 static int32_t last_code;
@@ -63,6 +63,7 @@ static int ota_wire_send(const uint8_t *p, uint32_t n)
     d = unpack7h(p + 1, n - 2, u);
     if (d < 3u) { printf("short device msg (%u bytes)\n", d); exit(1); }   /* (u[2], the command, is past it) */
     if (u[2] == 0x11) { ident_replies++; return 0; }
+    if (u[2] == 0x12) { build_replies++; return 0; }
     if (d != 15 || u[2] != 0x30) { printf("unexpected device msg cmd %02x len %u\n", u[2], d); exit(1); }
     addr = u[7] | u[8] << 8 | u[9] << 16 | (uint32_t)u[10] << 24;
     len = u[11] | u[12] << 8 | u[13] << 16;
@@ -171,7 +172,7 @@ static void reset_dev(void)
 {
     memset(nor, 0xFF, sizeof nor);
     memcpy(nor, logical + 0x400, 0x4000);                 /* device flash head = package flash.bin head */
-    rx_full = 0; requests = 0; ident_replies = 0; committed = 0; last_code = 0;
+    rx_full = 0; requests = 0; ident_replies = 0; build_replies = 0; committed = 0; last_code = 0;
     mute_after = 0xFFFFFFFFu; corrupt_at = NULL; bad_erase = 0; erases = 0;
 }
 
@@ -202,6 +203,14 @@ int main(int argc, char **argv)
         bad += check("handshake answered", ident_replies == 1);
         bad += check("identity frame is " FELUCCA_ID,
                      ota_msg[2] == 0x11 && !memcmp(ota_msg + 6, FELUCCA_ID, sizeof FELUCCA_ID - 1));
+    }
+    reset_dev();
+    {
+        uint8_t m[7] = {0, 0x59, 0x12, 0, 0, 0, 0xFF};
+        host_reply(m, 7);
+        ota_service();
+        bad += check("build query answered", build_replies == 1);
+        bad += check("build frame is ESTB + 16 bytes", ota_msg[2] == 0x12 && ota_msg[3] == 20 && !memcmp(ota_msg + 6, "ESTB", 4));
     }
 
     /* full session */

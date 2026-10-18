@@ -65,6 +65,13 @@ the package, the app (`estampie-0.1-app.bin`), `SHA256SUMS`, the sample attribut
 `LICENSING.md` and
 `LICENSES/` (the package contains Apache-2.0 SDK files, so the licence texts travel with it).
 
+Every build also carries a build ID (after M-VAVE's FM1 Open): `tools/build.py` stamps the first 16 bytes of the
+app image's SHA-256 into it (`ota_build_id` in `firmware/src/ota.c`, taken with those bytes zero), and prints it
+after the identity. The running firmware answers it to a build query on the update protocol (cmd `0x12`: "ESTB" and
+the 16 bytes). Since a version's builds share one identity, the installer uses it to tell them apart: it reads the
+package's ID (`web/fm1pkg.js` `buildIdOf`), asks before reinstalling the exact build already on the FM-1, and checks
+after the restart that the FM-1 runs the build it wrote (`web/fm1ota.js`).
+
 Build options (environment, `0` or `1`; defaults in `firmware/src/felucca.c`, `core.h` and `icons.c`):
 
 | Flag | Default | |

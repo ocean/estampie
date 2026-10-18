@@ -275,8 +275,28 @@ def build_app():
             img += b"\xff" * (load - APP_XIP - len(img))
             img += blob
     img += b"\xff" * (-len(img) % 4)
+    build_app.id = stamp_build_id(img)
     (OUT / "felucca.bin").write_bytes(img)
     return bytes(img), syms, dis, rt
+
+
+BUILD_MARK = b"ESTB"                # firmware/src/ota.c ota_build_id: the mark and 16 bytes this fills in
+
+
+def stamp_build_id(img):
+    """ESTAMPIE: the build's ID into the image (ota.c ota_build_id, after M-VAVE fm1_open's build hash): the first 16
+    bytes of the image's SHA-256, taken with the ID zero, so web/fm1pkg.js buildIdOf finds it in the package and the
+    installer can ask the device which build it runs. Returns it as hex (None: no OTA, no ID)"""
+    blank = BUILD_MARK + bytes(16)
+    n = img.count(blank)
+    if n == 0 and os.environ.get("FELUCCA_OTA") == "0":
+        return None
+    if n != 1:
+        raise SystemExit(f"build id: {n} copies of the blank ota_build_id in the image (need exactly one)")
+    at = img.index(blank) + len(BUILD_MARK)
+    bid = hashlib.sha256(img).digest()[:16]
+    img[at:at + 16] = bid
+    return bid.hex()
 
 
 def check(img, syms, dis, rt):
@@ -449,7 +469,7 @@ def main():
         shutil.copy(att, OUT / "ATTRIBUTION.txt")
     print(f"app      {OUT / 'felucca.bin'}  {len(img)} B")
     print(f"loader   {LDR / 'ota.bin'}  {len(ota)} B")
-    print(f"package  {OUT / name}  {len(pkg)} B, identity {PRODUCT}")
+    print(f"package  {OUT / name}  {len(pkg)} B, identity {PRODUCT}, build {build_app.id or '-'}")
     if a.release:                   # what a release carries: the package, the app and every licence they need
         rel = OUT / f"release-{a.release}"
         shutil.rmtree(rel, ignore_errors=True)

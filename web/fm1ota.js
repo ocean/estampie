@@ -13,6 +13,8 @@ const MAXDATA = 512;
 const FINISHED = [...new TextEncoder().encode("success"), 0];   // the answer to a finish request
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const IS_OTA = (id) => /^ota-/i.test(id.model);
+const FM1_PORT = /fm-1|felucca|ota|composite|sinco|usb-midi/i;   // the port names worth asking: never probe other gear
+const OPEN_MS = 5000;                                            // ESTAMPIE: a port that takes longer to open is in use
 
 // ESTAMPIE: how far a loader has written, after FM1Kit's WriteProgress (github.com/ocean/FM1Kit, MIT): loaders read in
 // their own order (V15's backwards, Felucca's forwards, then all of it again), so neither the furthest address nor a
@@ -68,8 +70,24 @@ export class WriteProgress {
 }
 
 // errors carry a code the pages translate: notfound, model, stopped, noloader, lost, noreturn,
-// mismatch (detail: the identity the device reports), badreq
+// mismatch (detail: the identity the device reports), badreq; ESTAMPIE: ambiguous (detail: the identities that
+// answered), cancelled, buildmismatch (detail: the build the device reports)
 function fail(code, msg, detail = "") { const e = new Error(msg); e.code = code; e.detail = detail; return e; }
+
+// ESTAMPIE (after M-VAVE fm1_open's portOperation): open a port, or give up after ms; a port that opens after that is
+// closed again, so a late open leaves no handle behind
+async function openPort(port, ms = OPEN_MS) {
+  let late = false, tm;
+  const opening = Promise.resolve().then(() => port.open());
+  opening.then(() => { if (late && port.close) Promise.resolve().then(() => port.close()).catch(() => {}); }, () => {});
+  try {
+    await Promise.race([opening, new Promise((_, reject) => {
+      tm = setTimeout(() => { late = true; reject(new Error(`opening the port took over ${ms / 1000} s`)); }, ms);
+    })]);
+  } finally {
+    clearTimeout(tm);
+  }
+}
 
 export function pack7(data) {
   const out = []; let acc = 0, nb = 0;
@@ -109,6 +127,36 @@ function parseRequest(pkt) {
   for (let i = 6; i < 14; i++) s += u[i];
   if ((~s & 0xFF) !== u[14]) return null;
   return { fl: u[6], addr: (u[7] | (u[8] << 8) | (u[9] << 16) | (u[10] << 24)) >>> 0, len: u[11] | (u[12] << 8) | (u[13] << 16) };
+}
+
+// ESTAMPIE: the build query (firmware/src/ota.c cmd 0x12) and its answer: "ESTB" and the build's 16-byte ID, as hex
+const BUILD_QUERY = [0xF0, ...pack7([0x00, 0x59, 0x12, 0, 0, 0, 0xFF]), 0xF7];
+
+function parseBuild(pkt) {
+  const d = unpack7(pkt.slice(1, -1));
+  if (d.length < 27 || d[0] !== 0 || d[1] !== 0x59 || d[2] !== 0x12 || d[3] !== 20) return null;
+  if (String.fromCharCode(...d.slice(6, 10)) !== "ESTB") return null;
+  let s = 0;
+  for (let i = 6; i < 26; i++) s += d[i];
+  if ((~s & 0xFF) !== d[26]) return null;
+  return d.slice(10, 26).map((x) => x.toString(16).padStart(2, "0")).join("");
+}
+
+// the build a running ESTAMPIE reports (fm1pkg.js buildIdOf: the package's), or null: no answer (official firmware,
+// a loader, ESTAMPIE before 0.1's build IDs)
+export async function buildOf(link, tries = 2) {
+  link.drain();
+  for (let t = 0; t < tries; t++) {
+    if (!link.send(BUILD_QUERY)) return null;
+    const end = Date.now() + 1000;
+    while (Date.now() < end) {
+      const p = await link.read(end - Date.now());
+      if (!p) break;
+      const b = parseBuild(p);
+      if (b) return b;
+    }
+  }
+  return null;
 }
 
 function parseIdentity(pkt) {
@@ -163,26 +211,78 @@ async function handshake(link, tries = 3) {
 }
 
 export class Updater {
-  constructor(access, log) {
+  // signal (ESTAMPIE): an AbortSignal that stops looking for the device (find, waitFor) with "cancelled"; never a
+  // transfer under way (serve), which the device paces and finishes or gives up on itself
+  constructor(access, log, signal = null) {
     this.access = access;
     this.log = log || (() => {});
+    this.signal = signal;
+    this.diag = null;
   }
 
-  // every in/out pair with the same port name that answers the handshake
+  cancelled() {
+    if (this.signal && this.signal.aborted) throw fail("cancelled", "cancelled");
+  }
+
+  // every in/out pair with the same port name that answers the handshake. ESTAMPIE (after M-VAVE fm1_open): every
+  // pair is asked, and two devices that both match stop with "ambiguous", never a guess at which is meant; diag (the
+  // ports seen, and what each pair did) is kept for the page's connection details
   async find(filter) {
-    const outs = [...this.access.outputs.values()];
-    for (const input of this.access.inputs.values()) {
-      if (input.state === "disconnected") continue;
-      if (!/fm-1|felucca|ota|composite|sinco|usb-midi/i.test(input.name || "")) continue;   // never probe other gear
-      const output = outs.find((o) => o.name === input.name && o.state !== "disconnected");
-      if (!output) continue;
-      try { await input.open(); await output.open(); } catch (_) { continue; }
-      const link = new Link(input, output);
-      const id = await handshake(link, 2);
-      if (id && (!filter || filter(id))) return { link, id, name: input.name };
-      link.close();
+    this.cancelled();
+    const live = (m) => [...m.values()].filter((p) => p.state !== "disconnected");
+    const outs = live(this.access.outputs), found = [];
+    const diag = this.diag = { inputs: live(this.access.inputs).map((p) => p.name || "?"), outputs: outs.map((p) => p.name || "?"),
+                               attempts: [] };
+    const note = (name, what) => diag.attempts.push(`${name || "?"}: ${what}`);
+    try {
+      for (const input of live(this.access.inputs)) {
+        this.cancelled();
+        if (!FM1_PORT.test(input.name || "")) { note(input.name, "not an FM-1 port name, not asked"); continue; }
+        const output = outs.find((o) => o.name === input.name);
+        if (!output) { note(input.name, "no output of the same name"); continue; }
+        try { await openPort(input); await openPort(output); } catch (e) { note(input.name, `could not open (${e.message})`); continue; }
+        const link = new Link(input, output);
+        const id = await handshake(link, 2);
+        if (!id) { note(input.name, "no answer"); link.close(); continue; }
+        if (filter && !filter(id)) { note(input.name, `${id.text}, not what is wanted now`); link.close(); continue; }
+        note(input.name, id.text);
+        found.push({ link, id, name: input.name });
+      }
+    } catch (e) {
+      for (const f of found) f.link.close();
+      throw e;
     }
-    return null;
+    if (found.length > 1) {
+      for (const f of found) f.link.close();
+      throw fail("ambiguous", "more than one FM-1 answered: connect only the one to update", found.map((f) => f.id.text).join(", "));
+    }
+    return found[0] || null;
+  }
+
+  // the diag of the last find, as lines for the page's log
+  diagnostics() {
+    const d = this.diag;
+    if (!d) return [];
+    return [`MIDI inputs: ${d.inputs.join(", ") || "none"}`, `MIDI outputs: ${d.outputs.join(", ") || "none"}`,
+      ...d.attempts.map((a) => `  ${a}`)];
+  }
+
+  // ESTAMPIE: the running FM-1 and the build it reports (null: one that does not say), before an install
+  async current() {
+    const dev = await this.find((id) => !IS_OTA(id));
+    if (!dev) return null;
+    const build = /^FM-1_378/.test(dev.id.text) ? await buildOf(dev.link) : null;
+    dev.link.close();
+    return { id: dev.id.text, build };
+  }
+
+  async pause(ms) {
+    const end = Date.now() + ms;
+    while (Date.now() < end) {
+      this.cancelled();
+      await sleep(Math.min(250, end - Date.now()));
+    }
+    this.cancelled();
   }
 
   // halfReload (GHOULBOX): Chrome on Linux gives an open page only the output of a port that came back (the FM-1
@@ -199,7 +299,7 @@ export class Updater {
       } else {
         half = 0;
       }
-      await sleep(1000);
+      await this.pause(1000);
     }
     return null;
   }
@@ -208,7 +308,7 @@ export class Updater {
   halfPort() {
     const ins = new Set([...this.access.inputs.values()].filter((p) => p.state !== "disconnected").map((p) => p.name));
     return [...this.access.outputs.values()].some((o) => o.state !== "disconnected" &&
-      /fm-1|felucca|ota|composite|sinco|usb-midi/i.test(o.name || "") && !ins.has(o.name));
+      FM1_PORT.test(o.name || "") && !ins.has(o.name));
   }
 
   // serve read requests until the device asks for one of the finish addresses; stops early when the port disappears
@@ -254,15 +354,17 @@ export class Updater {
 
   // full install: running firmware -> loader -> new firmware. onStep(name, detail): start (identity), prepare (requests:
   // the running firmware stages the loader, no percentage), loader (waiting for it), found (its identity), write (a
-  // WriteProgress: writing or checking, fraction, seconds left), reboot, done (identity). range: the application area
-  // (fm1pkg.js applicationRange; default the whole image)
-  async install(image, product, onStep, range = null) {
+  // WriteProgress: writing or checking, fraction, seconds left), reboot, done (identity), build (what the restarted
+  // device reports). range: the application area (fm1pkg.js applicationRange; default the whole image). build
+  // (ESTAMPIE): the package's build ID (fm1pkg.js buildIdOf): the restarted device must report it
+  async install(image, product, onStep, range = null, build = null) {
     const step = onStep || (() => {});
     const dev = await this.find((id) => !IS_OTA(id));
     if (!dev) throw fail("notfound", "FM-1 not found (USB cable, and no other app using it?)");
     const [model] = product.split("_");
     if (dev.id.model !== model) { dev.link.close(); throw fail("model", `the device is ${dev.id.text}, the package is for ${product}`); }
     step("start", dev.id.text);
+    try { this.cancelled(); } catch (e) { dev.link.close(); throw e; }
     dev.link.send(UPGRADE);
     await sleep(2000);
     let staged = 0;
@@ -270,23 +372,29 @@ export class Updater {
     dev.link.close();
     if (!s1.finished) throw fail(s1.lost ? "lost" : "stopped", `the device ${s1.lost ? "was disconnected" : "stopped"} after ${s1.served} requests: nothing was written`);
     step("loader");
-    await sleep(3000);
+    await this.pause(3000);
     const ota = await this.waitFor((id) => id.model === "ota-" + model, 30000, true);
     if (!ota) throw fail("noloader", "the update loader did not appear. Replug the USB cable and press Install again: the device stays in update mode until it is finished.");
     step("found", ota.id.text);
     const s2 = await this.write(ota, image, step, range);
     if (!s2.finished) throw fail(s2.lost ? "lost" : "stopped", `the loader ${s2.lost ? "was disconnected" : "stopped"} after ${s2.served} requests. Replug and press Install again to resume.`);
-    return this.back(model, product, step);
+    return this.back(model, product, step, build);
   }
 
-  // the new firmware answering again, and reporting the package's identity
-  async back(model, product, step) {
+  // the new firmware answering again, and reporting the package's identity; ESTAMPIE: and its build, when there is one
+  // to check (a device that does not answer the build query is let be: the identity is right)
+  async back(model, product, step, build = null) {
     step("reboot");
-    await sleep(3000);
+    await this.pause(3000);
     const back = await this.waitFor((id) => !IS_OTA(id) && id.model === model, 40000);
     if (!back) throw fail("noreturn", "the device did not come back: power-cycle it");
+    const got = build ? await buildOf(back.link) : null;
     back.link.close();
     if (back.id.text !== product) throw fail("mismatch", `installed, but the device reports ${back.id.text}`, back.id.text);
+    if (build) {
+      step("build", got);
+      if (got && got !== build) throw fail("buildmismatch", `installed, but the device reports build ${got}`, got);
+    }
     step("done", back.id.text);
     return back.id.text;
   }
@@ -303,7 +411,7 @@ export class Updater {
 
   // resume: the device is already in update mode (loader) -> true when the write finished
   // waitMs (GHOULBOX): look for the loader that long (a page reloaded to reach it can list it a moment late); 0: once
-  async resume(image, onStep, product = null, waitMs = 0, range = null) {
+  async resume(image, onStep, product = null, waitMs = 0, range = null, build = null) {
     const model = product && product.split("_")[0];
     const isOta = (id) => model ? id.model === "ota-" + model : IS_OTA(id);
     const ota = waitMs ? await this.waitFor(isOta, waitMs) : await this.find(isOta);
@@ -312,7 +420,7 @@ export class Updater {
     step("found", ota.id.text);
     const result = await this.write(ota, image, step, range);
     if (!result.finished) return false;
-    if (product) await this.back(model, product, step);
+    if (product) await this.back(model, product, step, build);
     return true;
   }
 }

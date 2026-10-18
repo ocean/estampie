@@ -262,3 +262,17 @@ export async function buildFeluccaPackage(stockBytes, appBytes, product) {
   pkg.setProduct(product);
   return pkg.serialize();
 }
+
+// ESTAMPIE: the build's ID in the package (tools/build.py stamp_build_id; firmware/src/ota.c ota_build_id): "ESTB" and
+// 16 bytes in the app, as hex; what fm1ota.js buildOf hears from a device running that build. null: a package without
+// one (official firmware, older builds)
+export function buildIdOf(fwsc) {
+  const p = new Package(fwsc), app = p.dec.subarray(p.appOff, p.appOff + p.app.size);
+  const ids = [];
+  for (let i = 0; i + 20 <= app.length; i++) {
+    if (app[i] !== 0x45 || app[i + 1] !== 0x53 || app[i + 2] !== 0x54 || app[i + 3] !== 0x42) continue;   // ("ESTB")
+    const id = app.subarray(i + 4, i + 20);
+    if (id.some((b) => b)) ids.push([...id].map((x) => x.toString(16).padStart(2, "0")).join(""));
+  }
+  return ids.length === 1 ? ids[0] : null;
+}
