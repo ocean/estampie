@@ -45,9 +45,8 @@
   .leaf::before { top: -14px; left: -14px; }
   .leaf::after { bottom: -14px; right: -14px; }
   h2 { margin: 0 0 12px; font: 400 24px/1.3 "IM Fell English SC", Georgia, serif; color: var(--vermilion); letter-spacing: .04em; }
-  /* the opening's initial: lapis on gold, as a manuscript's */
-  .opening::first-letter { float: left; margin: 6px 10px 0 0; padding: 4px 10px 2px; font: 58px/0.9 "IM Fell English", Georgia, serif;
-                           color: var(--vellum); background: var(--lapis); box-shadow: 0 0 0 2px var(--vellum), 0 0 0 4px var(--gold); }
+  /* the opening's initial rubricated, a step down from the title's lapis one */
+  .opening::first-letter { font-size: 1.7em; line-height: 1; color: var(--vermilion); }
   .small { font-size: 16px; color: var(--ink-soft); }
   /* the doors: one line each, the first a lapis plate */
   .doors { list-style: none; margin: 4px 0 6px; padding: 0; }
@@ -60,7 +59,7 @@
                     box-shadow: 0 0 0 2px var(--vellum), 0 0 0 4px var(--gold), 0 3px 8px rgba(60, 40, 10, .3); margin: 4px 0 6px; }
   .doors .first a::before { content: ""; }
   .doors .what { display: block; margin-top: 2px; }
-  .doors code { font: 14px/1.4 ui-monospace, Menlo, Consolas, monospace; word-break: break-all; color: var(--ink-soft); }
+  .doors code { display: block; font: 14px/1.4 ui-monospace, Menlo, Consolas, monospace; overflow-wrap: anywhere; color: var(--ink-soft); }
   ul.feats { padding-left: 22px; margin: 0 0 14px; }
   ul.feats li { margin-bottom: 6px; }
   ul.feats li::marker { content: "✠  "; color: var(--vermilion); }
@@ -75,7 +74,6 @@
     .tagline { font-size: 19px; }
     .leaf { padding: 22px 16px 12px; }
     .doors a { font-size: 20px; }
-    .opening::first-letter { font-size: 46px; }
   }
 </style>
 </head>
@@ -113,7 +111,7 @@
       <li><a href="guide/">Read the user guide</a>
         <span class="what">From your first notes to every page and setting (adapted from GHOULBOX's guide).</span></li>
       <li><a href="{{PKG}}">Download the firmware</a>
-        <span class="what">{{PKG_NAME}}, {{PKG_KB}} KB, for FM1Kit, FM-SWITCH or other installers. SHA-256
+        <span class="what">{{PKG_NAME}}, {{PKG_KB}} KB, for FM1Kit, FM-SWITCH or other installers. Its SHA-256:
           <code>{{PKG_SHA256}}</code></span></li>
     </ul>
   </section>
