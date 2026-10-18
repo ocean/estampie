@@ -6,6 +6,7 @@
  * every element remembers what it last drew and is redrawn only on change. */
 static int project_save(uint32_t slot);
 static void panel_setup(void);
+static void calibration_choose(void);       /* ESTAMPIE: PANEL or KEY TOUCH (ui_input.c) */
 static void project_load(uint32_t slot);
 static int project_used(uint32_t slot);
 static uint32_t chain_prepare(void);

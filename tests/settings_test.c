@@ -49,7 +49,8 @@ int main(void)
     }
     {   /* GHOULBOX 1.5 set RESTORE LAST OFF once (factory[15][28] bit 1); 2.1 sets it back ON once (bit 2), after it */
         persist_t q = original;
-        uint8_t all = GB_MIG_SERIAL | GB_MIG_RESTORE | GB_MIG_RESTORE_ON | GB_MIG_LEARN;   /* (ESTAMPIE: + MIDI LEARN's row) */
+        uint8_t all = GB_MIG_SERIAL | GB_MIG_RESTORE | GB_MIG_RESTORE_ON | GB_MIG_LEARN | GB_MIG_KT;   /* (ESTAMPIE: + MIDI
+                                                                                     * LEARN's row, KEY TOUCH's row) */
         q.favorites.factory[15][30] = 0;  q.favorites.factory[15][28] = GB_MIG_SERIAL;   /* GHOULBOX 1.4: ON, unmarked */
         assert(settings_import(&q, sizeof q) == 1 && !(favorites.factory[15][30] & GB_RESTORE_OFF) &&
                favorites.factory[15][28] == all);

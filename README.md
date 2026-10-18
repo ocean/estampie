@@ -35,7 +35,10 @@ Thirteen engines (virtual analog, 6-operator FM, phase distortion, chiptune, rea
 oscillators, tonewheel organ, granular, physical models, GHOULBOX's hurdy-gurdy, noise and drums) on four tracks, each
 with a 64-step sequencer, an arpeggiator, chord keys, scales and mediæval temperaments (Pythagorean, meantone, just).
 The hurdy-gurdy's drones can keep sounding through the sequencer's rests, as a real one's do while the wheel turns
-(RING, from GHOULBOX 2.3).
+(RING, from GHOULBOX 2.3). **KEY TOUCH** (MENU › AUDIO, calibrated in MENU › SYSTEM › CALIBRATION) measures how hard 20 of
+the FM-1's own keys are pressed, for velocity and aftertouch with no hardware change: Charles Vestal's trick from his
+[Velo](https://github.com/charlesvestal/fm1-velocity) and [MONK-1](https://github.com/charlesvestal/fm1-monk) firmwares
+(new, not yet tried widely).
 
 From Felucca 1.5–1.6.1 (merged into ESTAMPIE 0.1):
 

@@ -11,7 +11,8 @@ static unsigned char host_samples[3][0x14000];
 #define main hostsim_main
 #include "hostsim.c"
 #undef main
-#define MENU_N (34u + FELUCCA_CPU2)                  /* 1.6.1 (core.h FELUCCA_CPU2, the default): 2ND CORE, id 34 here */
+#define MENU_N (35u + FELUCCA_CPU2)                  /* 1.6.1 (core.h FELUCCA_CPU2, the default): 2ND CORE, id 34 here;
+                                                      * ESTAMPIE: KEY TOUCH, id 35 */
 
 static uint32_t host_progress = 1, host_erases, host_writes;
 static uint8_t host_wire[4096];
@@ -899,7 +900,7 @@ static uint32_t menu_set(uint32_t id, int32_t v)            /* -> rc; host_wire[
 #define TCH_NAMES "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,OMNI,OFF"
 static int menu_protocol(void)
 {
-    static const char *const WANT[35][2] = {
+    static const char *const WANT[36][2] = {
         {"COLOR", 0}, {"STYLE", "FLAT,LINE"}, {"LARGE", "OFF,ON"}, {"ANIM", "ON,OFF,IDLE"}, {"LEDS", "OFF,DIM LO,DIM HI,INV,INV LO,INV HI"},
         {"HOLD", "0.3 s,0.4 s,0.5 s,0.6 s"}, {"KNOB ACCEL", "OFF,ON"}, {"FX LATCH", "OFF,ON"}, {"BPM LOCK", "OFF,ON"},
         {"SPEAKER EQ", "FLAT,LOWCUT,BASS+"}, {"USB LEVEL", "MASTER,FIXED"}, {"SCENE", "TROTTO,CRYPT,TAVERN,CHAPEL,BLANK,DUNGEON"},
@@ -915,16 +916,19 @@ static int menu_protocol(void)
         {"SELECT", "BPM,PAGE,MODW,VEL"},                                                             /* (1.5.5; 1.5.6 MODW VEL) */
         {"T1 CHANNEL", TCH_NAMES}, {"T2 CHANNEL", TCH_NAMES}, {"T3 CHANNEL", TCH_NAMES}, {"T4 CHANNEL", TCH_NAMES},   /* (1.5.5) */
         {"AUTO SELECT", "OFF,ON"}, {"SCREEN WAKE", "+MIDI,PANEL"},                                   /* (1.5.5) */
-        {"2ND CORE", "OFF,ON (BETA)"}};                                                           /* (1.6.1; OFF the default) */
-    static const int32_t DEF[35] = {-1, 0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                    0, 0, 0, 1, 2, 3, 0, 0, 0};   /* (COLOR: the default palette) */
-    static const uint8_t TAB[35] = {0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 4, 4, 2, 2, 2, 4, 1, 0, 0, 2, 1, 3, 2, 0, 1,
-                                    4, 1, 3, 3, 3, 3, 3, 3, 4};   /* DISPLAY CONTROL AUDIO
+        {"2ND CORE", "OFF,ON (BETA)"},                                                            /* (1.6.1; OFF the default) */
+        {"KEY TOUCH", "OFF,VEL,VEL+AT LO,VEL+AT,VEL+AT HI"}};                                     /* (ESTAMPIE; OFF) */
+    static const int32_t DEF[36] = {-1, 0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 1, 2, 3, 0, 0, 0, 0};   /* (COLOR: the default palette) */
+    static const uint8_t TAB[36] = {0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 4, 4, 2, 2, 2, 4, 1, 0, 0, 2, 1, 3, 2, 0, 1,
+                                    4, 1, 3, 3, 3, 3, 3, 3, 4, 2};   /* DISPLAY CONTROL AUDIO
                                                                                                          * MIDI SYSTEM (1.2) */
     static const char *const TABN[5] = {"DISPLAY", "CONTROL", "AUDIO", "MIDI", "SYSTEM"};
     /* the editor ids: the index, but GHOULBOX's SCENE (index 11) keeps its 1.3 id 12, so USB SERIAL (index 12) has 11
      * and Felucca's later rows ids one past Felucca's own (CLICK 13 .. HOME 24) */
 #define MENU_ID(i) ((i) == 11u ? 12u : (i) == 12u ? 11u : (i))
+    /* the tables' row of item i: a FELUCCA_CPU2=0 build has no 2ND CORE (34), so its item 34 is KEY TOUCH (35) */
+#define MT(i) ((i) >= 34u && !FELUCCA_CPU2 ? (i) + 1u : (i))
     int bad = 0, ok = 1;
     uint32_t i, k, n;
     menu_item_t it;
@@ -937,13 +941,13 @@ static int menu_protocol(void)
         n = menu_desc(i, &it);
         joined[0] = 0;
         for (k = 0; k < it.nnames; k++) { if (k) strcat(joined, ","); strcat(joined, it.names[k]); }
-        ok &= i == 23u ? n > 10u && it.index == i && it.id == MENU_ID(i) && it.kind == 1 && it.min == -50 && it.max == 50 &&
+        ok &= i == 23u ? n > 10u && it.index == i && it.id == MENU_ID(MT(i)) && it.kind == 1 && it.min == -50 && it.max == 50 &&
                          !it.nnames && !strcmp(it.unit, "ct") && !strcmp(it.name, "TUNE")     /* (a number: cents) */
-                       : n > 10u && it.index == i && it.id == MENU_ID(i) && it.kind == 0 && it.min == 0 && !it.unit[0] &&
-                         it.max + 1 == (int32_t)it.nnames && !strcmp(it.name, WANT[i][0]) &&
-                         (WANT[i][1] ? !strcmp(joined, WANT[i][1]) : it.nnames == NPALETTES);
-        ok &= it.value == (DEF[i] < 0 ? (int32_t)settings.palette : DEF[i]) &&
-              it.tab == TAB[i] && !strcmp(it.tabname, TABN[TAB[i]]) && !it.rest;
+                       : n > 10u && it.index == i && it.id == MENU_ID(MT(i)) && it.kind == 0 && it.min == 0 && !it.unit[0] &&
+                         it.max + 1 == (int32_t)it.nnames && !strcmp(it.name, WANT[MT(i)][0]) &&
+                         (WANT[MT(i)][1] ? !strcmp(joined, WANT[MT(i)][1]) : it.nnames == NPALETTES);
+        ok &= it.value == (DEF[MT(i)] < 0 ? (int32_t)settings.palette : DEF[MT(i)]) &&
+              it.tab == TAB[MT(i)] && !strcmp(it.tabname, TABN[TAB[MT(i)]]) && !it.rest;
         if (i == 0)
             for (k = 0; k < NPALETTES; k++) ok &= !strcmp(it.names[k], UI_PALETTES[k].name);
         if (!ok) { printf("  MENU_DESC %u: %s [%s] value %d max %d tab %u %s\n", i, it.name, joined, it.value, it.max, it.tab, it.tabname); break; }
@@ -955,10 +959,10 @@ static int menu_protocol(void)
         }
     }
     if (jf) { fprintf(jf, "]\n"); fclose(jf); }
-    bad += check(FELUCCA_CPU2 ? "MENU_DESC: 35 items (1.0.4's 12 and GHOULBOX's SCENE (id 12, before USB SERIAL 11) in the menu's order, "
+    bad += check(FELUCCA_CPU2 ? "MENU_DESC: 36 items (1.0.4's 12 and GHOULBOX's SCENE (id 12, before USB SERIAL 11) in the menu's order, "
                  "then 1.1's CLICK .. 1.3's HOME, GHOULBOX 2.1's NOTE NAMES (25), Felucca's HELP SELECT T1..T4 CHANNEL AUTO SELECT "
-                 "SCREEN WAKE (26..33), 2ND CORE (34)), names, defaults; TUNE a number -50..50 ct"
-                              : "MENU_DESC (FELUCCA_CPU2=0): 34 items, ids 0..33 (no 2ND CORE), names, defaults", ok);
+                 "SCREEN WAKE (26..33), 2ND CORE (34), ESTAMPIE's KEY TOUCH (35)), names, defaults; TUNE a number -50..50 ct"
+                              : "MENU_DESC (FELUCCA_CPU2=0): 35 items, ids 0..33 and 35 (no 2ND CORE), names, defaults", ok);
     bad += check("MENU_DESC (1.0.5): after the names (TUNE: the unit) each item's tab, index and name (DISPLAY CONTROL AUDIO MIDI SYSTEM)", ok);
     {   /* an older editor reads the names and stops: the tab is past them, nothing it reads moved */
         uint32_t m = menu_desc(4, &it), p = 14, q;
@@ -1028,13 +1032,15 @@ static int menu_protocol(void)
 #else
     ok &= menu_set(34, 1) == 1 && ui_prefs2 == 0x37u;   /* (no 2ND CORE in a FELUCCA_CPU2=0 build: an unknown id, nothing set) */
 #endif
+    ok &= menu_set(35, 3) == 3 && kt_mode == KT_VELAT && kt_sens == 5u &&   /* (ESTAMPIE: KEY TOUCH VEL+AT, into its row) */
+          favorites.factory[KT_ROW][0] == KT_TAG && (favorites.factory[KT_ROW][1] & 3u) == KT_VELAT;
     for (i = 0; i < MENU_N; i++) {                         /* MENU_DESC reads them back */
-        static const int32_t SET[35] = {2, 1, 1, 1, 1, 3, 1, 1, 1, 2, 1, 2, 0, 2, 0, 2, 1, 1, 2, 1, 1, 1, 2, -13, 1, 0,
-                                        1, 1, 9, 16, 17, 0, 1, 1, 1};
+        static const int32_t SET[36] = {2, 1, 1, 1, 1, 3, 1, 1, 1, 2, 1, 2, 0, 2, 0, 2, 1, 1, 2, 1, 1, 1, 2, -13, 1, 0,
+                                        1, 1, 9, 16, 17, 0, 1, 1, 1, 3};
         menu_desc(i, &it);
-        ok &= it.value == SET[i];
+        ok &= it.value == SET[MT(i)];
     }
-    bad += check("MENU_SET: every setting applied as the menu does (palette, EQ, USB LEVEL, CLICK, COUNT-IN at once, RESTORE LAST, SCALE LEDS, SCREEN OFF, SCOPE, STEP PREVIEW, CHORD ENTRY, HOME, HELP, SELECT, T1..T4 CHANNEL, AUTO SELECT, SCREEN WAKE, 2ND CORE ON (bit 7 of ui_prefs2; none in a FELUCCA_CPU2=0 build)), read back", ok);
+    bad += check("MENU_SET: every setting applied as the menu does (palette, EQ, USB LEVEL, CLICK, COUNT-IN at once, RESTORE LAST, SCALE LEDS, SCREEN OFF, SCOPE, STEP PREVIEW, CHORD ENTRY, HOME, HELP, SELECT, T1..T4 CHANNEL, AUTO SELECT, SCREEN WAKE, 2ND CORE ON (bit 7 of ui_prefs2; none in a FELUCCA_CPU2=0 build), KEY TOUCH), read back", ok);
     ok = menu_set(3, 0) == 3 && !(ui_prefs & PREF_ANIM_OFF) && (ui_prefs & PREF_LARGE) && menu_set(10, 0) == 3 &&
          !fx_usb_fixed && menu_set(1, 0) == 3 && ui_style == ST_FLAT;
     bad += check("MENU_SET: a flag back to its default leaves the other flags", ok);
@@ -1058,7 +1064,7 @@ static int menu_protocol(void)
         static uint8_t fav0[sizeof favorites], set0[sizeof settings];
         uint8_t hold0 = settings_hold, leds0 = settings_leds;
         memcpy(fav0, &favorites, sizeof favorites); memcpy(set0, &settings, sizeof settings);
-        ok = menu_set(MENU_N, 1) == 1 && host_wire[6] == MENU_N && ed_rv(host_wire + 7) == 1;
+        ok = menu_set(36, 1) == 1 && host_wire[6] == 36 && ed_rv(host_wire + 7) == 1;   /* (35: KEY TOUCH) */
         ok &= menu_set(126, -3) == 1 && host_wire[6] == 126 && ed_rv(host_wire + 7) == -3;
         ok &= menu_set(127, 0) == 1 && host_wire[6] == 127;
         ok &= !memcmp(fav0, &favorites, sizeof favorites) && !memcmp(set0, &settings, sizeof settings) &&

@@ -59,6 +59,9 @@ static int fm1_led_anim_on(void) { return host_anim || host_idle; }
 static void fm1_led_idle_start(uint32_t glow) { host_idle = 1; host_idle_glow = (int)glow; }
 static int fm1_led_idle_on(void) { return host_idle; }
 static void fm1_led_anim_stop(void) { host_anim = host_idle = 0; }
+/* ESTAMPIE: KEY TOUCH's calibration screen (ui_input.c touch_setup) lights a key (no keys are measured here; the
+ * converter's switch: hostsim.c) */
+static void fm1_led_key(uint32_t id, int on) { (void)id; (void)on; }
 #define FM1_TICKS_PER_US 1u
 static uint32_t host_ticks, host_pressed, host_notes;
 static int32_t host_enc[7];
@@ -1749,13 +1752,13 @@ static int test_menu_tabs(void)
             }
     }
     ui_prefs = 0;
-    bad += check("MENU tabs: DISPLAY CONTROL AUDIO MIDI SYSTEM (8 8 7 8 8 rows: GHOULBOX's SCENE and NOTE NAMES, Felucca's SELECT, "
+    bad += check("MENU tabs: DISPLAY CONTROL AUDIO MIDI SYSTEM (8 8 8 8 8 rows: GHOULBOX's SCENE and NOTE NAMES, Felucca's SELECT, "
                  "T1..T4 CHANNEL, AUTO SELECT, SCREEN WAKE, LEARN CLEAR, HELP, 2ND CORE (a FELUCCA_CPU2=0 build: SYSTEM 7); STEP "
-                 "PREVIEW in AUDIO), 1..8 each in a run, fit the page; tab gaps constant (S, LARGE)",
+                 "PREVIEW and ESTAMPIE's KEY TOUCH in AUDIO), 1..8 each in a run, fit the page; tab gaps constant (S, LARGE)",
                  ok && MTAB_COUNT == 5u && str_eq(MTAB_NAME[0], "DISPLAY") && str_eq(MTAB_NAME[MTAB_MIDI], "MIDI") &&
                  mtab_rows(MTAB_DISPLAY) == 8u && MI_TAB[MI_HOME] == MTAB_DISPLAY && mtab_rows(MTAB_CONTROL) == 8u &&
-                 MI_TAB[MI_NAMES] == MTAB_CONTROL && MI_TAB[MI_SELECT] == MTAB_CONTROL && mtab_rows(MTAB_AUDIO) == 7u &&
-                 MI_TAB[MI_PREVIEW] == MTAB_AUDIO && mtab_rows(MTAB_MIDI) == 8u && MI_TAB[MI_MFOLLOW] == MTAB_MIDI &&
+                 MI_TAB[MI_NAMES] == MTAB_CONTROL && MI_TAB[MI_SELECT] == MTAB_CONTROL && mtab_rows(MTAB_AUDIO) == 8u &&
+                 MI_TAB[MI_PREVIEW] == MTAB_AUDIO && MI_TAB[MI_KTOUCH] == MTAB_AUDIO && mtab_rows(MTAB_MIDI) == 8u && MI_TAB[MI_MFOLLOW] == MTAB_MIDI &&
                  MI_TAB[MI_SCRWAKE] == MTAB_MIDI && MI_SCRWAKE + 1u == MI_LCLEAR && MI_TAB[MI_LCLEAR] == MTAB_MIDI &&
                  MI_TAB[MI_TCH4] == MTAB_MIDI && mtab_rows(MTAB_SYSTEM) == 7u + FELUCCA_CPU2 && MI_TAB[MI_SCENE] == MTAB_SYSTEM &&
 #if FELUCCA_CPU2
@@ -1907,7 +1910,7 @@ static int test_menu_tabs(void)
     press(B_OCTDN); ok &= ui.menu == 1 && ui.menu_sel == MI_INFO;
     turn(EN_PRESET, -1); ok &= ui.menu_sel == MI_PANEL;
     press(B_OCTDN); ok &= ui.menu == 1 && ui.menu_sel == MI_PANEL;
-    {   /* CALIBRATION: OCT+ starts the setup (nothing pressed here: it times out and keeps the table) */
+    {   /* CALIBRATION: OCT+ asks which (ESTAMPIE: PANEL or KEY TOUCH; nothing pressed here: it times out, the table kept) */
         panel_t p0 = panel;
         host_wdt_hook = wdt_ms;
         press(B_OCTUP);
@@ -8132,11 +8135,28 @@ static int test_click_menu(void)
     turn(EN_K4, 1); ok &= cin_bars == 1u;
     turn(EN_K4, 1); ok &= cin_bars == 2u;
     turn(EN_PRESET, 1); ok &= ui.menu_sel == MI_TUNE;     /* (1.2: TUNE) */
-    turn(EN_PRESET, 1); ok &= ui.menu_sel == MI_PREVIEW;  /* (STEP PREVIEW, AUDIO's last since the 1.6.1 merge) */
+    turn(EN_PRESET, 1); ok &= ui.menu_sel == MI_PREVIEW;  /* (STEP PREVIEW, AUDIO's since the 1.6.1 merge) */
+    turn(EN_PRESET, 1); ok &= ui.menu_sel == MI_KTOUCH;   /* (ESTAMPIE: KEY TOUCH, AUDIO's last) */
+    turn(EN_K1, 1); ok &= kt_mode == KT_VEL && favorites.factory[KT_ROW][0] == KT_TAG;
+    turn(EN_K1, 1); ok &= kt_mode == KT_VELAT && kt_sens == 2u;   /* (VEL+AT LO) */
+    turn(EN_K1, 1); ok &= kt_mode == KT_VELAT && kt_sens == 5u && str_eq(menu_vname(MI_KTOUCH, menu_get(MI_KTOUCH)), "VEL+AT");
+    turn(EN_K1, 1); turn(EN_K1, 1); ok &= kt_mode == KT_VELAT && kt_sens == 8u;   /* (stops at VEL+AT HI) */
+    press(B_OCTDN); press(B_OCTDN); press(B_OCTDN); press(B_OCTDN); press(B_OCTDN);
+    ok &= kt_mode == KT_OFF && menu_get(MI_KTOUCH) == 0u && !(favorites.factory[KT_ROW][1] & 3u);
     turn(EN_PRESET, 1); ok &= ui.menu_sel == MI_LOWCUT;   /* (wraps within AUDIO) */
     press(B_HOME);
     ok &= !ui.menu;
-    bad += check("MENU > AUDIO: PRESETS to CLICK, CLICK LEVEL, COUNT-IN, TUNE, STEP PREVIEW; knobs / OCT step them, applied at once", ok);
+    bad += check("MENU > AUDIO: PRESETS to CLICK, CLICK LEVEL, COUNT-IN, TUNE, STEP PREVIEW, KEY TOUCH; knobs / OCT step them, "
+                 "applied at once (KEY TOUCH into its settings row)", ok);
+    {   /* ESTAMPIE: KEY TOUCH's calibration left alone: after a minute it gives up, nothing changed */
+        uint16_t f0 = kt_key[3].floor_, c0 = kt_key[3].ceil;
+        uint8_t m0 = kt_mode;
+        host_wdt_hook = wdt_ms;
+        touch_setup();
+        host_wdt_hook = 0;
+        ok = msg_is("KEY TOUCH NOT CHANGED") && !kt_cal_phase && kt_key[3].floor_ == f0 && kt_key[3].ceil == c0 && kt_mode == m0;
+        bad += check("KEY TOUCH calibration: left alone it gives up after a minute, the keys' ends and the mode unchanged", ok);
+    }
     {
         persist_t p;
         settings_export(&p);

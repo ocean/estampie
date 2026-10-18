@@ -94,6 +94,30 @@
 #include "fm1_time.h"
 #include "fm1_gpio.h"
 #include "fm1_led_anim.h"
+#include "fm1_adc.h"
+
+/* ESTAMPIE: KEY TOUCH (src/key_touch.c, after Charles Vestal's Velo and MONK-1: github.com/charlesvestal/fm1-velocity,
+ * fm1-monk, GPL-3.0-only). With fm1_an.cfg set (fm1_an_set, the main loop) the tick also samples one converter input
+ * between two ticks: right after it latches column n, the key of that column on row PA7 (even frames) or PA8 (odd
+ * frames), so each of the 20 keys on those rows (notes 0..19) is read every two frames (~2.2 ms); in the slot of
+ * (odd frame, column 0: PA8 there is OCT-, a button) the MASTER pot instead (the battery, behind its high-impedance
+ * divider, is read the slow way by the main loop, the scan paused: main.c). The result
+ * is taken at the next tick's start, with the lines dark, before the rows are read and before column n's glow pulse
+ * (a lit LED's current goes through its column and lifts its keys' readings). FM1_INPUT_ANALOG(note, v, driven) gets
+ * each key's reading (1023 open, falling as the key's carbon pill is pressed harder); FM1_INPUT_DRIVE(note) asks
+ * whether to take it with the row driven high by the pin's weak driver (HD0, Velo's DRIVE 2: the pill's resistance
+ * above the matrix diode, where the 10k pull-up only shows the diode), restored before the rows are read;
+ * FM1_INPUT_LED_OK(note) 0 (a held key) keeps its column's LEDs dark on the tick that samples it. Off (cfg 0) the
+ * tick is as before and the main loop owns the converter (fm1_adc_read). */
+#ifndef FM1_INPUT_ANALOG
+#define FM1_INPUT_ANALOG(note, v, driven) ((void)0)
+#endif
+#ifndef FM1_INPUT_DRIVE
+#define FM1_INPUT_DRIVE(note) 0
+#endif
+#ifndef FM1_INPUT_LED_OK
+#define FM1_INPUT_LED_OK(note) 1
+#endif
 
 #ifndef FM1_INPUT_IDLE
 #define FM1_INPUT_IDLE() ((void)0)
@@ -199,6 +223,14 @@ static volatile struct {
     uint32_t dim_n, dim_sum;     /* the dim pulses and their widths (TIMER4 ticks) */
 } fm1_in_stat;
 
+static struct {
+    volatile uint16_t cfg;       /* FM1_ADC_CFG; 0: off, the main loop owns the converter */
+    uint8_t pend, col, rowbit;   /* a conversion runs for (col, rowbit); rowbit 0: the pot or the battery */
+    uint8_t ch, driven, phase;
+    volatile uint16_t master;    /* the pot's last reading (0: none yet) */
+    uint32_t timeouts;           /* conversions not done by the next tick */
+} fm1_an;
+
 static void fm1__led_lines(uint32_t rowmask)       /* row bit 1 PA9, 2 PA10, 3 PH6, 4 PH9 */
 {
     FM1_LED_TRACE(rowmask);
@@ -239,6 +271,73 @@ static uint32_t fm1__rows(void)
 {
     uint32_t a = FM1_PR(FM1_PA, FM1_IN), b = FM1_PR(FM1_PB, FM1_IN);
     return (~((a & 1u) | ((a >> 4) & 0x1Eu) | ((b >> 2) & 0x20u))) & 0x3Fu;
+}
+
+/* KEY TOUCH (see top): row PA7 (rowbit 3) / PA8 (4) driven high by its weak driver, and back to an input pulled up */
+static void fm1__row_drive(uint32_t rowbit)
+{
+    uint32_t m = 1u << (rowbit == 3u ? 7 : 8);
+    FM1_PR(FM1_PA, FM1_HD0) |= m;
+    FM1_PR(FM1_PA, FM1_HD) &= ~m;
+    FM1_PR(FM1_PA, FM1_OUT) |= m;
+    FM1_PR(FM1_PA, FM1_DIR) &= ~m;
+}
+static void fm1__row_release(uint32_t rowbit)
+{
+    uint32_t m = 1u << (rowbit == 3u ? 7 : 8);
+    FM1_PR(FM1_PA, FM1_DIR) |= m;
+    FM1_PR(FM1_PA, FM1_OUT) &= ~m;
+    FM1_PR(FM1_PA, FM1_HD0) &= ~m;
+    FM1_PR(FM1_PA, FM1_HD) &= ~m;
+}
+/* the conversion started last tick: its row released, its result to its owner */
+static __attribute__((noinline)) void fm1__an_take(void)   /* (out of the ISR's body: tests/target_budget.py) */
+{
+    uint32_t driven = fm1_an.driven, v;
+    int id;
+    fm1_an.pend = fm1_an.driven = 0;
+    if (driven)
+        fm1__row_release(fm1_an.rowbit);
+    if (!fm1_adc_done()) {
+        fm1_adc_abort();
+        fm1_an.timeouts++;
+        return;
+    }
+    v = fm1_adc_take();
+    if (!fm1_an.rowbit) {
+        fm1_an.master = (uint16_t)(v ? v : 1u);    /* (0 means none yet) */
+    } else if ((id = FM1_KEYMAP[fm1_an.rowbit][fm1_an.col]) >= 14) {
+        FM1_INPUT_ANALOG((uint32_t)id - 14u, v, (int)driven);
+    }
+}
+/* column n is latched and lit: start its sample (see top) */
+static __attribute__((noinline)) void fm1__an_start(uint32_t n)
+{
+    uint32_t rb, ch;
+    int id;
+    if (n == 0u)
+        fm1_an.phase ^= 1u;
+    if (fm1_an.phase && n == 0u) {
+        rb = 0;
+        ch = FM1_ADC_MASTER;
+    } else {
+        rb = fm1_an.phase ? 4u : 3u;
+        ch = fm1_an.phase ? FM1_ADC_ROW_PA8 : FM1_ADC_ROW_PA7;
+    }
+    fm1_an.col = (uint8_t)n;
+    fm1_an.rowbit = (uint8_t)rb;
+    fm1_an.ch = (uint8_t)ch;
+    id = rb ? FM1_KEYMAP[rb][n] : -1;
+    if (id >= 14) {
+        if (!FM1_INPUT_LED_OK((uint32_t)id - 14u))
+            fm1__led_lines(0);                     /* a held key: no LED current in its column while it is read */
+        if (FM1_INPUT_DRIVE((uint32_t)id - 14u)) {
+            fm1__row_drive(rb);
+            fm1_an.driven = 1;
+        }
+    }
+    fm1_adc_start(ch, fm1_an.cfg);
+    fm1_an.pend = 1;
 }
 
 static void fm1__wait(uint32_t us)
@@ -526,6 +625,8 @@ static void fm1_input_tick(void)
     uint32_t w = 0xFFFFu ^ (1u << n) ^ (n < 2u ? 1u << (11u + n) : 0u), lit, dim = 0, k = fm1__dim_k;
     uint32_t br = 0, kb = 0;
     fm1__led_lines(0);
+    if (fm1_an.pend)                               /* KEY TOUCH: last tick's sample, before the rows and the glow */
+        fm1__an_take();
     fm1_in_stat.last = t0;
     while (b < FM1_GAP_BINS - 1u && g >= (150u * FM1_TICKS_PER_US << b))
         b++;
@@ -584,6 +685,8 @@ static void fm1_input_tick(void)
         if (fm1__an_f)                             /* the power-on sweep: the next frame's picture */
             fm1__anim_frame();
     }
+    if (fm1_an.cfg)                                /* KEY TOUCH: column n's sample, to the next tick */
+        fm1__an_start(n);
     g = fm1_ticks() - t0;
     fm1_in_stat.cost_sum += g;
     fm1_in_stat.ticks++;
@@ -602,6 +705,23 @@ static inline void fm1__unlock(uint32_t v)
 {
     (void)v;
     __asm__ volatile("csync\n\tsti" ::: "memory");
+}
+
+/* KEY TOUCH: the tick samples the keys (cfg: FM1_ADC_CFG_FAST) or not (0: the main loop has the converter back). Main
+ * loop only; a conversion under way is dropped and its row released */
+static void fm1_an_set(uint32_t cfg)
+{
+    uint32_t k = fm1__lock();
+    if (fm1_an.pend) {
+        fm1_adc_abort();
+        if (fm1_an.driven)
+            fm1__row_release(fm1_an.rowbit);
+        fm1_an.pend = fm1_an.driven = 0;
+    }
+    fm1_an.cfg = (uint16_t)cfg;
+    if (!cfg)
+        fm1_an.master = 0;
+    fm1__unlock(k);
 }
 
 /* detent steps turned since the last call, + = clockwise */

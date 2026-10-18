@@ -16,7 +16,7 @@
  * nothing of theirs is in the settings record (MI_PROJECT: menu_get / menu_put read and write song.g) */
 enum { MI_COLOR, MI_STYLE, MI_LARGE, MI_ANIM, MI_LEDS, MI_SCROFF, MI_SCOPE, MI_HOME, MI_HOLD, MI_ACCEL, MI_LATCH, MI_BPMLOCK, MI_SCLLED,
        MI_CHADD, MI_NAMES, MI_SELECT, MI_LOWCUT, MI_USB,
-       MI_CLICK, MI_CLKLVL, MI_COUNTIN, MI_TUNE, MI_PREVIEW, MI_MIDIIN, MI_TCH1, MI_TCH2, MI_TCH3, MI_TCH4, MI_MFOLLOW, MI_SCRWAKE, MI_LCLEAR,
+       MI_CLICK, MI_CLKLVL, MI_COUNTIN, MI_TUNE, MI_PREVIEW, MI_KTOUCH, MI_MIDIIN, MI_TCH1, MI_TCH2, MI_TCH3, MI_TCH4, MI_MFOLLOW, MI_SCRWAKE, MI_LCLEAR,
        MI_SCENE, MI_SERIAL, MI_RESTORE, MI_HELP,
 #if FELUCCA_CPU2
        MI_CPU2,                                        /* (not in a FELUCCA_CPU2=0 build: core.h) */
@@ -41,7 +41,7 @@ static int menu_valued(uint32_t row) { return row < MI_VALUES && row != MI_LCLEA
 static const char *const MI_NAME[MI_COUNT] = {"COLOR", "STYLE", "LARGE", "ANIM", "LEDS", "SCREEN OFF", "SCOPE", "HOME", "HOLD", "KNOB ACCEL",
                                               "FX LATCH", "BPM LOCK", "SCALE LEDS", "CHORD ENTRY", "NOTE NAMES",
                                               "SELECT", "SPEAKER EQ", "USB LEVEL", "CLICK", "CLICK LEVEL", "COUNT-IN", "TUNE",
-                                              "STEP PREVIEW",
+                                              "STEP PREVIEW", "KEY TOUCH",
                                               "MIDI IN", "T1 CHANNEL", "T2 CHANNEL", "T3 CHANNEL", "T4 CHANNEL",
                                               "AUTO SELECT", "SCREEN WAKE", "LEARN CLEAR", "SCENE", "USB SERIAL", "RESTORE LAST",
                                               "HELP",
@@ -74,6 +74,7 @@ static const uint8_t MI_TAB[MI_COUNT] = {
     MTAB_AUDIO,                                                             /* TUNE (1.2) */
     MTAB_AUDIO,                                                             /* STEP PREVIEW (1.2's, CONTROL: the merge with Felucca
                                                                              * 1.6.1 filled CONTROL: NOTE NAMES and SELECT) */
+    MTAB_AUDIO,                                                             /* ESTAMPIE: KEY TOUCH (CONTROL is full) */
     MTAB_MIDI,                                                              /* MIDI IN (1.2) */
     MTAB_MIDI, MTAB_MIDI, MTAB_MIDI, MTAB_MIDI,                             /* T1..T4 CHANNEL (1.5.5) */
     MTAB_MIDI,                                                              /* AUTO SELECT (1.5.5) */
@@ -188,13 +189,31 @@ static const char *const LEDS_ROW_N[LEDS_ROWS] = {"OFF", "DIM LO", "DIM HI", "IN
 /* MENU > CONTROL > SELECT (ui.c sel_mode): BPM, PAGE (1.5.5, #188), MODW, VEL (1.5.6, #84), append-only */
 static const char *const SELECT_N[SEL_N] = {"BPM", "PAGE", "MODW", "VEL"};
 
+/* ESTAMPIE: MENU > AUDIO > KEY TOUCH (key_touch.c): velocity from the keys, and aftertouch at three sensitivities
+ * (kt_sens 2, 5, 8: how far a key has to be leant on past its rest for full aftertouch). Its calibration: SYSTEM >
+ * CALIBRATION, KEY TOUCH (ui_input.c touch_setup) */
+#define KTOUCH_N 5u
+static const char *const KTOUCH_N_[KTOUCH_N] = {"OFF", "VEL", "VEL+AT LO", "VEL+AT", "VEL+AT HI"};
+static uint32_t ktouch_get(void)
+{
+    return kt_mode == KT_OFF ? 0u : kt_mode == KT_VEL ? 1u : kt_sens <= 3u ? 2u : kt_sens <= 6u ? 3u : 4u;
+}
+static void ktouch_put(uint32_t v)
+{
+    static const uint8_t SENS[3] = {2, 5, 8};
+    kt_mode = (uint8_t)(v == 0u ? KT_OFF : v == 1u ? KT_VEL : KT_VELAT);
+    if (v >= 2u)
+        kt_sens = SENS[(v - 2u) % 3u];
+    kt_save(favorites.factory[KT_ROW]);                /* (saved with the settings: settings_persist.c) */
+}
+
 /* a row's value as 0..menu_n(row) - 1 in the order the menu steps it (LEDS: OFF DIM LO DIM HI INV INV LO INV HI) */
 static uint32_t menu_n(uint32_t row)
 {
     return row == MI_COLOR ? palette_n() : row == MI_LOWCUT || (row >= MI_CLICK && row <= MI_COUNTIN) ? 3u :
            row == MI_HOLD ? 4u : row == MI_LEDS ? LEDS_ROWS : row == MI_SCROFF ? NELEM(SCROFF_N) :
            row == MI_TUNE ? TUNE_N : row == MI_MIDIIN ? NELEM(N_ROUTE) : MI_TCH(row) ? MCH_N : row == MI_ANIM ? 3u : row == MI_HOME ? HV_COUNT :
-           row == MI_SELECT ? SEL_N : row == MI_SCENE ? GB_NSCENE : 2u;
+           row == MI_SELECT ? SEL_N : row == MI_SCENE ? GB_NSCENE : row == MI_KTOUCH ? KTOUCH_N : 2u;
 }
 static uint32_t menu_get(uint32_t row)
 {
@@ -212,6 +231,7 @@ static uint32_t menu_get(uint32_t row)
     case MI_ANIM: return ui_prefs & PREF_ANIM_OFF ? 1u : (ui_idle & 1u) ? 2u : 0u;
     case MI_HOME: return ui_home_view < HV_COUNT ? ui_home_view : HV_SCOPE;
     case MI_SELECT: return sel_mode();
+    case MI_KTOUCH: return ktouch_get();
     case MI_CLICK: case MI_CLKLVL: case MI_COUNTIN: return rp_get(row - MI_CLICK);
     case MI_TUNE: return (uint32_t)(clamp(song.g[G_TUNE], TUNE_MIN, TUNE_MIN + (int32_t)TUNE_N - 1) - TUNE_MIN);
     case MI_MIDIIN: return (uint32_t)clamp(song.g[G_ROUTE], 0, (int32_t)NELEM(N_ROUTE) - 1);
@@ -241,6 +261,7 @@ static const char *menu_vname(uint32_t row, uint32_t v)
     case MI_ANIM: return ANIM_N[v % 3u];
     case MI_HOME: return HOME_N[v % HV_COUNT];
     case MI_SELECT: return SELECT_N[v % SEL_N];
+    case MI_KTOUCH: return KTOUCH_N_[v % KTOUCH_N];
     case MI_LEDS: return LEDS_ROW_N[v % LEDS_ROWS];
     case MI_MIDIIN: return N_ROUTE[v % NELEM(N_ROUTE)];
     case MI_TCH1: case MI_TCH2: case MI_TCH3: case MI_TCH4: {   /* "1".."16", OMNI, OFF */
@@ -311,6 +332,7 @@ static void menu_put(uint32_t row, uint32_t v)
         leds_inv_put(v < LEDS_COUNT ? 0u : v - (LEDS_COUNT - 1u));
         break;
     case MI_CLICK: case MI_CLKLVL: case MI_COUNTIN: rp_put(row - MI_CLICK, v); break;   /* (at once: click.c, seq.c) */
+    case MI_KTOUCH: ktouch_put(v); break;              /* (at once: main.c hands the scan the converter) */
     case MI_TUNE: song.g[G_TUNE] = (int16_t)((int32_t)v + TUNE_MIN); break;
     case MI_MIDIIN: song.g[G_ROUTE] = (int16_t)v; break;
     case MI_TCH1: case MI_TCH2: case MI_TCH3: case MI_TCH4:   /* (MIDI IN TRACK: what the channel no longer hears let */

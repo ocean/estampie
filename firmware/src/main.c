@@ -162,6 +162,7 @@ static void fm1_main(void)
     felucca_dbg.prev_rst = fm1_boot.p3_rst;
     fm1_input_init();
     fm1_adc_init();
+    kt_init();                                /* ESTAMPIE: KEY TOUCH's defaults, before the settings bring its own */
     panel_init();
     felucca_init();
     master_boot();
@@ -219,8 +220,25 @@ static void fm1_main(void)
             ui_message("2ND CORE MISREAD: OFF");     /* (ui.msg: 23 characters at most) */
         }
 #endif
-        {
-            int32_t b = fm1_adc_read(FM1_ADC_BATT);     /* battery: slow IIR */
+        {   /* ESTAMPIE: KEY TOUCH on, the scan tick measures the keys and has the converter (hal/fm1_input.h fm1_an) */
+            uint32_t want = kt_mode ? FM1_ADC_CFG_FAST : 0u;
+            if (fm1_an.cfg != want)
+                fm1_an_set(want);
+            kt_live = want != 0u;
+        }
+        {   /* battery: slow IIR. ESTAMPIE: with KEY TOUCH, every 2 s with no key touched, the scan's sampling paused for
+             * the slow reading its high-impedance divider wants */
+            static uint32_t bt;
+            int32_t b = -1;
+            if (!fm1_an.cfg) {
+                b = fm1_adc_read(FM1_ADC_BATT);
+            } else if (m - bt >= 2000u && kt_idle()) {
+                uint32_t cfg = fm1_an.cfg;
+                bt = m;
+                fm1_an_set(0);
+                b = fm1_adc_read(FM1_ADC_BATT);
+                fm1_an_set(cfg);
+            }
             if (b > 0)
                 song.batt_raw = song.batt_raw ? song.batt_raw + (b - song.batt_raw) / 32 : b;
         }

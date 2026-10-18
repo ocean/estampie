@@ -28,6 +28,11 @@
 #undef memcpy
 #undef memcmp
 static struct { volatile uint32_t notes, buttons; uint32_t frames, enc_dfr[7]; } fm1_in;   /* (GHOULBOX: the crank's) */
+/* ESTAMPIE: KEY TOUCH's converter switch (hal/fm1_input.h fm1_an, fm1_an_set): never on here (master.c reads the pot
+ * through fm1_adc_read's stub; no keys are measured, key_touch.c kt_live stays 0) */
+static struct { uint16_t cfg, master; } fm1_an;
+#define FM1_ADC_CFG_FAST 1u
+static void fm1_an_set(uint32_t cfg) { fm1_an.cfg = (uint16_t)cfg; }
 #include "../firmware/src/core.h"
 #include "../firmware/src/engines.c"
 #include "../firmware/src/params.c"
@@ -35,6 +40,7 @@ static struct { volatile uint32_t notes, buttons; uint32_t frames, enc_dfr[7]; }
 #include "../firmware/src/voice.c"
 #include "../firmware/src/slicer.c"
 #include "../firmware/src/fx.c"
+#include "../firmware/src/key_touch.c"
 static void fm1_delay_ms(uint32_t ms) { (void)ms; }
 #include "../firmware/src/usb.c"
 #include "../firmware/src/midi_uart.c"                /* TRS MIDI IN: its parser (um_byte) feeds midi_in_q */

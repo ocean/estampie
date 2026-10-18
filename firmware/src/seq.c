@@ -45,6 +45,7 @@ static uint8_t kb_note[27], kb_trk[27];  /* per key: the note it started and on 
 static uint8_t kb_trk2[27];              /* GHOULBOX 2.1: KEYS LAYER's second track of key k, + 1 (0: none) */
 static uint8_t in_key;                   /* the key (+ 1) whose notes go into input_on now (key_on), 0: none (MIDI IN) */
 static uint8_t kb_vel = 100;             /* 1.5.6 (#84): the keys' velocity (MENU > SELECT VEL, ui_input.c sel_play) */
+static uint8_t kb_vk;                    /* ESTAMPIE: the key being played's own velocity (KEY TOUCH, key_touch.c), 0: kb_vel */
 /* #191: where each track's held[i] came from, so the arp maps it again as it plays (arp_list: TRN, ROOT, SCALE, QNT as
  * they are now). held_key: the key + 1 (bits 0..4) and the octave buttons then + 3 (bits 5..7); 0: not a key's own
  * mapping (MIDI IN, the DRUM grid, an engine's own key map), held[i] plays as it is. held_dt: held[i] above the key's
@@ -775,7 +776,7 @@ static __attribute__((noinline)) void perf_key_remap(void)
  * own, or KEYS LAYER's second sound); key1 the key + 1 the arp maps again (#191), 0: as it is (LAYER's) */
 static void key_on_to(track_t *t, uint32_t note, uint8_t *chord, uint8_t *chn, uint32_t key1)
 {
-    uint32_t n = chord_build(t, note, chord), i, mc = trk_midi_ch(trk_index(t)), vel = kb_vel;
+    uint32_t n = chord_build(t, note, chord), i, mc = trk_midi_ch(trk_index(t)), vel = kb_vk ? kb_vk : kb_vel;
     *chn = 0;
     in_key = (uint8_t)key1;                         /* (the arp keeps the key: arp_add) */
     for (i = 0; i < n; i++) {
@@ -848,10 +849,52 @@ static __attribute__((noinline)) void kb_lat(uint32_t k)
 }
 #endif
 
+/* ESTAMPIE: KEY TOUCH VEL+AT, every KT_AT_MS: each held measured key's pressure (key_touch.c kt_lean); a track's
+ * aftertouch (mod.c MS_AT) is the most any key playing it leans, and each key's goes out as polyphonic aftertouch
+ * with its notes on its track's channel. A track whose keys have all let go is set back to 0, once (MIDI IN's channel
+ * aftertouch is left as it is otherwise) */
+static uint32_t kt_at_ms;
+static uint8_t kt_at_set;                /* bit per track: its aftertouch is the keys' */
+static __attribute__((noinline)) void key_pressure(void)
+{
+    uint8_t at[NTRK] = {0};
+    uint32_t k, i, held = 0;
+    if (fm1_ms - kt_at_ms < KT_AT_MS)
+        return;
+    kt_at_ms = fm1_ms;
+    for (k = 0; k < KT_NKEY; k++) {
+        uint32_t p = kt_lean(k, fm1_ms), tr = kb_trk[k] % NTRK, mc;
+        if (!((kb_prev >> k) & 1u) || kb_note[k] == KB_SILENT) {
+            kt_p[k] = 0;
+            continue;
+        }
+        held |= 1u << tr;
+        if (p > at[tr])
+            at[tr] = (uint8_t)p;
+        if (p == kt_p[k])
+            continue;
+        kt_p[k] = (uint8_t)p;
+        mc = trk_midi_ch(tr);
+        for (i = 0; i < kb_chn[k]; i++)
+            midi_out_event(0x0Au | (0xA0u | mc) << 8 | (uint32_t)kb_chord[k][i] << 16 | p << 24);
+    }
+    for (i = 0; i < NTRK; i++) {
+        if ((held >> i) & 1u) {
+            trk[i].at = at[i];
+            kt_at_set |= (uint8_t)(1u << i);
+        } else if ((kt_at_set >> i) & 1u) {
+            trk[i].at = 0;
+            kt_at_set &= (uint8_t)~(1u << i);
+        }
+    }
+}
+
 static void keyboard_block(void)
 {
-    uint32_t cur = fm1_in.notes, ch, k;
+    uint32_t cur = kt_gate(fm1_in.notes, kb_prev, fm1_ms), ch, k;   /* (ESTAMPIE: KEY TOUCH waits for a velocity) */
     uint32_t lay, fx, mute;
+    if (kt_mode == KT_VELAT || kt_at_set)
+        key_pressure();
     ch = cur ^ kb_prev;                          /* keys also sound while entering steps */
     if (perf_remap)
         perf_key_remap();
@@ -871,6 +914,7 @@ static void keyboard_block(void)
         if (!((ch >> k) & 1u))
             continue;
         if ((cur >> k) & 1u) {                    /* the selected track; the key-up goes to the same one */
+            kb_vk = kt_kvel[k];                   /* (ESTAMPIE: KEY TOUCH's velocity, 0: SELECT VEL) */
             kb_trk[k] = song.sel;
             kb_trk2[k] = 0;                       /* (GHOULBOX 2.1: no second sound unless KEYS LAYER gives one) */
             if (kb_asleep) {                      /* (SCREEN OFF: the wake press is swallowed) */
@@ -921,6 +965,7 @@ static void keyboard_block(void)
             key_off(k, &trk[kb_trk[k] % NTRK]);
         }
     }
+    kb_vk = 0;
     kb_prev = cur;
 }
 

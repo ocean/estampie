@@ -43,6 +43,7 @@ static const uint8_t ED_MENU[][2] = {
     {MI_CPU2, 34},                                     /* 1.6.1, the second core (Discussion #141): 2ND CORE OFF / ON (BETA),
                                                         * SYSTEM, from the next power-on (32; a FELUCCA_CPU2=0 build: 0..33) */
 #endif
+    {MI_KTOUCH, 35},                                   /* ESTAMPIE: KEY TOUCH OFF / VEL / VEL+AT LO / VEL+AT / VEL+AT HI, AUDIO */
 };
 #define ED_MENU_N NELEM(ED_MENU)
 

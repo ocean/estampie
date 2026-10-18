@@ -2045,3 +2045,123 @@ timeout:
     ui.force = 1;
     ui_message("SETUP CANCELLED");
 }
+
+/* ESTAMPIE: KEY TOUCH's calibration (MENU > SYSTEM > CALIBRATION, KEY TOUCH; key_touch.c kt_cal_*). The measured keys
+ * (F3..C5) light up; each is played KT_CAL_N times gently (the lightest press that still sounds: its ceiling), then
+ * KT_CAL_N times firmly (its floor), its light going out when it has enough; the medians are its ends. OCT+ moves on
+ * with the keys that are done (the others keep theirs), OCT- cancels; KT_CAL_IDLE_MS without a press cancels too. The
+ * scan measures the keys meanwhile even with KEY TOUCH OFF (fm1_an_set); a calibration with KEY TOUCH OFF turns it on
+ * (VEL). The keys sound as they are played (at the old ends), so the difference can be heard */
+#define KT_CAL_IDLE_MS 60000u
+static void touch_screen(uint32_t ph, uint32_t done)
+{
+    char b[24];
+    lcd_fill(0, 0, 240, 240, T_BG);
+    draw_text_box(0, 8, 240, &AF_M, "KEY TOUCH", T_THEME, 1);
+    draw_text_box(0, 36, 240, &AF_S, "CALIBRATION", T_MID, 1);
+    lcd_fill(16, 58, 208, 1, T_LINE);
+    draw_text_box(0, 76, 240, &AF_S, "PLAY EACH LIT KEY", T_MID, 1);
+    draw_text_box(0, 98, 240, &AF_L, ph == 1u ? "GENTLY" : "FIRMLY", T_THEME, 1);
+    draw_text_box(0, 132, 240, &AF_S, ph == 1u ? "THE LIGHTEST THAT SOUNDS, 3 TIMES" : "AS HARD AS YOU PLAY, 3 TIMES", T_MID, 1);
+    fmt_int(b, (int32_t)done);
+    str_cpy(b + str_len(b), " OF 20 KEYS", sizeof b - str_len(b));
+    draw_text_box(0, 160, 240, &AF_S, b, T_TEXT, 1);
+    draw_text_box(0, 206, 240, &AF_S, "OCT+ NEXT   OCT- CANCEL", T_DIM, 1);
+}
+static void touch_setup(void)
+{
+    uint32_t ph, t0, k, shown = ~0u, cancel = 0;
+    uint32_t up = 1u << panel.btn[B_OCTUP], dn = 1u << panel.btn[B_OCTDN];
+    fm1_an_set(FM1_ADC_CFG_FAST);                       /* (the main loop puts it back as KEY TOUCH says) */
+    fm1_led_anim_stop();                                /* (the keys' lights are the screen's now) */
+    while (fm1_in.buttons)                              /* (OCT+ that chose this: let go first) */
+        fm1_wdt_feed();
+    fm1_input_edges(0);
+    kt_cal_begin();
+    for (ph = 1; ph <= 2u && !cancel; ph++) {
+        kt_cal_phase = (uint8_t)ph;
+        t0 = fm1_ms;
+        for (;;) {
+            uint32_t e = fm1_input_edges(0), done = 0;
+            fm1_wdt_feed();
+            memset(fm1_led, 0, sizeof fm1_led);
+            memset(fm1_led_dim, 0, sizeof fm1_led_dim);
+            memset(fm1_led_breath, 0, sizeof fm1_led_breath);
+            memset(fm1_led_mid, 0, sizeof fm1_led_mid);
+            for (k = 0; k < KT_NKEY; k++) {
+                uint32_t left = kt_cal_left(ph, k);
+                done += !left;
+                fm1_led_key(14u + k, left != 0u);
+            }
+            if (done != shown) {
+                touch_screen(ph, done);
+                shown = done;
+                t0 = fm1_ms;
+            }
+            if (e & dn) {
+                cancel = 1;
+                break;
+            }
+            if ((e & up) || done == KT_NKEY)
+                break;
+            if (fm1_ms - t0 > KT_CAL_IDLE_MS) {
+                cancel = 1;
+                break;
+            }
+        }
+        shown = ~0u;
+    }
+    memset(fm1_led, 0, sizeof fm1_led);
+    lcd_fill(0, 0, 240, 240, T_BG);
+    ui.force = 1;
+    if (cancel) {
+        kt_cal_phase = 0;
+        ui_message("KEY TOUCH NOT CHANGED");
+        return;
+    }
+    kt_cal_finish();
+    if (kt_mode == KT_OFF)
+        kt_mode = KT_VEL;
+    kt_save(favorites.factory[KT_ROW]);
+    settings_later();
+    ui_message("KEY TOUCH CALIBRATED");
+}
+
+/* MENU > SYSTEM > CALIBRATION: which one. KNOB 1 (or PRESETS) picks, OCT+ starts it, OCT- goes back */
+static void calibration_choose(void)
+{
+    uint32_t sel = 0, drawn = ~0u, t0 = fm1_ms;
+    uint32_t up = 1u << panel.btn[B_OCTUP], dn = 1u << panel.btn[B_OCTDN];
+    while (fm1_in.buttons)
+        fm1_wdt_feed();
+    fm1_input_edges(0);
+    for (;;) {
+        uint32_t e = fm1_input_edges(0);
+        int32_t s = panel_enc(EN_K1) + panel_enc(EN_PRESET);
+        fm1_wdt_feed();
+        if (s)
+            sel = s > 0;
+        if (sel != drawn) {
+            lcd_fill(0, 0, 240, 240, T_BG);
+            draw_text_box(0, 8, 240, &AF_M, "CALIBRATION", T_THEME, 1);
+            lcd_fill(16, 40, 208, 1, T_LINE);
+            draw_text_box(0, 80, 240, &AF_L, sel ? "KEY TOUCH" : "PANEL", T_THEME, 1);
+            draw_text_box(0, 116, 240, &AF_S, sel ? "HOW HARD EACH KEY IS PLAYED" : "TEACH EACH BUTTON AND KNOB", T_MID, 1);
+            draw_text_box(0, 180, 240, &AF_S, "KNOB 1: PANEL / KEY TOUCH", T_DIM, 1);
+            draw_text_box(0, 206, 240, &AF_S, "OCT+ START   OCT- BACK", T_DIM, 1);
+            drawn = sel;
+        }
+        if ((e & dn) || SETUP_GIVE_UP(t0)) {           /* (OCT-, a piano key, or 30 s: as the setup itself) */
+            lcd_fill(0, 0, 240, 240, T_BG);
+            ui.force = 1;
+            ui_message("SETUP CANCELLED");
+            return;
+        }
+        if (e & up)
+            break;
+    }
+    if (sel)
+        touch_setup();
+    else
+        panel_setup();
+}

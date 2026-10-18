@@ -58,6 +58,13 @@
 #define C1_RUN(fn, arg) fm1_cpu1_run(fn, arg)
 #define C1_WAIT() fm1_cpu1_wait()
 #endif
+/* ESTAMPIE: KEY TOUCH's hooks in the scan tick (hal/fm1_input.h; key_touch.c) */
+static void kt_sample(uint32_t key, uint32_t v, int driven);
+static int kt_want_drive(uint32_t k);
+static int kt_led_ok(uint32_t k);
+#define FM1_INPUT_ANALOG(note, v, driven) kt_sample(note, v, driven)
+#define FM1_INPUT_DRIVE(note) kt_want_drive(note)
+#define FM1_INPUT_LED_OK(note) kt_led_ok(note)
 #include "fm1_input.h"
 #include "fm1_timer.h"
 #include "fm1_audio.h"
@@ -78,6 +85,7 @@
 #include "voice.c"
 #include "slicer.c"              /* per-track SLICER insert, used by fx.c */
 #include "fx.c"
+#include "key_touch.c"           /* ESTAMPIE: velocity and aftertouch from the keys (seq.c keyboard_block) */
 
 /* ------------------------------------------------- MIDI, sequencer --- */
 #include "usb.c"

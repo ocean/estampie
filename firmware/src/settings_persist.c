@@ -51,6 +51,10 @@ _Static_assert(GB_SERIAL_OFF == PREF_SERIAL_OFF, "settings_persist.c GB_SERIAL_O
 /* ESTAMPIE (the Felucca 1.6.1 merge): MIDI LEARN's table is favorites.factory[ML_ROW], SLICE's row, which a setting
  * saved before may hold stray favourite bits in: settings without this mark get the row cleared once (nothing learned) */
 #define GB_MIG_LEARN 8u
+/* ESTAMPIE: KEY TOUCH (key_touch.c kt_load / kt_save) keeps its settings and calibration in favorites.factory[1], the
+ * row of DIGITAL (retired: its stars moved to FM6's at every import until now). Settings without this mark get that
+ * move once more and the row cleared, then it is KEY TOUCH's */
+#define GB_MIG_KT 16u
 #ifndef ML_ROW
 #define ML_ROW 13u                                 /* (core.h's: a build of this file alone) */
 #endif
@@ -61,6 +65,7 @@ _Static_assert(GB_RESTORE_OFF == PREF_RESTORE_OFF, "settings_persist.c GB_RESTOR
 /* Normalize in place; 1 = current, 2 = migrated, 0 = invalid. */
 static int settings_import(persist_t *p, int n)
 {
+    int kt_mig;
     int current = n == (int)sizeof *p && p->magic == PERSIST_MAGIC;
     int old3 = n == (int)(sizeof *p - sizeof p->favorites) && p->magic == 0x50455233u;
     int old2 = n == (int)(sizeof *p - sizeof p->favorites - sizeof p->bold) && p->magic == 0x50455232u;
@@ -90,6 +95,8 @@ static int settings_import(persist_t *p, int n)
         memset(p->favorites.factory[ML_ROW], 0, sizeof p->favorites.factory[ML_ROW]);
         p->favorites.factory[15][28] |= GB_MIG_LEARN;
     }
+    kt_mig = !(p->favorites.factory[15][28] & GB_MIG_KT);   /* ESTAMPIE: once, DIGITAL's row (see above) */
+    p->favorites.factory[15][28] |= GB_MIG_KT;
     if (p->favorites.factory[15][29] > 1u)        /* STYLE (ui.c ui_style): 2, the retired PIXEL = LINE; unknown = FLAT */
         p->favorites.factory[15][29] = p->favorites.factory[15][29] == 2u ? 1u : 0u;
     {   /* CLICK, CLICK LEVEL, COUNT-IN (ui.c ui_rec_prefs): two bits each, 3 is no value: the default (0) */
@@ -125,7 +132,7 @@ static int settings_import(persist_t *p, int n)
     memcpy(&favorites, &p->favorites, sizeof favorites);
     favorites.filter = favorites.filter == 1u;
 #if defined(FM4_NPRESETS) && !FELUCCA_FM4
-    {   /* DIGITAL's starred presets (engine 1, retired) -> the FM6 presets that cover them (fm4_convert.c) */
+    if (kt_mig) {   /* DIGITAL's starred presets (engine 1, retired) -> the FM6 presets that cover them (fm4_convert.c) */
         uint32_t k;
         for (k = 0; k < FM4_NPRESETS; k++)
             if ((favorites.factory[ENGI_DIGITAL][0] >> k) & 1u)
@@ -139,7 +146,11 @@ static int settings_import(persist_t *p, int n)
         favorites.factory[ENGI_SAMPLE][0] &= (uint8_t)~(1u << SMP_SET_PERC);
     }
 #endif
+#ifdef KT_ROW
+    kt_load(favorites.factory[KT_ROW]);          /* ESTAMPIE: KEY TOUCH */
 #endif
+#endif
+    (void)kt_mig;
     if (p->panel.magic == PANEL_MAGIC) panel = p->panel;
     return current ? 1 : 2;
 }
@@ -150,7 +161,7 @@ static void settings_fresh(void)
 {
 #ifdef FELUCCA_FAVORITES
     favorites.factory[15][30] |= GB_SERIAL_OFF;                  /* (2.1: RESTORE LAST ON, Felucca's default) */
-    favorites.factory[15][28] |= GB_MIG_SERIAL | GB_MIG_RESTORE | GB_MIG_RESTORE_ON | GB_MIG_LEARN;
+    favorites.factory[15][28] |= GB_MIG_SERIAL | GB_MIG_RESTORE | GB_MIG_RESTORE_ON | GB_MIG_LEARN | GB_MIG_KT;
 #endif
 }
 

@@ -7,7 +7,8 @@
 static int32_t master_knob = 512 * 16;
 static void master_poll(void)
 {
-    int32_t a = fm1_adc_read(FM1_ADC_MASTER);
+    /* (ESTAMPIE: with KEY TOUCH the scan tick owns the converter and samples the pot itself: hal/fm1_input.h fm1_an) */
+    int32_t a = fm1_an.cfg ? (fm1_an.master ? (int32_t)fm1_an.master : -1) : fm1_adc_read(FM1_ADC_MASTER);
     if (a >= 0) {
         master_knob += (a * 16 - master_knob) / 8;
         song.master_q12 = master_of_pot((uint32_t)(master_knob / 16));
