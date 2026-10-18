@@ -690,6 +690,15 @@ const req = {
   fm6Erase: (i) => [CMD.FM6_ERASE, [i & 0x7F]],
 };
 
+/* ESTAMPIE (after M-VAVE fm1_open's device library, which reloads a saved project and compares it): is project slot
+   `slot` (0..3) what the device is playing now, by a BACKUP_LIST manifest (fm1backup.js bkManifest: ids 2..5 the slots,
+   0 the music now, each with its length and CRC-32)? The device packs both the same way, and its save re-reads the
+   flash it wrote (storage.c), so a match is the slot saved as heard */
+function slotMatchesRuntime(manifest, slot) {
+  const s = manifest.find((o) => o.id === slot + 2), r = manifest.find((o) => o.id === 0);
+  return !!(s && r && s.size > 0 && s.size === r.size && s.crc === r.crc);
+}
+
 /* which reply belongs to which request (the device echoes these) */
 function replyMatches(cmd, args, a) {
   switch (cmd) {
@@ -2652,7 +2661,8 @@ const TEXT = {
     ready: "接続しました", disconnected: "切断されました", lost: "ESTAMPIE が外されました",
     noreply: "応答がありません", error: "エラー: ", busy: "処理中",
     applying: "書き込み中 ", applied: "読み込みました", badfile: "ファイルを読み込めません: ",
-    savedSlot: "保存しました: スロット ", loadedSlot: "読み込みました: スロット ", emptySlot: "空のスロットです: ",
+    savedSlot: "保存しました: スロット ", savedChecked: "保存して確認しました: スロット ",
+    saveMismatch: "書き込みましたが、今の曲と一致しません。もう一度保存してください: スロット ", loadedSlot: "読み込みました: スロット ", emptySlot: "空のスロットです: ",
     confirmSave: "スロット {n} に上書き保存しますか？", confirmLoad: "スロット {n} を読み込みますか？ 4 トラックすべての音色とシーケンスが置き換わります（元に戻せません）。",
     confirmClear: "シーケンスを全部消しますか？", confirmInit: "音色を初期化しますか？ シーケンスはそのままです（本体の SAVE 長押しで元に戻せます）。",
     samples: "サンプル", smpHelp: "ファイルを選択、または入力から録音。波形の両端でトリム、ホイールで拡大。1枠に16音、合計約7秒。",
@@ -2755,7 +2765,8 @@ const TEXT = {
     ready: "Connected", disconnected: "Disconnected", lost: "ESTAMPIE was unplugged",
     noreply: "No reply from the device", error: "Error: ", busy: "Busy",
     applying: "Writing ", applied: "Loaded", badfile: "Cannot read the file: ",
-    savedSlot: "Saved to slot ", loadedSlot: "Loaded slot ", emptySlot: "Empty slot: ",
+    savedSlot: "Saved to slot ", savedChecked: "Saved and checked: slot ",
+    saveMismatch: "Written, but it doesn't match the music now playing: save again. Slot ", loadedSlot: "Loaded slot ", emptySlot: "Empty slot: ",
     confirmSave: "Overwrite slot {n}?", confirmLoad: "Load slot {n}? The sounds and sequences of all four tracks are replaced (no undo).",
     confirmClear: "Clear the whole sequence?", confirmInit: "Reset the sound to the engine defaults? The sequence stays (hold SAVE on the device to undo).",
     samples: "Samples", smpHelp: "Choose files or record an input. Drag waveform ends to trim; wheel to zoom. Up to 16 sounds and about 7 s per slot.",
@@ -3398,9 +3409,15 @@ async function project(op, slot) {
     const r = parse[CMD.PROJECT](await rq(req.project(op, slot), { timeout: 4000, retries: 0 }));
     dev.slotUsed[slot] = r.used;
     renderSlots();
+    let said = op ? "savedSlot" : r.used ? "loadedSlot" : "emptySlot";
+    if (op && dev.info.backupCaps & 1) {          /* ESTAMPIE: a save is "saved" once the device lists it as it plays */
+      const { bkManifest } = await backupModule();
+      const m = bkManifest(await rq([CMD.BACKUP_LIST, []], { timeout: 4000, retries: 0 }));
+      said = slotMatchesRuntime(m, slot) ? "savedChecked" : "saveMismatch";
+    }
     if (!op && r.used) await afterSoundChange();
     if (dev.info.chainRows) { dev.song = parse[CMD.SONG](await rq(req.song())); renderSong(); }
-    sayK(op ? "savedSlot" : r.used ? "loadedSlot" : "emptySlot", String(slot + 1));
+    sayK(said, String(slot + 1));
   } catch (err) { report(err); } finally { releaseBusy(); }
 }
 

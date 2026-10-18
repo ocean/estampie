@@ -71,6 +71,7 @@
   .phases li.done { color: var(--vermilion); }
   .phases li.done::before { content: "✓ "; }
   #details { margin-bottom: 16px; }
+  h3.sub { margin: 22px 0 6px; font: 400 18px/1.4 "IM Fell English SC", Georgia, serif; color: var(--vermilion); letter-spacing: .04em; }
   #details summary { font-size: 15px; }
   pre { color: var(--ink-soft); font-size: 12px; white-space: pre-wrap; margin-top: 16px; }
 </style>
@@ -90,6 +91,7 @@
   <p class="small" data-t="beta"></p>
   <p class="small"><span data-t="brick"></span>
     <a href="https://github.com/kurogedelic/FM-1-transporter" target="_blank" rel="noopener">FM-1-transporter</a></p>
+  <p class="small"><label><input id="save-backup" type="checkbox"> <span data-t="saveBackup"></span></label></p>
   <div class="go-row"><button id="go" disabled data-t="install"></button>
     <button id="cancel" hidden data-t="cancel"></button>
     <a class="try" href="../emu/" data-t="tryit"></a></div>
@@ -101,6 +103,9 @@
     <p><button id="stock-go" disabled data-t="stockGo"></button></p>
     <p class="small" data-t="stockBackup"></p>
     <p class="small"><label><input id="stock-recovery" type="checkbox"> <span data-t="stockRecovery"></span></label></p>
+    <h3 class="sub" data-t="soundsTitle"></h3>
+    <p class="small" data-t="soundsWhat"></p>
+    <p><button id="sounds-go" disabled data-t="soundsGo"></button></p>
     <p class="small"><label><span data-t="stockFile"></span><br><input id="stock-file" type="file" accept=".fwsc"></label>
       (<a href="https://www.m-vave.com/download" target="_blank" rel="noopener">M-VAVE Downloads</a>)</p>
   </details>
@@ -147,6 +152,16 @@ const TEXT = {
     back: "公式 FM-1 V15 ファームウェアはこのページに同梱しています（M-VAVE が公開しているもの、書き込む前に SHA-256 で確認します）:",
     stockTitle: "公式V15に戻す", stockFile: "または M-VAVE から入手した未変更の FM-1.fwsc を使う", stockGo: "バックアップして公式V15へ戻す",
     stockLoading: "公式V15を読み込み中…",
+    saveBackup: "インストールの前に、全体バックアップ（曲、保存曲、音色バンク、サンプル、設定）をこのパソコンに保存する",
+    backupSaved: "バックアップを保存しました。インストールを続けます…",
+    backupUnsupported: "このファームウェアからは全体バックアップを作れません。チェックを外すとバックアップなしでインストールします。",
+    soundsTitle: "公式V15の工場出荷時の音色に戻す（別の手順）",
+    soundsWhat: "公式V15に戻した後、音色バンクが空や別のものになっている場合に使います。公式V15の4つの音色バンクを書き戻し、そこに保存されている音色はすべて置き換わります。FM-1 が公式V15で動いているときだけ使えます。",
+    soundsGo: "工場出荷時の音色を書き戻す…",
+    soundsConfirm: "接続中の FM-1（公式V15）の4つの音色バンクを、工場出荷時の音色で置き換えます。今バンクにある音色は消えます。続けますか？",
+    soundsWriting: "工場出荷時の音色を書き込み中 ", soundsDone: "工場出荷時の音色を書き戻しました。",
+    notstock: "FM-1 が公式V15で動いていません。先に公式V15に戻してください。動作中: ",
+    refused: "FM-1 が音色の書き込みを受け付けませんでした。電源を入れ直して、もう一度試してください。",
     stockBackup: "現在の曲・保存曲・音色バンク・サンプル・設定を先に保存します。全体バックアップ非対応版は、Feluccaを更新してから行ってください。復元はFeluccaを再インストールしてエディタから行います。",
     stockRecovery: "更新中断の再開：全体バックアップはすでにパソコンへ保存済み",
     stockValid: "公式V15を確認しました", stockConfirm: "全体バックアップファイルをパソコンに保存できましたか？ 続けると公式V15へ戻します。Feluccaの曲は公式V15では開けません。",
@@ -193,6 +208,16 @@ const TEXT = {
     back: "The official FM-1 V15 firmware comes with this page, as M-VAVE publish it, and is checked against its SHA-256 before anything is written:",
     stockTitle: "Return to official V15", stockFile: "Or use your own unmodified FM-1.fwsc from M-VAVE", stockGo: "Back up and return to official V15",
     stockLoading: "Loading official V15…",
+    saveBackup: "Before installing, save a complete backup (music, saved music, sound banks, samples and settings) to this computer",
+    backupSaved: "Backup saved. Installing…",
+    backupUnsupported: "This firmware can't make a complete backup. Untick the backup to install without one.",
+    soundsTitle: "Restore official V15's factory sounds (a separate step)",
+    soundsWhat: "For after returning to official V15, if its sound banks are empty or not its own: this writes V15's four factory sound banks back, replacing every sound stored in them. It only works while the FM-1 runs official V15.",
+    soundsGo: "Restore the factory sounds…",
+    soundsConfirm: "This replaces all four sound banks in the connected FM-1 (official V15) with the factory sounds. The sounds in its banks now will be lost. Continue?",
+    soundsWriting: "Writing the factory sounds ", soundsDone: "The factory sounds are restored.",
+    notstock: "The FM-1 isn't running official V15: return to official V15 first. It runs: ",
+    refused: "The FM-1 refused the sound data. Power-cycle it and try again.",
     stockBackup: "Current music, saved music, sound banks, samples and settings are saved first. Older firmware needs a Felucca update for complete backups. To restore an archive later, reinstall Felucca and use the editor.",
     stockRecovery: "Resume an interrupted update: I already saved a complete backup to this computer",
     stockValid: "Official V15 verified", stockConfirm: "Has the complete backup file been saved to this computer? Continue to return to official V15. Official V15 cannot open Felucca music.",
@@ -288,7 +313,8 @@ let build = null;                 // ESTAMPIE: the package's build ID (fm1pkg.js
 let writing = false, stock = null, stockFileEpoch = 0, resumed = false;   // resumed: GHOULBOX, the page came back from a "reload"
 let abort = null;                 // ESTAMPIE: the running update's AbortController (the Cancel button)
 const lockInstaller = (on) => {
-  writing = on; $("go").disabled = on || !image; $("stock-go").disabled = on; $("stock-file").disabled = on;
+  writing = on; $("go").disabled = on || !image; $("stock-go").disabled = on; $("sounds-go").disabled = on; $("stock-file").disabled = on;
+  $("save-backup").disabled = on;
   $("stock-recovery").disabled = on;
   if (!on) { $("cancel").hidden = true; abort = null; }
 };
@@ -302,7 +328,7 @@ function newUpdater(midi) {
 $("cancel").addEventListener("click", () => { if (abort) abort.abort(); $("cancel").hidden = true; });
 // ESTAMPIE: a failed update in words, and, when the device could not be found or told apart, what the page saw of the
 // MIDI ports (after M-VAVE fm1_open's connection details), the details opened
-const CONNECTION = new Set(["notfound", "ambiguous", "noloader", "noreturn", "model", "cancelled"]);
+const CONNECTION = new Set(["notfound", "ambiguous", "noloader", "noreturn", "model", "cancelled", "notstock"]);
 function failed(e, up) {
   if (e && e.code && TEXT[lang][e.code]) sayK(e.code, e.detail || "");
   else sayK("error", e && e.message);
@@ -318,6 +344,7 @@ function failed(e, up) {
 (async () => {
   if (!navigator.requestMIDIAccess) { sayK("nomidi"); return; }
   $("stock-go").disabled = false;
+  $("sounds-go").disabled = false;
   try {
     const r = await fetch(meta.pkg);
     if (!r.ok) throw new Error(`${meta.pkg}: HTTP ${r.status}`);
@@ -359,6 +386,11 @@ $("go").addEventListener("click", async () => {
       const now = await up.current();                 // ESTAMPIE: this exact build already there? (after M-VAVE fm1_open)
       if (now) log(`running: ${now.id}${now.build ? `, build ${now.build}` : ""}`);
       if (now && build && now.build === build && !confirm(t("same"))) { sayK("cancelled"); lockInstaller(false); return; }
+      if ($("save-backup").checked) {                 // ESTAMPIE: a backup file first, when asked for
+        if (!await backupToFile(up, "backupUnsupported")) { lockInstaller(false); return; }
+        sayK("backupSaved");
+        $("cancel").hidden = false;
+      }
       await up.install(image, meta.product, step, range, build);
     }
   } catch (e) {
@@ -391,6 +423,33 @@ async function bundledStock() {
   if (!r.ok) throw new Error(`${meta.stock}: HTTP ${r.status}`);
   return validateStockPackage(new Uint8Array(await r.arrayBuffer()));
 }
+// ESTAMPIE: official V15's factory sounds written back (fm1ota.js restoreFactorySounds), never as part of a return to
+// V15: its own button, its own question, only to an FM-1 running official V15
+$("sounds-go").addEventListener("click", async () => {
+  if (writing) return;
+  lockInstaller(true);
+  let up = null;
+  try {
+    let selected = stock;
+    if (!selected) {
+      try { selected = await bundledStock(); } catch (e) { sayK("stockError", e.message); return; }
+    }
+    const sounds = await stockFactorySounds(selected.raw);
+    let midi;
+    try { midi = await navigator.requestMIDIAccess({sysex:true}); } catch (e) { sayK("denied"); return; }
+    up = newUpdater(midi);
+    const now = await up.current();
+    if (!now) throw Object.assign(new Error("FM-1 not found"), { code: "notfound" });
+    if (now.id !== "FM-1_015") throw Object.assign(new Error("not official V15"), { code: "notstock", detail: now.id });
+    $("cancel").hidden = true;
+    if (!confirm(t("soundsConfirm"))) { sayK("cancelled"); return; }
+    $("bar").value = 0;
+    await up.restoreFactorySounds(sounds, (f) => { $("bar").value = f * 100; sayK("soundsWriting", `${Math.floor(f * 100)} %`); });
+    sayK("soundsDone");
+  } catch (e) {
+    failed(e, up);
+  } finally { lockInstaller(false); }
+});
 $("stock-file").addEventListener("change", async () => {
   const epoch = ++stockFileEpoch, file = $("stock-file").files[0]; stock = null; lockInstaller(false);
   if (!file) return;
@@ -406,6 +465,24 @@ function saveArchive(archive) {
   const a = document.createElement("a"); a.href = url; a.download = `ESTAMPIE-backup-${new Date().toISOString().slice(0,10)}.json`;
   document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+// a complete backup of the running FM-1 (editor protocol v7: fm1backup.js captureBackup) saved as a file: true when it
+// was saved; false (said with unsupportedKey) when this firmware can't make one
+async function backupToFile(up, unsupportedKey) {
+  const device = await up.find(id => id.model === "FM-1");
+  if (!device) throw Object.assign(new Error("FM-1 not found"), { code: "notfound" });
+  const input = device.link.input, output = device.link.output; device.link.close();
+  $("cancel").hidden = true;                       // (the backup runs to its end; the install looks again)
+  const link = new BackupConnection(input, output);
+  try {
+    const info = archiveInfo(await link.request([1,[]]));
+    if (!info.supported) { sayK(unsupportedKey); return false; }
+    const archive = await captureBackup((r,o) => link.request(r,o), info.version,
+      (done,total) => sayK("backup", `${Math.round(done / Math.max(1,total) * 100)}%`));
+    saveArchive(archive);
+    log(`backup saved: ${info.version}`);
+    return true;
+  } finally { link.close(); }
+}
 function archiveInfo(a) {
   let pos = a.indexOf(0); if (pos < 0) throw new Error("Invalid INFO");
   const version = String.fromCharCode(...a.slice(0,pos)); pos++;
@@ -419,7 +496,7 @@ function archiveInfo(a) {
 $("stock-go").addEventListener("click", async () => {
   if (writing) return;
   lockInstaller(true);
-  let link = null, up = null;
+  let up = null;
   try {
     let selected = stock;
     if (!selected) {
@@ -437,22 +514,13 @@ $("stock-go").addEventListener("click", async () => {
       if (!confirm(t("stockConfirm"))) return;
       sayK(await up.resume(selected.image, step, selected.product, 0, selected.range) ? "done" : "stopped");
     } else {
-      const device = await up.find(id => id.model === "FM-1");
-      if (!device) throw Object.assign(new Error("FM-1 not found"), { code: "notfound" });
-      const input = device.link.input, output = device.link.output; device.link.close();
-      $("cancel").hidden = true;                     // (the backup runs to its end; the install looks again)
-      link = new BackupConnection(input, output);
-      const info = archiveInfo(await link.request([1,[]]));
-      if (!info.supported) { sayK("stockUnsupported"); return; }
-      const archive = await captureBackup((r,o) => link.request(r,o), info.version,
-        (done,total) => sayK("backup", `${Math.round(done / Math.max(1,total) * 100)}%`));
-      saveArchive(archive); link.close(); link = null;
+      if (!await backupToFile(up, "stockUnsupported")) return;
       if (!confirm(t("stockConfirm"))) return;
       await up.install(selected.image, selected.product, step, selected.range);
     }
   } catch (e) {
     failed(e, up);
-  } finally { if (link) link.close(); lockInstaller(false); }
+  } finally { lockInstaller(false); }
 });
 </script>
 </body>

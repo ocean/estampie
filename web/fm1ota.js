@@ -159,6 +159,23 @@ export async function buildOf(link, tries = 2) {
   return null;
 }
 
+// ESTAMPIE: one message of the vendor protocol (F0 pack7(00 59 cmd len24 body chk) F7: the chk makes the body's sum
+// 0xFF), and back: { cmd, data } or null
+function frame59(cmd, body) {
+  let s = 0;
+  for (const x of body) s += x;
+  return [0xF0, ...pack7([0x00, 0x59, cmd, body.length & 0xFF, (body.length >> 8) & 0xFF, 0, ...body, ~s & 0xFF]), 0xF7];
+}
+
+function parse59(pkt) {
+  if (pkt[0] !== 0xF0 || pkt[pkt.length - 1] !== 0xF7) return null;
+  const d = unpack7(pkt.slice(1, -1));
+  if (d.length < 7 || d[0] !== 0 || d[1] !== 0x59 || (d[3] | d[4] << 8 | d[5] << 16) !== d.length - 7) return null;
+  let s = 0;
+  for (let i = 6; i < d.length; i++) s += d[i];
+  return (s & 0xFF) === 0xFF ? { cmd: d[2], data: d.slice(6, -1) } : null;
+}
+
 function parseIdentity(pkt) {
   const d = unpack7(pkt.slice(1, -1));
   if (d.length !== 34 || d[0] !== 0 || d[1] !== 0x59 || d[2] !== 0x11) return null;
@@ -407,6 +424,47 @@ export class Updater {
     const s2 = await this.serve(ota.link, image, 0xF0000000, 60000, (addr, len) => step("write", progress.read(addr, len)));
     ota.link.close();
     return s2;
+  }
+
+  // ESTAMPIE: official V15's factory sound banks (fm1pkg.js stockFactorySounds, 16 KB) written back into an FM-1 that
+  // runs official V15, after M-VAVE fm1_open's restoreFactory: four 4 KB banks, each begun (cmd 0x21: area 5, its
+  // address) then written in 512-byte pieces (cmd 0x22: area 5, address, length 512), every message answered by the
+  // device (cmd 0x00, 0: taken). A separate step the page asks about: it replaces every sound in the banks.
+  // onProgress(fraction); error codes: notfound, notstock (detail: the identity), refused, lost
+  async restoreFactorySounds(sounds, onProgress = () => {}) {
+    if (!(sounds instanceof Uint8Array) || sounds.length !== 16384) throw fail("badreq", "the factory sounds are 16 KB");
+    const dev = await this.find((id) => !IS_OTA(id));
+    if (!dev) throw fail("notfound", "FM-1 not found");
+    const link = dev.link;
+    try {
+      if (dev.id.text !== "FM-1_015") throw fail("notstock", `the FM-1 runs ${dev.id.text}, not official V15`, dev.id.text);
+      const ack = async (cmd, body) => {
+        link.drain();
+        if (!link.send(frame59(cmd, body))) throw fail("lost", "the USB connection was lost");
+        const end = Date.now() + 10000;
+        while (Date.now() < end) {
+          const p = await link.read(Math.min(250, end - Date.now()));
+          if (link.lost) throw fail("lost", "the USB connection was lost");
+          const r = p && parse59(p);
+          if (!r || r.cmd !== 0x00) continue;
+          if (r.data.length !== 1 || r.data[0] !== 0) throw fail("refused", "the FM-1 refused the factory sounds");
+          return;
+        }
+        throw fail("refused", "the FM-1 did not answer: the factory sounds are not all written");
+      };
+      onProgress(0);
+      for (let bank = 0; bank < 16384; bank += 4096) {
+        await ack(0x21, [5, 0, bank >> 8, 0, 0]);
+        for (let off = bank; off < bank + 4096; off += 512) {
+          await ack(0x22, [5, off & 0xFF, off >> 8, 0, 0, 0, 2, 0, ...sounds.subarray(off, off + 512)]);
+          onProgress((off + 512) / 16384);
+        }
+      }
+      const id = await handshake(link, 2);
+      if (!id || id.text !== "FM-1_015") throw fail("notstock", "the FM-1 no longer reports official V15", id ? id.text : "");
+    } finally {
+      link.close();
+    }
   }
 
   // resume: the device is already in update mode (loader) -> true when the write finished

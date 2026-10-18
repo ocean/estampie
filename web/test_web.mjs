@@ -16,7 +16,7 @@ import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import vm from "node:vm";
-import { Package, buildIdOf, logicalImage, productOf } from "./fm1pkg.js";
+import { Package, buildIdOf, logicalImage, productOf, stockFactorySounds } from "./fm1pkg.js";
 import { Updater, WriteProgress, buildOf, pack7, unpack7 } from "./fm1ota.js";
 
 let failed = 0;
@@ -44,7 +44,7 @@ const E = vm.runInNewContext(proto + `
    readDeviceMenu: typeof readDeviceMenu === "undefined" ? null : readDeviceMenu,
    parseMotionAll: typeof parseMotionAll === "undefined" ? null : parseMotionAll,
    fm6Bank: typeof fm6Bank === "undefined" ? null : fm6Bank, crc32: typeof crc32 === "undefined" ? null : crc32,
-   midiLearn: typeof midiLearn === "undefined" ? null : midiLearn })`,
+   midiLearn: typeof midiLearn === "undefined" ? null : midiLearn, slotMatchesRuntime })`,
 { setTimeout, clearTimeout, setInterval, clearInterval, console });
 
 async function editorMock() {
@@ -1648,6 +1648,14 @@ function samplesMatch() {
 }
 
 /* ------------------------------------------------------- packages: JS == Python --- */
+/* ESTAMPIE: a project save is reported saved only when the device lists the slot as the music it plays */
+function savedProjectCheck() {
+  const m = (slot, crc, size = 3840) => [{ id: 0, size: 3840, crc: 0x1234 }, { id: 1, size: 64, crc: 9 }, { id: slot + 2, size, crc }];
+  ok(E.slotMatchesRuntime(m(1, 0x1234), 1) && !E.slotMatchesRuntime(m(1, 0x9999), 1) && !E.slotMatchesRuntime(m(1, 0x1234, 3648), 1) &&
+     !E.slotMatchesRuntime(m(1, 0, 0), 1) && !E.slotMatchesRuntime(m(2, 0x1234), 1),
+     "editor: a saved project matches the music now (same length and CRC), else not");
+}
+
 async function packages() {
   const pkg = join(FW_ROOT, "build/felucca.fwsc");
   if (!existsSync(pkg)) {
@@ -1718,6 +1726,12 @@ class FakeFM1 {
       const body = [...new TextEncoder().encode("ESTB"), ...b.match(/../g).map((x) => parseInt(x, 16))];
       const sum = body.reduce((a, x) => a + x, 0);
       this.tx([0xF0, ...pack7([0, 0x59, 0x12, 20, 0, 0, ...body, ~sum & 0xFF]), 0xF7]);
+    } else if (!this.waiting && d.length > 8 && [0x21, 0x22].includes(unpack7(d.slice(1, -1))[2])) {
+      /* ESTAMPIE: official V15's sound bank writes (begin 0x21, piece 0x22), each answered 0x00 "taken" */
+      const u = unpack7(d.slice(1, -1)), body = u.slice(6, -1);
+      (this.soundWrites ||= []).push([u[2], body]);
+      const ok = this.refuseSounds ? 1 : 0;
+      this.tx([0xF0, ...pack7([0, 0x59, 0x00, 1, 0, 0, ok, ~ok & 0xFF]), 0xF7]);
     } else if (eq(d, UPGRADE)) {
       this.queue = this.identity.startsWith("ota-")
         ? [...Array.from({ length: 6 }, (_, k) => [k * 512, 512]), [0xF0000000, 8]]
@@ -1830,8 +1844,33 @@ async function updaterChecks(image) {
      "fm1ota.js: current() reports the running build; no port, no build");
 }
 
+/* ESTAMPIE: official V15's factory sounds (fm1pkg.js stockFactorySounds) written back, after M-VAVE fm1_open: only to
+ * an FM-1 running official V15, four banks of eight 512-byte pieces, every byte as extracted */
+async function factorySounds() {
+  const stock = readFileSync(join(FW_ROOT, "assets/m-vave/FM-1_015.fwsc"));
+  const sounds = await stockFactorySounds(new Uint8Array(stock));
+  ok(sounds.length === 16384, "fm1pkg.js stockFactorySounds: V15's 16 KB, its CRC and SHA-256");
+  const v15 = new FakeFM1(new Uint8Array(16));
+  const fr = [];
+  await new Updater(v15.access).restoreFactorySounds(sounds, (f) => fr.push(f));
+  const w = v15.soundWrites || [], pieces = w.filter(([c]) => c === 0x22);
+  const data = Uint8Array.from(pieces.flatMap(([, b]) => b.slice(8)));
+  ok(w.length === 36 && w.filter(([c]) => c === 0x21).length === 4 && pieces.length === 32 && eq(data, sounds) &&
+     eq(w[0][1], [5, 0, 0, 0, 0]) && eq(pieces[1][1].slice(0, 8), [5, 0, 2, 0, 0, 0, 2, 0]) && fr.at(-1) === 1,
+     "fm1ota.js restoreFactorySounds: four banks begun, 32 pieces, the sounds byte for byte");
+  const ours = new FakeFM1(new Uint8Array(16));
+  ours.boot("FM-1_378001", "Felucca");
+  const e1 = await new Updater(ours.access).restoreFactorySounds(sounds).then(() => null, (x) => x);
+  ok(e1 && e1.code === "notstock" && !ours.soundWrites, "fm1ota.js restoreFactorySounds: refused to anything but official V15, nothing sent");
+  const no = new FakeFM1(new Uint8Array(16));
+  no.refuseSounds = true;
+  const e2 = await new Updater(no.access).restoreFactorySounds(sounds).then(() => null, (x) => x);
+  ok(e2 && e2.code === "refused" && no.soundWrites.length === 1, "fm1ota.js restoreFactorySounds: stops at the first refusal");
+}
+
 async function updater() {
   writeProgress();
+  await factorySounds();
   const image = Uint8Array.from({ length: 0x2000 }, (_, i) => (i * 7) & 0xFF);
   const dev = new FakeFM1(image);
   const steps = [];
@@ -1895,6 +1934,7 @@ await editorFm4();
 editorTabs();
 editorIcons();
 samplesMatch();
+savedProjectCheck();
 await packages();
 await updater();
 console.log(failed ? `WEB TESTS FAILED (${failed})` : "web tests passed");

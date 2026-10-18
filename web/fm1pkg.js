@@ -250,7 +250,7 @@ export async function validateStockPackage(bytes) {
       pkg.appBase !== 16384 || pkg.appOff !== 16672 || pkg.app.size !== STOCK_APP_SIZE ||
       !pkg.entries.some((e) => e.type === 100 && e.name === "ota.bin" && e.size === 19969))
     throw new Error("The official firmware has an unsupported FM-1 layout.");
-  return { product: pkg.product, image: logicalImage(bytes), sha256: STOCK_V15_SHA256, range: applicationRange(bytes) };
+  return { product: pkg.product, image: logicalImage(bytes), sha256: STOCK_V15_SHA256, range: applicationRange(bytes), raw: bytes };
 }
 
 // official V15 + Felucca app -> installable package (Uint8Array)
@@ -275,4 +275,30 @@ export function buildIdOf(fwsc) {
     if (id.some((b) => b)) ids.push([...id].map((x) => x.toString(16).padStart(2, "0")).join(""));
   }
   return ids.length === 1 ? ids[0] : null;
+}
+
+// ESTAMPIE: official V15's four factory sound banks (16 KB), for the installer's separate "Restore V15's factory sounds"
+// (fm1ota.js restoreFactorySounds; after M-VAVE fm1_open's restoreFactory). They are the start of V15's USR entry
+// (type 50), stored with the JieLi cipher in 32-byte blocks, each keyed 0x980F ^ (its image offset / 4); its CRC and
+// M-VAVE's SHA-256 of the 16 KB pin them
+export const STOCK_SOUNDS_SHA256 = "ecad0b8620f9d784d46c8da1e3c5de02c40214649ed8dec218026431046aad25";
+export const STOCK_SOUNDS_SIZE = 16384;
+
+export async function stockFactorySounds(fwsc) {
+  await validateStockPackage(fwsc);
+  const p = new Package(fwsc), image = logicalImage(fwsc);
+  const e = p.entries.find((x) => x.type === 50 && x.name === "USR");
+  if (!e) throw new Error("official V15 has no factory sound data");
+  const stored = u32(e.plain, 16);
+  if (stored < e.size || e.dataOff + stored > image.length) throw new Error("official V15's factory sound data is out of place");
+  const dec = new Uint8Array(stored);
+  for (let i = 0; i < stored; i += 32) {
+    const blk = image.slice(e.dataOff + i, e.dataOff + i + 32);
+    enc(blk, 0, blk.length, 0x980F ^ ((e.dataOff + i) >>> 2));
+    dec.set(blk, i);
+  }
+  if (crc16(dec.subarray(0, e.size)) !== e.dcrc) throw new Error("official V15's factory sound data failed its CRC");
+  const sounds = dec.slice(0, STOCK_SOUNDS_SIZE);
+  if (await sha256hex(sounds) !== STOCK_SOUNDS_SHA256) throw new Error("official V15's factory sounds are not the known ones");
+  return sounds;
 }

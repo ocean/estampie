@@ -245,7 +245,7 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 </ul>
 <h3>Install</h3>
 <ol>
-  <li>Connect the FM-1 and switch it on. <b>Save a backup first</b>, because the installer doesn't make one: open the web editor at <span class="path">{{SITE}}/webapp/editor</span>, allow MIDI access, and on the <b>Settings</b> tab press <b>Save backup</b>. Your music, sounds, samples and settings go to your computer.</li>
+  <li>Connect the FM-1 and switch it on. <b>Save a backup first</b>: tick <b>Before installing, save a complete backup</b> on the installer page, or open the web editor at <span class="path">{{SITE}}/webapp/editor</span>, allow MIDI access, and on the <b>Settings</b> tab press <b>Save backup</b>. Your music, saved projects, sound banks, samples and settings go to your computer as one file, which the editor's <b>Restore backup</b> puts back. (Official V15 can't make one, so from V15 there is nothing to save.)</li>
   <li>Open <span class="path">{{SITE}}/webapp/installer</span> and press <b>Install</b>. Allow MIDI access when the browser asks.</li>
   <li>The installer switches the FM-1 to update mode and writes ESTAMPIE.</li>
   <li>When it says done, the FM-1 restarts with ESTAMPIE's illuminated initial. Hold <span class="k">HOME</span> › SYSTEM › ABOUT shows the version.</li>
@@ -258,7 +258,7 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 <p>Two starts in a row that fail within their first 30 seconds open the rescue on their own. To leave it without installing, switch the FM-1 off and on again.</p>
 <div class="note">The OCT− rescue is part of ESTAMPIE itself, not of the FM-1: it only works once ESTAMPIE is installed. Only some FM-1 firmwares have one: Felucca, for example, simply starts as normal when OCT− is held. If even the rescue can't start, the FM-1's built-in boot mode (a device named WL80UBOOT on a computer) is the last resort; it needs a computer, not a phone. Felucca's README describes it.</div>
 <h3>Going back</h3>
-<p>To return to GHOULBOX, install it from <span class="path">ghoulbox.messy.quest</span>; to return to Felucca, from <span class="path">hugelton.github.io/Felucca</span>. Then restore your backup in its editor. The installer's <b>Return to official V15</b> button puts back M-VAVE's own firmware.</p>
+<p>To return to GHOULBOX, install it from <span class="path">ghoulbox.messy.quest</span>; to return to Felucca, from <span class="path">hugelton.github.io/Felucca</span>. Then restore your backup in its editor. The installer's <b>Return to official V15</b> button saves a backup and puts back M-VAVE's own firmware (it comes with the page). If V15's sound banks are then empty or wrong, <b>Restore the factory sounds</b> below it writes V15's four factory banks back: a separate step that asks first, since it replaces every sound in those banks.</p>
 <h3>Your old music</h3>
 <p>Projects and user presets from GHOULBOX and Felucca load in ESTAMPIE. Sounds ESTAMPIE no longer lists (for example Felucca's techno presets) still load and play inside an old project; they are only missing from the menus. SAX sounds play on FLUTE, and the SLICE engine is left out of ESTAMPIE.</p>
 </section>

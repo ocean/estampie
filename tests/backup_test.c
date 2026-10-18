@@ -187,6 +187,16 @@ int main(void)
     bad += check("a project save after LIST reused the staging RAM: GET of the runtime is stale (5)",
                  get(0, 0, 64) == 5u);
     bad += check("a new LIST makes it readable again", list(0, &len, &crc) == 0 && get(0, 0, 64) == 0);
+    {   /* ESTAMPIE: the editor's check of a project save (editor.html saveProjectChecked): after it, LIST gives the slot
+         * the same length and CRC as the music now playing, and a different music a different CRC */
+        uint32_t slen, scrc, rlen, rcrc;
+        bad += check("a saved slot lists as the runtime: same length and CRC",
+                     list(2, &slen, &scrc) == 0 && list(0, &rlen, &rcrc) == 0 && slen == rlen && scrc == rcrc && slen == 3840u);
+        trk[0].step[0].note[0] = 62;
+        bad += check("the music changed after the save: the slot's CRC differs",
+                     list(2, &slen, &scrc) == 0 && list(0, &rlen, &rcrc) == 0 && scrc != rcrc);
+        trk[0].step[0].note[0] = 60;
+    }
     usb.resets++;
     bad += check("a USB reset after LIST: GET is stale (5)", get(2, 0, 16) == 5u);
 
