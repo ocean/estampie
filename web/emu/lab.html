@@ -66,7 +66,7 @@ pre { margin: 0; font: 13px/1.45 ui-monospace, Menlo, monospace; background: var
 .foot { margin-top: 34px; border-top: 3px double var(--vermilion); padding-top: 12px; color: var(--soft); font-size: 15px;
         max-width: 72ch; }
 a { color: var(--vermilion); }
-.off { opacity: .5; pointer-events: none; }
+.off { outline: 1px dashed var(--rule); outline-offset: 6px; }   /* not started: inert, in full-strength ink */
 @media (max-width: 760px) { .layout { grid-template-columns: minmax(0, 1fr); } h1 { font-size: 32px; } }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
 </style>
@@ -86,7 +86,7 @@ a { color: var(--vermilion); }
 
 <nav class="parts" id="parts" role="tablist"></nav>
 
-<div class="layout off" id="layout">
+<div class="layout off" id="layout" inert>
   <aside>
     <h2>Candidates</h2>
     <p class="idea">Each loads into the part it was made for. "As now" puts a part back as the TROTTO has it.</p>
@@ -308,6 +308,7 @@ $("on").onclick = async () => {
       node.port.postMessage({ type: "load", wasm, master: +$("vol").value }, [wasm]);
     });
     $("layout").classList.remove("off");
+    $("layout").inert = false;
     $("play").disabled = false;
     $("on").hidden = true;
     $("status").textContent = "On. Press Play to hear the TROTTO, then load a candidate or move a slider.";
