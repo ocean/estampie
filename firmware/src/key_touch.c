@@ -16,10 +16,18 @@
  * conducts), DOWN (seated below KT_PRESS, KT_WAIT samples after the touch at least), LIFT, and OPEN again after two
  * samples above KT_RELEASE (a seated key can read open for one). The dome snaps, so every press lands within a sample
  * or two whatever its speed: what tells a hard hit from a soft one is how deep the key sits just after landing. The
- * velocity is the lowest driven reading since the touch (the scan ISR keeps it, kt_gate maps it), on a log scale between the key's floor (its firmest landing:
- * 127) and its ceiling (its lightest landing that seats: 1): t = log(r / r_floor) / log(r_ceil / r_floor) with r the
- * reading less KT_DBASE (conductive rubber's resistance falls as a power of the force, so its log is linear in the
- * force's), velocity = 1 + 126 (1 - t)^0.7 (Velo's curve: free playing gave quartiles 45 / 63 / 80).
+ * velocity is the lowest driven reading since the touch (the scan ISR keeps it, kt_gate maps it), on a log scale
+ * between the key's floor (its firmest landing: 127) and its ceiling (its lightest landing that seats: KT_VMIN):
+ * t = log(r / r_floor) / log(r_ceil / r_floor) with r the reading less KT_DBASE (conductive rubber's resistance falls
+ * as a power of the force, so its log is linear in the force's), velocity = KT_VMIN + (127 - KT_VMIN) (1 - t)^0.7
+ * (Velo's curve: free playing gave quartiles 45 / 63 / 80; its 1 at the ceiling is -42 dB, as good as silent).
+ *
+ * Each key's ends then follow its own landings as running quantiles (MONK-1's sense_learn): the floor near its firmest
+ * 1/32 of presses, the ceiling near its lightest 1/32. A landing past an end moves it most of a step (64 counts for
+ * an uncalibrated key's first 16 landings, 24 after), one inside creeps it back by 1/8 of a step (the first 16) or
+ * 1/32, so one freak press moves an end a step at most. Keys differ (Velo: the lightest landings 742..987 across one
+ * FM-1's keys): without this, a key whose light presses read past the default ceiling played them all at the
+ * lightest. The learnt ends last until power-off; the calibration (below) is what is kept.
  *
  * The keyboard (seq.c keyboard_block, kt_gate) holds a measured key's note back until its velocity is in (KT_WAIT
  * pulled samples, two driven: ~6.6 ms from the touch), at most KT_GATE_MS after the scan saw it down; then it plays
@@ -49,6 +57,8 @@
 #define KT_FLOOR0 450u                 /* the defaults (Velo, DRIVE 2) */
 #define KT_CEIL0 896u
 #define KT_SPAN 80u                    /* the least a ceiling sits above its floor */
+#define KT_VMIN 10u                    /* the lightest velocity (at the ceiling) */
+#define KT_LEARN_N 16u                 /* landings learnt quickly (an uncalibrated key's first) */
 #define KT_GATE_MS 12u                 /* the longest a measured key's note waits for its velocity */
 #define KT_AT_MS 5u
 #define KT_SETTLE_MS 250u
@@ -69,6 +79,8 @@ typedef struct {
 } kt_key_t;
 
 static kt_key_t kt_key[KT_NKEY];
+static uint16_t kt_f16[KT_NKEY], kt_c16[KT_NKEY];   /* the ends in Q4 (kt_learn's creep is under a count) */
+static uint8_t kt_nland[KT_NKEY];                   /* landings learnt (to KT_LEARN_N) */
 static uint8_t kt_mode;                /* MENU > KEYS > KEY TOUCH: OFF, VEL, VEL+AT */
 static uint8_t kt_sens = 5;            /* MENU > KEYS > AT SENS, 1..9 */
 static uint8_t kt_calibrated;          /* the ends came from a TOUCH CAL (else the defaults) */
@@ -109,26 +121,50 @@ static int32_t kt_log2q8(uint32_t x)
     return (int32_t)(e << 8) + (f >> 7);
 }
 
-static void kt_ends(kt_key_t *k, uint32_t fl, uint32_t cl)
+/* key i's ends in Q4 (f16 floor, c16 ceiling), kept apart and within the readings */
+static void kt_ends16(uint32_t i, uint32_t f16, uint32_t c16)
 {
-    if (fl < KT_DBASE + 16u)
-        fl = KT_DBASE + 16u;
-    if (cl > 1020u)
-        cl = 1020u;
-    if (cl < fl + KT_SPAN) {                       /* too close: part them about the middle */
-        uint32_t mid = (fl + cl) / 2u;
-        fl = mid - KT_SPAN / 2u;
-        cl = mid + KT_SPAN / 2u;
+    if (f16 < (KT_DBASE + 16u) << 4)
+        f16 = (KT_DBASE + 16u) << 4;
+    if (c16 > 1020u << 4)
+        c16 = 1020u << 4;
+    if (c16 < f16 + (KT_SPAN << 4)) {              /* too close: part them about the middle */
+        uint32_t mid = (f16 + c16) / 2u;
+        f16 = mid - (KT_SPAN << 3);
+        c16 = mid + (KT_SPAN << 3);
     }
-    k->floor_ = (uint16_t)fl;
-    k->ceil = (uint16_t)cl;
+    kt_f16[i] = (uint16_t)f16;
+    kt_c16[i] = (uint16_t)c16;
+    kt_key[i].floor_ = (uint16_t)((f16 + 8u) >> 4);
+    kt_key[i].ceil = (uint16_t)((c16 + 8u) >> 4);
+}
+static void kt_ends(kt_key_t *k, uint32_t fl, uint32_t cl) { kt_ends16((uint32_t)(k - kt_key), fl << 4, cl << 4); }
+
+/* a landing of key i (m: its lowest driven reading) moves its ends (the top) */
+static void kt_learn(uint32_t i, uint32_t m)
+{
+    uint32_t early = kt_nland[i] < KT_LEARN_N, step = early ? 64u << 4 : 24u << 4, m16 = m << 4;
+    uint32_t creep = early ? step / 8u : step / 32u, jump = step - creep, f = kt_f16[i], c = kt_c16[i];
+    if (m16 < f)
+        f -= f - m16 < jump ? f - m16 : jump;
+    else
+        f += creep;
+    if (m16 > c)
+        c += m16 - c < jump ? m16 - c : jump;
+    else
+        c -= creep;
+    kt_ends16(i, f, c);
+    if (kt_nland[i] < KT_LEARN_N)
+        kt_nland[i]++;
 }
 
 static void kt_defaults(void)
 {
     uint32_t i;
-    for (i = 0; i < KT_NKEY; i++)
+    for (i = 0; i < KT_NKEY; i++) {
         kt_ends(&kt_key[i], KT_FLOOR0, KT_CEIL0);
+        kt_nland[i] = 0;
+    }
     kt_calibrated = 0;
 }
 
@@ -143,14 +179,14 @@ static void kt_init(void)
     kt_defaults();
 }
 
-/* the velocity of driven reading d on a key with ends fl (127) .. cl (1) */
+/* the velocity of driven reading d on a key with ends fl (127) .. cl (KT_VMIN) */
 static uint8_t kt_velocity(uint32_t d, uint32_t fl, uint32_t cl)
 {
     int32_t l, l0, l1, t, i, fr, p;
     if (d <= fl)
         return 127;
     if (d >= cl)
-        return 1;
+        return KT_VMIN;
     l = kt_log2q8(d - KT_DBASE);
     l0 = kt_log2q8(fl > KT_DBASE ? fl - KT_DBASE : 1u);
     l1 = kt_log2q8(cl - KT_DBASE);
@@ -161,7 +197,7 @@ static uint8_t kt_velocity(uint32_t d, uint32_t fl, uint32_t cl)
     i = t >> 7;                                    /* the curve: 32 steps, interpolated */
     fr = t & 127;
     p = KT_POW07[i] + (i < 32 ? ((KT_POW07[i + 1] - KT_POW07[i]) * fr) >> 7 : 0);
-    return (uint8_t)(1 + ((126 * p + 2048) >> 12));
+    return (uint8_t)(KT_VMIN + (((127 - KT_VMIN) * (uint32_t)p + 2048u) >> 12));
 }
 
 /* the scan asks before each sample of key k: drive its row? (the first after the touch, then every other one) */
@@ -268,6 +304,8 @@ static uint32_t kt_gate(uint32_t cur, uint32_t prev, uint32_t now_ms)
             uint32_t m = kt_key[k].dland;
             kt_seen[k] = kt_key[k].land;
             kt_kvel[k] = m == 0xFFFFu ? 0u : kt_velocity(m, kt_key[k].floor_, kt_key[k].ceil);
+            if (m != 0xFFFFu && !kt_cal_phase)     /* (then its ends follow it: MONK-1's order) */
+                kt_learn(k, m);
             kt_wait &= ~(1u << k);
         } else if (now_ms - kt_wait_ms[k] >= KT_GATE_MS) {   /* never seated in time: SELECT VEL */
             kt_kvel[k] = 0;
@@ -336,6 +374,7 @@ static void kt_load(const uint8_t *r)
         uint32_t b = 12u * i, w = (uint32_t)(r[2 + b / 8u] | r[3 + b / 8u] << 8) >> (b % 8u), fl;
         fl = KT_DBASE + 10u * (w & 63u);
         kt_ends(&kt_key[i], fl, fl + KT_SPAN + 10u * ((w >> 6) & 63u));
+        kt_nland[i] = KT_LEARN_N;                  /* (calibrated: learnt slowly from the start) */
     }
     kt_calibrated = 1;
 }
@@ -385,6 +424,7 @@ static void kt_cal_finish(void)
         if (kt_cal_n[1][k] == KT_CAL_N)
             fl = kt_cal_median(kt_cal_v[1][k]);
         kt_ends(&kt_key[k], fl, cl);
+        kt_nland[k] = KT_LEARN_N;
     }
     kt_calibrated = 1;
 }

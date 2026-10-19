@@ -3,8 +3,8 @@
  * in github.com/charlesvestal/fm1-velocity): a pulled-up reading falls from 1023 through the touch to the diode's ~190
  * once seated; a driven one reads the diode (185) plus the pill, lower the harder the key is pressed.
  * 1. the log2 approximation within 0.015 octave (its own 0.008 and Q8's rounding: a 1/70 of a semitone);
- * 2. velocity: 127 at the floor and below, 1 at the ceiling and above, rising the harder the landing, the middle of
- *    the range (in log) where the 0.7 curve puts it, 1 + 126 x 0.5^0.7 = 78;
+ * 2. velocity: 127 at the floor and below, KT_VMIN at the ceiling and above, rising the harder the landing, the middle
+ *    of the range (in log) where the 0.7 curve puts it, 10 + 117 x 0.5^0.7 = 82;
  * 3. the state machine: a press lands after KT_WAIT pulled samples, its velocity from the lowest driven reading; a
  *    graze (gone before seating) never lands; a release after two samples above RELEASE, not one; samples alternate
  *    driven once touched (kt_want_drive), and a held key's column LEDs stay dark (kt_led_ok);
@@ -13,7 +13,10 @@
  * 5. aftertouch: 0 resting, rising as the key is pressed past its rest, back to 0 eased off; AT SENS more sensitive
  *    gives more for the same lean (eased off it fades through the ~30 ms smoothing);
  * 6. the settings row: saved and loaded back within its 10-count steps; another row's bytes (not KT_TAG): OFF;
- * 7. calibration: the medians of three gentle (the ceiling) and three firm (the floor) landings per key. */
+ * 7. calibration: the medians of three gentle (the ceiling) and three firm (the floor) landings per key;
+ * 8. learning: a key whose light presses read past the default ceiling (the A4 played silent on hardware) plays
+ *    them at KT_VMIN, and within a few landings its ceiling is past them, so its medium presses play as such; its floor comes down to firm ones; a calibrated
+ *    key's ends move less for the same presses; calibration's landings teach nothing. */
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -67,8 +70,8 @@ int main(void)
         uint32_t d;
         for (d = 460; d < 896; d += 10)
             up &= kt_velocity(d, 450, 896) <= kt_velocity(d - 10, 450, 896);
-        check("2. velocity: 127 at the floor and harder, 1 at the ceiling", a == 127 && c == 127 && b == 1);
-        check("   softer landings never louder; the log middle 78 (the 0.7 curve)", up && m >= 76 && m <= 80);
+        check("2. velocity: 127 at the floor and harder, KT_VMIN at the ceiling", a == 127 && c == 127 && b == KT_VMIN);
+        check("   softer landings never louder; the log middle 82 (the 0.7 curve)", up && m >= 80 && m <= 84);
     }
 
     kt_init();
@@ -201,6 +204,51 @@ int main(void)
     check("   each key's ceiling the gentle median, its floor the firm median",
           kt_key[0].ceil == 820 && kt_key[0].floor_ == 340 && kt_key[19].ceil == 801 && kt_key[19].floor_ == 359 &&
           kt_calibrated && !kt_cal_phase);
+
+    kt_init();
+    kt_mode = KT_VEL;
+    kt_live = 1;
+    memset(kt_seen, 0, sizeof kt_seen);
+    {
+        uint32_t i, prev = 0, t = 5000, first = 0, last = 0, c0;
+        for (i = 0; i < 6u; i++) {                 /* key 16 (A4): light presses at 960, past the ceiling (896) */
+            press(16, 960, 6);
+            prev = kt_gate(1u << 16, 0, t);
+            if (!i)
+                first = kt_kvel[16];
+            last = kt_kvel[16];
+            lift(16);
+            prev = kt_gate(0, prev, t += 50);
+        }
+        check("8. a key light past its ceiling: KT_VMIN, not silent; its ceiling learnt to them",
+              first == KT_VMIN && last == KT_VMIN && kt_key[16].ceil >= 955);
+        check("   so a medium press of it no longer plays at the lightest",
+              kt_velocity(700, kt_key[16].floor_, kt_key[16].ceil) > 40u);
+        for (i = 0; i < 6u; i++) {
+            press(16, 380, 6);
+            prev = kt_gate(1u << 16, 0, t);
+            lift(16);
+            prev = kt_gate(0, prev, t += 50);
+        }
+        check("   its floor comes down to its firm presses", kt_key[16].floor_ < 420 && kt_velocity(380, kt_key[16].floor_, kt_key[16].ceil) > 115);
+        kt_ends(&kt_key[17], KT_FLOOR0, KT_CEIL0);
+        kt_nland[17] = KT_LEARN_N;
+        c0 = kt_key[17].ceil;
+        press(17, 960, 6);
+        (void)kt_gate(1u << 17, 0, t);
+        lift(17);
+        (void)kt_gate(0, 1u << 17, t += 50);
+        check("   a calibrated key's ceiling moves a smaller step", kt_key[17].ceil > c0 && kt_key[17].ceil - c0 <= 24u);
+        kt_cal_begin();
+        c0 = kt_key[18].ceil;
+        press(18, 990, 6);
+        (void)kt_gate(1u << 18, 0, t);
+        lift(18);
+        (void)kt_gate(0, 1u << 18, t += 50);
+        kt_cal_phase = 0;
+        check("   calibration's landings teach nothing", kt_key[18].ceil == c0);
+        (void)prev;
+    }
 
     printf(bad ? "KEY TOUCH TEST FAILED (%d)\n" : "key touch test passed\n", bad);
     return bad ? 1 : 0;
