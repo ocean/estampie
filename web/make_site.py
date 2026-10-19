@@ -8,6 +8,7 @@ tools read the file with no base URL). No CNAME: the domain belongs to the site 
 
   index.html                  ESTAMPIE: the front page (web/home.html): what it is, the ways in, the thanks
   llms.txt, llms-full.txt     ESTAMPIE: the site for language models (llmstxt.org): the pages; the README and the guide
+  card.jpg                    ESTAMPIE: the link preview (web/card.jpg, docs/readme/hero.html?card): each page's og:image
   favicon.ico                 ESTAMPIE: the pages' icon (also in webapp/art/, with the home-screen icons)
   firmware/estampie-VER.fwsc   the package (+ LICENSE, LICENSING.md, LICENSES/: the package holds
                               JieLi SDK files under Apache-2.0, see LICENSING.md)
@@ -33,7 +34,7 @@ import re
 import shutil
 import subprocess
 import sys
-from html import escape as html_escape
+from html import escape as html_escape, unescape as html_unescape
 from html.parser import HTMLParser
 from pathlib import Path
 
@@ -121,6 +122,56 @@ def write_llms(out, version, product, name, sha):
             raise SystemExit(f"{f}: relative links {rel[:3]}: every llms link must be absolute (from {base})")
 
 
+# ESTAMPIE: the pages a link to which should show the card (Open Graph and Twitter tags), with a description for those
+# that have none of their own (None: keep the page's)
+CARD_TITLES = {"webapp/emu/index.html": "Play ESTAMPIE in your browser",    # (else the page's <title>)
+               "webapp/installer/index.html": "Install ESTAMPIE on your FM-1"}
+CARD_PAGES = {
+    "index.html": None,
+    "guide/index.html": "The ESTAMPIE user guide: from first notes to every page and setting of the mediæval groovebox "
+                        "firmware for the M-VAVE FM-1.",
+    "webapp/emu/index.html": None,
+    "webapp/emu/lab.html": "ESTAMPIE's Sound Lab: shape the TROTTO's sounds as it plays, in your browser, with the "
+                           "firmware's own engines.",
+    "webapp/emu/tools.html": None,
+    "webapp/installer/index.html": "Install ESTAMPIE, a mediæval groovebox firmware, on your M-VAVE FM-1 from the browser "
+                                   "(Chrome or Edge, over USB), or put official firmware V15 back.",
+    "webapp/editor/index.html": "The ESTAMPIE editor: sounds, patterns, songs, samples and backups for your FM-1, over "
+                                "USB MIDI in the browser.",
+}
+CARD_W, CARD_H = 2400, 1260
+CARD_ALT = ("The M-VAVE FM-1 running ESTAMPIE, on an illuminated page: the Estampie wordmark, \"A mediæval groovebox for "
+            "the M-VAVE FM-1\", lutes, shawms, hurdy-gurdies, bagpipes, tabors and nakers")
+
+
+def write_cards(out):
+    """card.jpg, and on each of CARD_PAGES its link-preview tags (absolute, from ESTAMPIE_SITE) before </head>"""
+    base = "https://" + os.environ.get("ESTAMPIE_SITE", "fm-1.drewr.dev/estampie").strip("/") + "/"
+    shutil.copy(HERE / "card.jpg", out / "card.jpg")
+    for rel, desc in CARD_PAGES.items():
+        f = out / rel
+        if not f.exists():
+            print(f"site: no {rel}: no card tags for it")
+            continue
+        page = f.read_text(encoding="utf-8")
+        if 'property="og:' in page or page.count("</head>") != 1:
+            raise SystemExit(f"{rel}: already has og: tags, or not one </head>: update make_site.py")
+        title = CARD_TITLES.get(rel) or html_unescape(re.search(r"<title>([^<]*)</title>", page)[1]).strip()
+        have = re.search(r'<meta name="description" content="([^"]*)"', page)
+        if not have and not desc:
+            raise SystemExit(f"{rel}: no meta description: give it one in CARD_PAGES")
+        text = html_unescape(have[1]) if have else desc
+        url = base + re.sub(r"(^|/)index\.html$", r"\1", rel)
+        tags = ([] if have else [("name", "description", text)]) + [
+            ("property", "og:type", "website"), ("property", "og:site_name", "ESTAMPIE"),
+            ("property", "og:title", title), ("property", "og:description", text), ("property", "og:url", url),
+            ("property", "og:image", base + "card.jpg"), ("property", "og:image:type", "image/jpeg"),
+            ("property", "og:image:width", str(CARD_W)), ("property", "og:image:height", str(CARD_H)),
+            ("property", "og:image:alt", CARD_ALT), ("name", "twitter:card", "summary_large_image")]
+        meta = "".join(f'<meta {k}="{v}" content="{html_escape(c, quote=False).replace('"', '&quot;')}">\n' for k, v, c in tags)
+        f.write_text(page.replace("</head>", meta + "</head>"), encoding="utf-8")
+
+
 def main(pkg, version, out):
     pkg, out = Path(pkg), Path(out)
     raw = pkg.read_bytes()
@@ -204,6 +255,7 @@ def main(pkg, version, out):
         raise SystemExit("home.html: a {{...}} make_site.py does not fill")
     (out / "index.html").write_text(page, encoding="utf-8")
     write_llms(out, version, product, name, front["PKG_SHA256"])
+    write_cards(out)
     shutil.copy(out / "webapp/art/favicon.ico", out / "favicon.ico")   # ESTAMPIE: where a browser looks for it first
     print(f"site: {out}: webapp/installer ({len(html)} B), webapp/editor, firmware/{name} ({len(raw)} B, {product})")
 

@@ -6,19 +6,23 @@
         emulator (python3 -m http.server --bind 127.0.0.1 ...).
      2. In the emulator, Switch on, press PLAY on track 1 (TROTTO GURDY), scale #device to 2x, hide the rest of the
         page on magenta, and screenshot #device; key the magenta out to .artifacts/tmp/device-cut.png.
-     3. Open this page at 1760 x 1440 and screenshot it, saved as docs/readme/estampie.jpg (quality 88: the vellum's grain makes a PNG 1.6 MB). -->
+     3. Open this page at 1760 x 1440 and screenshot it, saved as docs/readme/estampie.jpg (quality 88: the vellum's grain makes a PNG 1.6 MB).
+     hero.html?card is the same leaf laid out wide, the site's link preview (web/card.jpg: og:image, make_site.py): open
+     it at 2400 x 1260, screenshot it and save it at quality 85. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <title>ESTAMPIE README picture</title>
+<script>if (/card/.test(location.search)) document.documentElement.classList.add("card");</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=swap">
 <style>
   :root { --vellum: #eee2c4; --ink: #2e1e14; --soft: #5b4532; --vermilion: #962012; --lapis: #1a3e94; --gold: #b8892a;
-          --gilt: #d9b04a; --verdigris: #3f6b3a; }
+          --gilt: #d9b04a; --verdigris: #3f6b3a; --w: 1760px; --h: 1440px; }
+  .card { --w: 2400px; --h: 1260px; }
   html, body { margin: 0; }
-  body { width: 1760px; height: 1440px; overflow: hidden; position: relative; color: var(--ink);
+  body { width: var(--w); height: var(--h); overflow: hidden; position: relative; color: var(--ink);
          font-family: "IM Fell English", Georgia, serif;
          background:
            radial-gradient(ellipse 75% 70% at 50% 45%, transparent 50%, rgba(120, 82, 30, .34) 100%),
@@ -27,7 +31,7 @@
   /* the leaf's rules: gold outside, a vermilion double rule within */
   .frame { position: absolute; inset: 44px; border: 6px double var(--vermilion); outline: 3px solid var(--gold);
            outline-offset: 10px; }
-  .orn { position: absolute; inset: 0; width: 1760px; height: 1440px; pointer-events: none; }
+  .orn { position: absolute; inset: 0; width: var(--w); height: var(--h); pointer-events: none; }
   .crest { position: absolute; top: 92px; left: 0; right: 0; display: flex; justify-content: center; align-items: flex-end;
            gap: 10px; }
   .crest .initial { width: 210px; height: 210px; }
@@ -39,6 +43,19 @@
   .foot { position: absolute; top: 1262px; left: 0; right: 0; margin: 0; text-align: center;
           font: 38px/1.2 "IM Fell English SC", serif; letter-spacing: .05em; color: var(--vermilion); }
   .foot span { color: var(--gold); padding: 0 .35em; }
+  .url, .c { display: none; }
+  /* the card (?card): the device on the left, the crest and the words on the right */
+  .card .device { top: 200px; left: 110px; width: 1380px; transform: none; }
+  .card .crest { top: 150px; left: 1530px; right: 110px; }
+  .card .crest .initial { width: 190px; height: 190px; }
+  .card .crest .word { height: 136px; margin-bottom: 27px; }
+  .card .tagline { top: 390px; left: 1530px; right: 110px; font-size: 54px; line-height: 1.25; }
+  .card .tagline b { font-size: 54px; }
+  .card .c { display: inline; }
+  .card .h { display: none; }
+  .card .foot { top: 610px; left: 1560px; right: 140px; font-size: 42px; line-height: 1.55; }
+  .card .url { display: block; position: absolute; top: 990px; left: 1530px; right: 110px; margin: 0; text-align: center;
+               font: 40px/1.2 "IM Fell English SC", serif; letter-spacing: .05em; color: var(--soft); }
 </style>
 </head>
 <body>
@@ -63,7 +80,7 @@
       <!-- the vines: ink stems, finely drawn -->
       <g fill="none" stroke="#2e1e14" stroke-width="3" stroke-linecap="round">
         <path d="M100 100 C170 60 210 120 270 86 S380 50 430 84 C448 96 462 96 470 90"/>
-        <path d="M100 100 C60 170 120 210 86 270 S50 380 84 430 S120 540 82 600 S54 660 78 690"/>
+        <path d="M100 100 C60 170 120 210 86 270 S50 380 84 430 S120 540 82 600"/>
         <path d="M270 86 C282 54 316 50 322 70" />
         <path d="M430 84 C440 116 472 122 480 104"/>
         <path d="M86 270 C54 282 50 316 70 322"/>
@@ -79,8 +96,7 @@
       <use href="#rose" transform="translate(72 322) scale(.9)"/>
       <use href="#bezant" transform="translate(480 104)"/>
       <use href="#bezant" transform="translate(104 480)"/>
-      <use href="#ivy" transform="translate(60 640) rotate(150) scale(.75)" fill="#d9b04a" stroke="#8a6418" stroke-width="1.5"/>
-      <use href="#bezant" transform="translate(78 690) scale(.8)"/>
+      <use href="#bezant" transform="translate(82 600) scale(.8)"/>
       <!-- the boss: a lapis square in gold, a gold quatrefoil on it -->
       <rect x="56" y="56" width="88" height="88" fill="#1a3e94" stroke="#d9b04a" stroke-width="6"/>
       <rect x="56" y="56" width="88" height="88" fill="none" stroke="#8a6418" stroke-width="1.5"/>
@@ -90,16 +106,33 @@
       <circle cx="100" cy="100" r="7" fill="#962012"/>
       <g fill="#eee2c4"><circle cx="70" cy="70" r="3"/><circle cx="130" cy="70" r="3"/><circle cx="70" cy="130" r="3"/><circle cx="130" cy="130" r="3"/></g>
     </g>
+    <!-- the side vine a step further down: the tall leaf only -->
+    <g id="ext">
+      <path d="M82 600 S54 660 78 690" fill="none" stroke="#2e1e14" stroke-width="3" stroke-linecap="round"/>
+      <use href="#ivy" transform="translate(60 640) rotate(150) scale(.75)" fill="#d9b04a" stroke="#8a6418" stroke-width="1.5"/>
+      <use href="#bezant" transform="translate(78 690) scale(.8)"/>
+    </g>
   </defs>
-  <use href="#corner"/>
-  <use href="#corner" transform="translate(1760 0) scale(-1 1)"/>
-  <use href="#corner" transform="translate(0 1440) scale(1 -1)"/>
-  <use href="#corner" transform="translate(1760 1440) scale(-1 -1)"/>
+  <g id="corners"></g>
 </svg>
+<script>
+  // the four corners (and on the tall leaf the side vines' last step), mirrored to the page's size
+  const card = document.documentElement.classList.contains("card"), W = card ? 2400 : 1760, H = card ? 1260 : 1440;
+  const svg = document.querySelector(".orn"), g = document.getElementById("corners");
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  for (const t of ["", `translate(${W} 0) scale(-1 1)`, `translate(0 ${H}) scale(1 -1)`, `translate(${W} ${H}) scale(-1 -1)`])
+    for (const id of card ? ["corner"] : ["corner", "ext"]) {
+      const u = document.createElementNS("http://www.w3.org/2000/svg", "use");
+      u.setAttribute("href", "#" + id);
+      if (t) u.setAttribute("transform", t);
+      g.append(u);
+    }
+</script>
 
 <div class="crest"><img class="initial" src="../../build/emu/art/initial.png" alt="E"><img class="word" src="../../build/emu/art/word.png" alt="stampie"></div>
-<p class="tagline">A <b>mediæval groovebox</b> for the M-VAVE FM-1</p>
+<p class="tagline">A <b>mediæval groovebox</b><br class="c"> for the M-VAVE FM-1</p>
 <img class="device" src="../../.artifacts/tmp/device-cut.png" alt="The FM-1 running ESTAMPIE, playing the TROTTO">
-<p class="foot">Lutes<span>❧</span>Shawms<span>❧</span>Hurdy-gurdies<span>❧</span>Bagpipes<span>❧</span>Tabors &amp; nakers</p>
+<p class="foot">Lutes<span>❧</span>Shawms<span class="h">❧</span><br class="c">Hurdy-gurdies<span>❧</span>Bagpipes<span class="h">❧</span><br class="c">Tabors &amp; nakers</p>
+<p class="url">fm-1.drewr.dev/estampie</p>
 </body>
 </html>
