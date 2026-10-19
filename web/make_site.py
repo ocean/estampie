@@ -2,8 +2,9 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments
 """Make the site: ESTAMPIE's folder of https://fm-1.drewr.dev/ (Drew's FM-1 projects, each in a folder of its own:
-/estampie/ is this one). Every link is relative, so OUT_DIR works anywhere; ESTAMPIE_SITE changes only the address
-the guide's text shows (docs/guide/make_guide.py). No CNAME: the domain belongs to the site above this folder.
+/estampie/ is this one). Every page's link is relative, so OUT_DIR works anywhere; ESTAMPIE_SITE changes the address
+the guide's text shows (docs/guide/make_guide.py) and the base of llms.txt's links, which are absolute (llmstxt.org;
+tools read the file with no base URL). No CNAME: the domain belongs to the site above this folder.
 
   index.html                  ESTAMPIE: the front page (web/home.html): what it is, the ways in, the thanks
   llms.txt, llms-full.txt     ESTAMPIE: the site for language models (llmstxt.org): the pages; the README and the guide
@@ -27,6 +28,7 @@ the install.
 """
 import hashlib
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -92,19 +94,20 @@ def guide_text(page):
 
 def write_llms(out, version, product, name, sha):
     """llms.txt (llmstxt.org: what the site is and its pages) and llms-full.txt (that, the README and the guide's text)"""
+    base = "https://" + os.environ.get("ESTAMPIE_SITE", "fm-1.drewr.dev/estampie").strip("/") + "/"
     head = (f"# ESTAMPIE\n\n> A mediæval groovebox: custom firmware for the M-VAVE FM-1 synthesiser. Version {version} "
             f"(firmware identity {product}). GPL-3.0-only; not affiliated with M-VAVE.\n\n"
             "Part of Drew Robinson's FM-1 projects: https://fm-1.drewr.dev/ . Source: " + SRC_URL + "\n\n"
             "## Pages\n\n"
-            "- [Front page](index.html): what ESTAMPIE is, the ways in, credits\n"
-            "- [Play it in your browser](webapp/emu/): the firmware compiled to WebAssembly, with its panel and sound\n"
-            "- [Install it on your FM-1](webapp/installer/): the web installer (Web MIDI with SysEx; Chrome or Edge); "
+            f"- [Front page]({base}index.html): what ESTAMPIE is, the ways in, credits\n"
+            f"- [Play it in your browser]({base}webapp/emu/): the firmware compiled to WebAssembly, with its panel and sound\n"
+            f"- [Install it on your FM-1]({base}webapp/installer/): the web installer (Web MIDI with SysEx; Chrome or Edge); "
             "also returns the FM-1 to official firmware V15\n"
-            "- [Editor](webapp/editor/): edit sounds, patterns, songs and samples, and make backups, over USB MIDI\n"
-            "- [User guide](guide/): from first notes to every page and setting\n"
-            f"- [Firmware download](firmware/{name}): the .fwsc package, SHA-256 {sha}\n"
-            "- [Licences](firmware/LICENSING.md)\n\n")
-    (out / "llms.txt").write_text(head + "## Optional\n\n- [Full text](llms-full.txt): the README and the user guide\n",
+            f"- [Editor]({base}webapp/editor/): edit sounds, patterns, songs and samples, and make backups, over USB MIDI\n"
+            f"- [User guide]({base}guide/): from first notes to every page and setting\n"
+            f"- [Firmware download]({base}firmware/{name}): the .fwsc package, SHA-256 {sha}\n"
+            f"- [Licences]({base}firmware/LICENSING.md)\n\n")
+    (out / "llms.txt").write_text(head + f"## Optional\n\n- [Full text]({base}llms-full.txt): the README and the user guide\n",
                                   encoding="utf-8")
     readme = (HERE.parent / "README.md").read_text(encoding="utf-8")
     readme = README_LINKS.sub(lambda m: f"]({SRC_URL}/blob/main/{m[1]})", readme)
@@ -112,6 +115,10 @@ def write_llms(out, version, product, name, sha):
     guide = guide_text((out / "guide" / "index.html").read_text(encoding="utf-8"))
     (out / "llms-full.txt").write_text(head + "## README\n\n" + readme.strip() + "\n\n## User guide\n\n" + guide + "\n",
                                        encoding="utf-8")
+    for f in ("llms.txt", "llms-full.txt"):                   # (fm1-site's link check resolves these too)
+        rel = [u for u in re.findall(r"\]\(([^)\s]+)\)", (out / f).read_text(encoding="utf-8")) if "://" not in u]
+        if rel:
+            raise SystemExit(f"{f}: relative links {rel[:3]}: every llms link must be absolute (from {base})")
 
 
 def main(pkg, version, out):
