@@ -107,6 +107,17 @@ a { color: var(--vermilion); }
         <fieldset><legend>Sends</legend><div id="g-sends"></div></fieldset>
         <fieldset><legend>The track</legend><div id="g-mix"></div></fieldset>
       </div>
+      <div>
+        <fieldset><legend>Touch</legend>
+          <p class="idea">What KEY TOUCH (or a MIDI controller) gives the part: how hard its notes are played, and the pressure on a held key.</p>
+          <div id="g-touch"></div>
+          <label class="ctl"><b>SWELL</b><input type="checkbox" id="swell"><output>lean in and ease off, every 4 s</output></label>
+        </fieldset>
+        <fieldset><legend>Modulation matrix</legend>
+          <p class="idea">AT is aftertouch, MODW the mod wheel, VEL each note's velocity. Try AT → CUT on a reed, AT → AMP on a pipe.</p>
+          <div id="g-mod"></div>
+        </fieldset>
+      </div>
     </div>
     <div class="copy">
       <div class="row"><button id="copy" type="button">Copy as a preset</button><span class="idea" id="copied"></span></div>
@@ -125,6 +136,9 @@ const PARTS = ["The tune", "The lute", "The long notes", "The tabor"];
 const $ = (id) => document.getElementById(id);
 let ac = null, node = null, playing = false, sel = 0, solo = false, engines = [];
 const states = [], chosen = [null, null, null, null];   // the candidate in each part (null: as the TROTTO has it)
+const TOUCH0 = { vel: 0, at: 0, mw: 0 };                 // vel 0: the steps' own velocities
+const touch = [0, 1, 2, 3].map(() => ({ ...TOUCH0 }));
+let swellT = null;
 
 function post(ops, want = sel) { node.port.postMessage({ type: "ops", ops, want }); }
 
@@ -135,7 +149,7 @@ function drawParts() {
     b.type = "button"; b.setAttribute("role", "tab"); b.setAttribute("aria-selected", String(k === sel));
     const eng = states[k] && engines.find((x) => x.e === states[k].eng);
     b.innerHTML = `${k + 1} · ${p}<small>${chosen[k] ? chosen[k].name : "as the TROTTO"}${eng ? " · " + eng.name : ""}</small>`;
-    b.onclick = () => { sel = k; drawParts(); drawCands(); post(solo ? soloOps() : [], k); };
+    b.onclick = () => { sel = k; drawParts(); drawCands(); drawTouch(); swell($("swell").checked); post(solo ? soloOps() : [], k); };
     return b;
   }));
 }
@@ -172,9 +186,42 @@ function load(c) {
       ops.push(["set", k, "SLEN", 12], ["set", k, "SDIV", 4]);
     }
   }
+  touch[k] = { ...TOUCH0 };
+  ops.push(["touch", k, 0, 0]);
   sel = k;
   post(ops.concat(soloOps()), k);
-  drawParts(); drawCands();
+  drawParts(); drawCands(); drawTouch();
+}
+// ---- the part's touch: velocity (every note), aftertouch and mod wheel, and a swell of the aftertouch ----
+function drawTouch() {
+  const t = touch[sel], k = sel;
+  const row = (label, key, min, text) => {
+    const c = { id: key, label, min, max: 127, value: t[key], text: text(t[key]) };
+    const r = ctl(k, c, () => null);
+    const inp = r.querySelector("input"), out = r.querySelector("output");
+    inp.oninput = () => {
+      t[key] = +inp.value;
+      out.textContent = text(t[key]);
+      if (key === "vel") post([["vel", k, t.vel]], k);
+      else post([["touch", k, t.at, t.mw]], k);
+    };
+    return r;
+  };
+  $("g-touch").replaceChildren(
+    row("VEL", "vel", 0, (v) => v ? String(v) : "as written"),
+    row("AT", "at", 0, (v) => String(v)),
+    row("MODW", "mw", 0, (v) => String(v)));
+}
+function swell(on) {
+  clearInterval(swellT);
+  swellT = null;
+  if (!on) { post([["touch", sel, touch[sel].at, touch[sel].mw]]); return; }
+  const t0 = performance.now();
+  swellT = setInterval(() => {
+    const ph = ((performance.now() - t0) / 4000) % 1, top = touch[sel].at || 127;
+    const at = Math.round(top * (ph < 0.5 ? ph * 2 : 2 - ph * 2));
+    node.port.postMessage({ type: "ops", ops: [["touch", sel, at, touch[sel].mw]] });
+  }, 40);
 }
 function soloOps() { return [0, 1, 2, 3].map((k) => ["set", k, "MUTE", solo && k !== sel ? 1 : 0]); }
 
@@ -198,11 +245,12 @@ function drawPanel(s) {
   $("pidea").textContent = c ? c.idea : "The scene's own sound in this part. Change anything below, or load a candidate.";
   $("engine").value = String(s.eng);
   const shape = [s.k, s.eng, ...s.engine.map((x) => `${x.label}${x.min}${x.max}`)].join();
-  const groups = { engine: s.engine, env: s.env, sends: s.sends, mix: s.mix.filter((x) => x.label !== "RING" || s.eng === 14) };
+  const groups = { engine: s.engine, env: s.env, sends: s.sends, mix: s.mix.filter((x) => x.label !== "RING" || s.eng === 14),
+                   mod: s.mod };
   if (shape !== lastShape) {                         // a new engine or model: the sliders again
     lastShape = shape;
     $("g-engine").replaceChildren(...groups.engine.map((x, i) => ctl(s.k, x, (v) => ["setE", s.k, i, v])));
-    for (const g of ["env", "sends", "mix"])
+    for (const g of ["env", "sends", "mix", "mod"])
       $(`g-${g}`).replaceChildren(...groups[g].map((x) => ctl(s.k, x, (v) => ["set", s.k, x.id, v])));
   } else {                                           // the same sliders: values and their text
     for (const g of Object.values(groups))
@@ -223,8 +271,12 @@ function presetLine(s, c) {
   const fx = s.sends.map((x) => x.value);
   const name = c ? c.name : "MY SOUND", eng = engines.find((x) => x.e === s.eng);
   const temp = s.mix.find((x) => x.label === "TEMP"), ring = s.mix.find((x) => x.label === "RING");
+  const mods = [0, 1, 2].map((i) => s.mod.slice(i * 3, i * 3 + 3)).concat([s.mod.slice(9, 12)])
+    .filter(([src, dst, amt]) => src.value && dst.value && amt.value)
+    .map(([src, dst, amt]) => `${src.text} > ${dst.text} ${amt.text}`);
   return `/* ${eng ? eng.name : s.eng}${temp && temp.value ? `, TEMP ${temp.text}` : ""}${s.eng === 14 && ring && ring.value ? ", RING ON" : ""} */\n` +
-    `{"${name}", {${s.engine.map((x) => x.value).join(", ")}}, {${env.join(", ")}}, ${fenv}, ${mono}, FX(${fx.join(", ")})},`;
+    `{"${name}", {${s.engine.map((x) => x.value).join(", ")}}, {${env.join(", ")}}, ${fenv}, ${mono}, FX(${fx.join(", ")})},` +
+    (mods.length ? `\n/* MOD (not in a preset line: set on LFO > MOD): ${mods.join(", ")} */` : "");
 }
 
 // ---- the deck ----
@@ -259,7 +311,7 @@ $("on").onclick = async () => {
     $("play").disabled = false;
     $("on").hidden = true;
     $("status").textContent = "On. Press Play to hear the TROTTO, then load a candidate or move a slider.";
-    drawParts(); drawCands(); drawPanel(states[sel]);
+    drawParts(); drawCands(); drawPanel(states[sel]); drawTouch();
   } catch (err) {
     $("on").disabled = false;
     $("status").textContent = /WebAssembly|wasm|CSP|Content Security/i.test(String(err))
@@ -276,7 +328,13 @@ $("play").onclick = () => {
 $("vol").oninput = () => node && node.port.postMessage({ type: "master", value: +$("vol").value });
 $("engine").onchange = () => { chosen[sel] = null; post([["engine", sel, +$("engine").value]]); drawCands(); };
 $("solo").onchange = () => { solo = $("solo").checked; post(soloOps()); };
-$("reset").onclick = () => { chosen[sel] = null; post([["part", sel]]); drawCands(); };
+$("reset").onclick = () => {
+  chosen[sel] = null;
+  touch[sel] = { ...TOUCH0 };
+  post([["part", sel], ["touch", sel, 0, 0]]);
+  drawCands(); drawTouch();
+};
+$("swell").onchange = () => swell($("swell").checked);
 $("copy").onclick = async () => {
   const t = $("preset").textContent;
   try { await navigator.clipboard.writeText(t); $("copied").textContent = "Copied."; }

@@ -449,17 +449,51 @@ EXPORT int32_t web_track_set(uint32_t k, uint32_t id, int32_t v)
     ui.force = 1;
     return trk[k].p[id];
 }
+static uint8_t web_vel_own[NTRK][NSTEP], web_vel_kept[NTRK];   /* (web_track_vel, below) */
 EXPORT void web_track_step(uint32_t k, uint32_t i, uint32_t note, uint32_t vel)
 {
     step_t *s;
     if (k >= NTRK || i >= NSTEP)
         return;
     s = &trk[k].step[i];
+    web_vel_kept[k] = 0;
     memset(s, 0, sizeof *s);
     s->note[0] = (uint8_t)(note & 127u);
     s->n = note ? 1 : 0;
     s->time = note ? ST_NOTE : ST_REST;
     s->vel = (uint8_t)(note ? (vel ? vel & 127u : 96u) : 0u);
+}
+/* the lab's touch, as KEY TOUCH or a MIDI controller gives it: web_track_vel, every note step of track k at
+ * velocity v (1..127), or 0 their own again (kept at the first change; a part or a step loaded forgets them);
+ * web_track_touch, its aftertouch and mod wheel (0..127: mod.c AT and MODW) */
+EXPORT void web_track_vel(uint32_t k, uint32_t v)
+{
+    uint32_t i;
+    if (k >= NTRK || v > 127u)
+        return;
+    if (!v) {
+        if (web_vel_kept[k])
+            for (i = 0; i < NSTEP; i++)
+                if (trk[k].step[i].n)
+                    trk[k].step[i].vel = web_vel_own[k][i];
+        web_vel_kept[k] = 0;
+        return;
+    }
+    if (!web_vel_kept[k]) {
+        for (i = 0; i < NSTEP; i++)
+            web_vel_own[k][i] = trk[k].step[i].vel;
+        web_vel_kept[k] = 1;
+    }
+    for (i = 0; i < NSTEP; i++)
+        if (trk[k].step[i].n)
+            trk[k].step[i].vel = (uint8_t)v;
+}
+EXPORT void web_track_touch(uint32_t k, uint32_t at, uint32_t mw)
+{
+    if (k >= NTRK)
+        return;
+    trk[k].at = (uint8_t)(at > 127u ? 127u : at);
+    trk[k].mw = (uint8_t)(mw > 127u ? 127u : mw);
 }
 EXPORT void web_transport(uint32_t req) { if (req >= 1u && req <= 3u) transport_req = (uint8_t)req; }
 EXPORT int32_t web_track_get(uint32_t k, uint32_t id) { return k < NTRK && id < P_COUNT ? trk[k].p[id] : 0; }
@@ -502,6 +536,7 @@ EXPORT void web_scene_part(uint32_t k)
         return;
     p = GB_SCENES[0].part[k];
     t = &trk[k];
+    web_vel_kept[k] = 0;
     set_engine_of(t, p[0]);
     apply_preset_to(t, p[1]);
     es_phrase_load(t, p[2] - ES_PHR(0));
@@ -510,7 +545,9 @@ EXPORT void web_scene_part(uint32_t k)
 }
 /* the lab's parameters by number (lab.html PIDS: the same order), so the page never holds P_* values of its own */
 static const uint8_t WEB_PIDS[] = {P_LEVEL, P_ATK, P_DEC, P_SUS, P_REL, P_ED_FLT, P_VOICE, P_PAN, P_MUTE, P_DIST,
-                                   P_CHOR, P_DLY, P_REV, P_SLEN, P_SDIV, P_TEMP, P_RING, P_E0};
+                                   P_CHOR, P_DLY, P_REV, P_SLEN, P_SDIV, P_TEMP, P_RING, P_E0, P_M1SRC, P_M1DST,
+                                   P_M1AMT, P_M2SRC, P_M2DST, P_M2AMT, P_M3SRC, P_M3DST, P_M3AMT, P_M4SRC, P_M4DST,
+                                   P_M4AMT};
 EXPORT int32_t web_pid(uint32_t n) { return n < sizeof WEB_PIDS ? WEB_PIDS[n] : -1; }
 /* a channel message from Web MIDI, as a USB-MIDI packet arrives (usb.c midi_enqueue): 0 = the ring was full */
 EXPORT uint32_t web_midi(uint32_t status, uint32_t d1, uint32_t d2)

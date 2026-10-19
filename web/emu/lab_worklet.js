@@ -5,7 +5,8 @@
 // controls as the firmware describes them (label, range, value, the value as the screen shows it).
 
 const PID_NAMES = ["LEVEL", "ATK", "DEC", "SUS", "REL", "ED_FLT", "VOICE", "PAN", "MUTE", "DIST", "CHOR", "DLY", "REV",
-                   "SLEN", "SDIV", "TEMP", "RING", "E0"];   // felucca_web.c WEB_PIDS, in its order
+                   "SLEN", "SDIV", "TEMP", "RING", "E0", "M1SRC", "M1DST", "M1AMT", "M2SRC", "M2DST", "M2AMT",
+                   "M3SRC", "M3DST", "M3AMT", "M4SRC", "M4DST", "M4AMT"];   // felucca_web.c WEB_PIDS, in its order
 
 class Lab extends AudioWorkletProcessor {
   constructor() {
@@ -37,6 +38,7 @@ class Lab extends AudioWorkletProcessor {
       env: ids(["ATK", "DEC", "SUS", "REL", "ED_FLT"]),
       sends: ids(["DIST", "CHOR", "DLY", "REV"]),
       mix: ids(["LEVEL", "PAN", "VOICE", "TEMP", "RING"]),
+      mod: ids(["M1SRC", "M1DST", "M1AMT", "M2SRC", "M2DST", "M2AMT", "M3SRC", "M3DST", "M3AMT", "M4SRC", "M4DST", "M4AMT"]),
       mute: this.ex.web_track_get(k, P.MUTE),
     };
   }
@@ -50,6 +52,8 @@ class Lab extends AudioWorkletProcessor {
     else if (name === "part") ex.web_scene_part(a[0]);
     else if (name === "scene") ex.web_scene(a[0]);
     else if (name === "transport") ex.web_transport(a[0]);
+    else if (name === "vel") ex.web_track_vel(a[0], a[1]);          // every note step of the part at velocity a[1]
+    else if (name === "touch") ex.web_track_touch(a[0], a[1], a[2]);   // aftertouch, mod wheel
   }
 
   async onMessage(m) {
