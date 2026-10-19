@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/readme/estampie.jpg" width="880" alt="ESTAMPIE: the M-VAVE FM-1 playing the TROTTO in its vellum look, on an illuminated page with vines, ivy leaves and the calligraphic Estampie wordmark"></p>
+
 # ESTAMPIE: a mediæval groovebox for the FM-1
 
 **ESTAMPIE** is custom firmware for the **M-VAVE FM-1**, named after the *estampie*, a fast dance of the

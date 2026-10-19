@@ -1,0 +1,105 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-only -->
+<!-- ESTAMPIE: the README's opening picture (docs/readme/estampie.jpg), the emulator's FM-1 on an illuminated leaf.
+     To remake it:
+     1. web/emu/build.sh and tools/gen_emu_art.py (build/emu/art/initial.png, word.png); serve the repo root and the
+        emulator (python3 -m http.server --bind 127.0.0.1 ...).
+     2. In the emulator, Switch on, press PLAY on track 1 (TROTTO GURDY), scale #device to 2x, hide the rest of the
+        page on magenta, and screenshot #device; key the magenta out to .artifacts/tmp/device-cut.png.
+     3. Open this page at 1760 x 1440 and screenshot it, saved as docs/readme/estampie.jpg (quality 88: the vellum's grain makes a PNG 1.6 MB). -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ESTAMPIE README picture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=swap">
+<style>
+  :root { --vellum: #eee2c4; --ink: #2e1e14; --soft: #5b4532; --vermilion: #962012; --lapis: #1a3e94; --gold: #b8892a;
+          --gilt: #d9b04a; --verdigris: #3f6b3a; }
+  html, body { margin: 0; }
+  body { width: 1760px; height: 1440px; overflow: hidden; position: relative; color: var(--ink);
+         font-family: "IM Fell English", Georgia, serif;
+         background:
+           radial-gradient(ellipse 75% 70% at 50% 45%, transparent 50%, rgba(120, 82, 30, .34) 100%),
+           url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .32 0 0 0 0 .15 0 0 0 .11 0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23f)'/%3E%3C/svg%3E"),
+           var(--vellum); }
+  /* the leaf's rules: gold outside, a vermilion double rule within */
+  .frame { position: absolute; inset: 44px; border: 6px double var(--vermilion); outline: 3px solid var(--gold);
+           outline-offset: 10px; }
+  .orn { position: absolute; inset: 0; width: 1760px; height: 1440px; pointer-events: none; }
+  .crest { position: absolute; top: 92px; left: 0; right: 0; display: flex; justify-content: center; align-items: flex-end;
+           gap: 10px; }
+  .crest .initial { width: 210px; height: 210px; }
+  .crest .word { height: 150px; margin-bottom: 30px; }
+  .tagline { position: absolute; top: 318px; left: 0; right: 0; margin: 0; text-align: center; font: italic 46px/1.2 "IM Fell English", serif; }
+  .tagline b { font: 400 46px/1.2 "IM Fell English SC", serif; color: var(--vermilion); letter-spacing: .03em; }
+  .device { position: absolute; top: 410px; left: 50%; width: 1300px; transform: translateX(-50%);
+            filter: drop-shadow(0 18px 22px rgba(60, 38, 12, .38)) drop-shadow(0 3px 4px rgba(60, 38, 12, .3)); }
+  .foot { position: absolute; top: 1262px; left: 0; right: 0; margin: 0; text-align: center;
+          font: 38px/1.2 "IM Fell English SC", serif; letter-spacing: .05em; color: var(--vermilion); }
+  .foot span { color: var(--gold); padding: 0 .35em; }
+</style>
+</head>
+<body>
+<div class="frame"></div>
+
+<svg class="orn" viewBox="0 0 1760 1440" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <defs>
+    <!-- an ivy leaf, its stem at the origin, pointing along +x -->
+    <path id="ivy" d="M0 0 C8 -4 14 -16 26 -15 C30 -24 44 -22 42 -11 C54 -10 56 4 44 7 C48 18 34 24 28 14 C18 20 6 10 0 0 Z"/>
+    <!-- a flower: five vermilion petals round a gold heart -->
+    <g id="rose">
+      <g fill="#962012">
+        <circle cx="0" cy="-11" r="8"/><circle cx="10.5" cy="-3.4" r="8"/><circle cx="6.5" cy="8.9" r="8"/>
+        <circle cx="-6.5" cy="8.9" r="8"/><circle cx="-10.5" cy="-3.4" r="8"/>
+      </g>
+      <circle r="6" fill="#d9b04a" stroke="#8a6418" stroke-width="1.5"/>
+    </g>
+    <!-- a gold bezant with a dark edge -->
+    <g id="bezant"><circle r="7" fill="#d9b04a" stroke="#8a6418" stroke-width="1.6"/></g>
+    <!-- the top-left corner: a lapis boss, and vines running along the top and down the side -->
+    <g id="corner">
+      <!-- the vines: ink stems, finely drawn -->
+      <g fill="none" stroke="#2e1e14" stroke-width="3" stroke-linecap="round">
+        <path d="M100 100 C170 60 210 120 270 86 S380 50 430 84 C448 96 462 96 470 90"/>
+        <path d="M100 100 C60 170 120 210 86 270 S50 380 84 430 S120 540 82 600 S54 660 78 690"/>
+        <path d="M270 86 C282 54 316 50 322 70" />
+        <path d="M430 84 C440 116 472 122 480 104"/>
+        <path d="M86 270 C54 282 50 316 70 322"/>
+        <path d="M84 430 C116 440 122 472 104 480"/>
+      </g>
+      <!-- leaves along them, gold and green -->
+      <use href="#ivy" transform="translate(186 92) rotate(-70) scale(.9)" fill="#3f6b3a" stroke="#2e1e14" stroke-width="1.5"/>
+      <use href="#ivy" transform="translate(352 64) rotate(-30)" fill="#d9b04a" stroke="#8a6418" stroke-width="1.5"/>
+      <use href="#ivy" transform="translate(92 186) rotate(160) scale(.9)" fill="#3f6b3a" stroke="#2e1e14" stroke-width="1.5"/>
+      <use href="#ivy" transform="translate(64 352) rotate(120)" fill="#d9b04a" stroke="#8a6418" stroke-width="1.5"/>
+      <use href="#ivy" transform="translate(104 522) rotate(30) scale(.85)" fill="#3f6b3a" stroke="#2e1e14" stroke-width="1.5"/>
+      <use href="#rose" transform="translate(322 72) scale(.9)"/>
+      <use href="#rose" transform="translate(72 322) scale(.9)"/>
+      <use href="#bezant" transform="translate(480 104)"/>
+      <use href="#bezant" transform="translate(104 480)"/>
+      <use href="#ivy" transform="translate(60 640) rotate(150) scale(.75)" fill="#d9b04a" stroke="#8a6418" stroke-width="1.5"/>
+      <use href="#bezant" transform="translate(78 690) scale(.8)"/>
+      <!-- the boss: a lapis square in gold, a gold quatrefoil on it -->
+      <rect x="56" y="56" width="88" height="88" fill="#1a3e94" stroke="#d9b04a" stroke-width="6"/>
+      <rect x="56" y="56" width="88" height="88" fill="none" stroke="#8a6418" stroke-width="1.5"/>
+      <g transform="translate(100 100)" fill="#d9b04a" stroke="#8a6418" stroke-width="1.5">
+        <circle cx="0" cy="-15" r="12"/><circle cx="15" cy="0" r="12"/><circle cx="0" cy="15" r="12"/><circle cx="-15" cy="0" r="12"/>
+      </g>
+      <circle cx="100" cy="100" r="7" fill="#962012"/>
+      <g fill="#eee2c4"><circle cx="70" cy="70" r="3"/><circle cx="130" cy="70" r="3"/><circle cx="70" cy="130" r="3"/><circle cx="130" cy="130" r="3"/></g>
+    </g>
+  </defs>
+  <use href="#corner"/>
+  <use href="#corner" transform="translate(1760 0) scale(-1 1)"/>
+  <use href="#corner" transform="translate(0 1440) scale(1 -1)"/>
+  <use href="#corner" transform="translate(1760 1440) scale(-1 -1)"/>
+</svg>
+
+<div class="crest"><img class="initial" src="../../build/emu/art/initial.png" alt="E"><img class="word" src="../../build/emu/art/word.png" alt="stampie"></div>
+<p class="tagline">A <b>mediæval groovebox</b> for the M-VAVE FM-1</p>
+<img class="device" src="../../.artifacts/tmp/device-cut.png" alt="The FM-1 running ESTAMPIE, playing the TROTTO">
+<p class="foot">Lutes<span>❧</span>Shawms<span>❧</span>Hurdy-gurdies<span>❧</span>Bagpipes<span>❧</span>Tabors &amp; nakers</p>
+</body>
+</html>
