@@ -74,7 +74,9 @@ def keycap(font, label):
     tw = int(math.ceil(font.getlength(label)))
     sw = tw + 4 * KC_PAD
     img = Image.new("L", (sw, KC_H), 0)
-    ImageDraw.Draw(img).text((2 * KC_PAD + (tw - font.getlength(label)) / 2, KC_BASE), label, font=font, fill=255,
+    # (at a whole pixel: a fractional start goes to FreeType as a sub-pixel shift, which macOS's and Linux's Pillow
+    # round differently; the fonts are drawn at whole pixels too, tools/aa_raster.py, and come out the same on both)
+    ImageDraw.Draw(img).text((2 * KC_PAD + round((tw - font.getlength(label)) / 2), KC_BASE), label, font=font, fill=255,
                              anchor="ls")
     src = img.tobytes()
     cols = [x for x in range(sw) if any(src[y * sw + x] >= INK_MIN for y in range(KC_H))]
