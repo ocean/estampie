@@ -32,6 +32,10 @@ fi
 
 ./build.sh --release "$VER"
 EMU_PREVIEW=0 web/emu/build.sh
+# the firmware's parameter and engine tables (the guide's sound list: docs/guide/make_guide.py), as the tests make them
+mkdir -p build/host
+${CC:-cc} -w -Ibuild/gen -Ifirmware/src -o build/host/descdump tests/descdump.c -lm
+build/host/descdump > build/host/desc.json
 rm -rf build/site
 "$PY" web/make_site.py "build/estampie-$VER.fwsc" "$VER" build/site
 
