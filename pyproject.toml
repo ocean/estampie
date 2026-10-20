@@ -7,7 +7,7 @@ name = "estampie-tools"
 version = "0.1"
 requires-python = "==3.14.*"
 dependencies = [
-    "pillow==12.3.0",
+    "pillow==13.0.0",
     "fonttools==4.66.1",
     "numpy==2.5.3",
 ]
@@ -35,3 +35,7 @@ default-groups = ["device", "audit", "qr"]
 # A cooldown: nothing newer than a week can be locked, so a hijacked release has time to be noticed and pulled before
 # it reaches this lock (docs/SECURITY.md).
 exclude-newer = "7 days"
+# Exceptions, each a security release taken before its week is up, with why (remove once the week has passed):
+#   pillow 13.0.0 (2026-10-16): fixes GHSA-8g5g-8vmr-9782 (critical) and eight more published 2026-10-20 against
+#   12.3.0; published by python-pillow/Pillow's wheels.yml through PyPI's trusted publishing (PEP 740 provenance)
+exclude-newer-package = { pillow = "2026-10-17T00:00:00Z" }
