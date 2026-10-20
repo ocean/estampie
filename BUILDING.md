@@ -189,10 +189,28 @@ starts, recovery needs [FM-1-transporter](https://github.com/kurogedelic/FM-1-tr
 
 ### Releasing
 
-`tools/release.sh X.Y` does all of the above for a version: the release build, the emulator, the site, and
-`build/estampie-site-X.Y.zip` (the site, `index.html` at its root) with `estampie-site-X.Y.zip.sha256`.
-`tools/release.sh X.Y --publish` then tags `vX.Y` and creates the GitHub release with the package, the app,
-`SHA256SUMS` and the site zip. The FM-1 site ([ocean/fm1-site](https://github.com/ocean/fm1-site)) publishes it:
-its update workflow finds the newest release's site zip, checks its SHA-256, pins it in `estampie.json` and opens a
-pull request, whose checks (accessibility, contrast, links) run over `/estampie/` before it goes live. Keep the zip's
-and the `.sha256`'s names. After a release, the next version gets its own number in `RELEASES`.
+GitHub builds every release, from the tagged commit, and signs it, so anyone can check that the files on the
+release page came from this source.
+
+1. Give the version its number in `RELEASES` (`tools/build.py`), set `ESTAMPIE_VERSION` in `firmware/src/core.h`, and
+   write its notes in `docs/releases/X.Y.Z.md`. Commit and push.
+2. `tools/release.sh X.Y.Z` builds it here first: the release build, the emulator, the site, and
+   `build/estampie-site-X.Y.Z.zip` (`index.html` at its root) with `estampie-site-X.Y.Z.zip.sha256`. Everything a
+   release ships is gathered in `build/dist/`.
+3. `tools/release.sh X.Y.Z --publish` tags `vX.Y.Z` and pushes the tag. `.github/workflows/release.yml` then runs the
+   FM-1 Firmware Hub's shared workflow ([zvenson/fm1-build](https://github.com/zvenson/fm1-build)). It builds with
+   `tools/ci_release.sh` (this repository's own pinned toolchain), runs the host tests, signs a build attestation for
+   each file in `build/dist/`, and creates the release. A last job puts in the notes. The hub shows the firmware as
+   **"Built from source"**. A dry run: Actions › release › Run workflow on a branch (built and signed, not released).
+4. `tools/verify_release.sh X.Y.Z` checks the published files: each is signed by that workflow from this repository
+   at the tag, and each is byte for byte the file step 2 built here. The build is reproducible: the package, the
+   app and the site zip (its files dated at the commit, zipped in UTC) come out the same on any machine.
+
+Check a file yourself: `gh attestation verify estampie-X.Y.Z.fwsc --repo ocean/estampie --signer-workflow
+zvenson/fm1-build/.github/workflows/build.yml`. A signature says where a file came from, not that it is safe: the
+source is here to read.
+
+The FM-1 site ([ocean/fm1-site](https://github.com/ocean/fm1-site)) publishes the site zip: its update workflow
+finds the newest release's site zip, checks it, pins it in `estampie.json` and opens a pull request, whose checks
+(accessibility, contrast, links) run over `/estampie/` before it goes live. Keep the zip's and the `.sha256`'s names.
+After a release, the next version gets its own number in `RELEASES`.

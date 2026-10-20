@@ -7,7 +7,8 @@
 # message the sources show (ui_message / ui_say / msg2), in build/sr/all.tsv. Needs build/gen (./build.sh --gen-only).
 set -e
 cd "$(dirname "$0")/.."
-R="${FM1_READER:-../fm1-reader}"
+R="${FM1_READER:-../fm1-reader}"                   # (no checkout next to it: the pinned one, setup_toolchain.sh)
+[ -n "${FM1_READER:-}" ] || [ -f "$R/web/words.js" ] || R=.toolchain/fm1-reader
 [ -f "$R/tools/audit.mjs" ] || { echo "speak_audit: no fm1-reader at $R (FM1_READER)"; exit 2; }
 mkdir -p build/sr build/host
 cc -O1 -w -Ibuild/gen -Ifirmware/src -o build/host/estampie_host tests/estampie_host.c -lm

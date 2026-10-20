@@ -1,0 +1,56 @@
+# ESTAMPIE: a release, built, signed and released by GitHub. A pushed tag vX.Y.Z (tools/release.sh X.Y.Z --publish)
+# runs the FM-1 Firmware Hub's shared workflow, zvenson/fm1-build (reviewed: 144 lines, every action pinned; the hub
+# shows "Built from source" only for its @v1). It checks out this commit, runs tools/ci_release.sh (ESTAMPIE's own
+# pinned toolchain, not the one it downloads) and the host tests, signs a build attestation for every file in
+# build/dist/ (the package, the app, the site zip and its .sha256) and makes the release. Then the notes job puts in
+# docs/releases/X.Y.Z.md. Check a release, and that this machine builds the same files: tools/verify_release.sh.
+# Run by hand (Actions > release > Run workflow) on a branch: a dry run, built and signed but not released.
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  build:
+    # @v1, not a commit: the hub gives its badge to this tag only (it promises never to move it; v1 is
+    # 85a003ab455b1c074b0bd6d7c282c096a464b973). What it can do here: write releases and sign, in this repository only;
+    # it is given no secrets.
+    uses: zvenson/fm1-build/.github/workflows/build.yml@v1   # zizmor: ignore[unpinned-uses]
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    with:
+      build: tools/ci_release.sh "$GITHUB_REF_NAME"
+      packages: build/dist/*
+      test: HOST_ONLY=1 tests/run_tests.sh
+      sdk: false                         # (tools/ci_release.sh checks out the pinned SDK commit itself)
+
+  notes:
+    needs: build
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      # Every action pinned to a commit (a tag can be moved), its version in the comment.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1   # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: The release's title and its own notes (docs/releases/X.Y.Z.md), the site zip's SHA-256 after them
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          VER="${TAG#v}"
+          NOTES="docs/releases/$VER.md"
+          [ -f "$NOTES" ] || { echo "no $NOTES: the release keeps GitHub's notes"; exit 0; }
+          SITE=$(gh release download "$TAG" -p "estampie-site-$VER.zip.sha256" -O - | cut -d' ' -f1)
+          { cat "$NOTES"; printf '\n\nSite zip SHA-256: %s\n' "$SITE"; } > "$RUNNER_TEMP/notes.md"
+          gh release edit "$TAG" --title "ESTAMPIE $VER" --notes-file "$RUNNER_TEMP/notes.md"

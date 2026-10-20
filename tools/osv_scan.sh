@@ -84,7 +84,8 @@ print(" ".join(r["version"] for r in newer if r["security"]))' "$have") || newer
                 echo "osv_scan: build-image: ${IMG%@*} has a newer digest, $latest (update tools/toolchain.lock)"
         else skip build-image "no Docker"; fi ;;
     espeak)
-        R="${FM1_READER:-../fm1-reader}"
+        R="${FM1_READER:-../fm1-reader}"               # (no checkout next to it: the pinned one, setup_toolchain.sh)
+        [ -n "${FM1_READER:-}" ] || [ -f "$R/web/words.js" ] || R=.toolchain/fm1-reader
         C=$(sed -n 's/.*espeak-ng commit `\([0-9a-f]\{40\}\)`.*/\1/p' "$R/web/espeak/README.md" 2>/dev/null)
         if [ -n "$C" ]; then
             curl --proto '=https' -fsS -X POST https://api.osv.dev/v1/query -d "{\"commit\":\"$C\"}" > build/osv/espeak.json &&

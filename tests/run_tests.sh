@@ -457,7 +457,8 @@ if [ -f build/gen/felucca_tables.h ]; then
     for f in tests/scenarios/*.txt; do                 # ESTAMPIE: the screen reader, as a reader hears it
         run "screen reader: $(basename "$f" .txt) (tests/scenarios: what the FM-1 says, ui_speak.c)" "$OUT/estampie_host" "$f"
     done
-    if [ -f "${FM1_READER:-../fm1-reader}/tools/audit.mjs" ] && command -v node >/dev/null; then
+    if { [ -f "${FM1_READER:-../fm1-reader}/tools/audit.mjs" ] || [ -f .toolchain/fm1-reader/tools/audit.mjs ]; } &&
+        command -v node >/dev/null; then
         run "screen reader: the audit (fm1-reader's rules: every screen, knob value, row, message in words)" tools/speak_audit.sh
     else
         echo "screen reader audit: skipped (no fm1-reader next to this repo, or no node: FM1_READER)"

@@ -37,7 +37,8 @@ cp web/emu/tools.html build/emu/
 cp web/emu/lab.html web/emu/lab_worklet.js web/emu/lab_sounds.js build/emu/   # ESTAMPIE: the sound lab
 # ESTAMPIE: the screen reader's words and voice (fm1-reader, pinned in tools/toolchain.lock; FM1_READER: its checkout)
 # in reader/, the words files in words/ (the site has them at its root: make_site.py)
-R="${FM1_READER:-../fm1-reader}"
+R="${FM1_READER:-../fm1-reader}"                   # (no checkout next to it: the pinned one, setup_toolchain.sh)
+[ -n "${FM1_READER:-}" ] || [ -f "$R/web/words.js" ] || R=.toolchain/fm1-reader
 rm -rf build/emu/reader build/emu/words
 if [ -f "$R/web/words.js" ]; then
     PIN=$(awk '$1 == "fm1-reader" { print $4 }' tools/toolchain.lock)

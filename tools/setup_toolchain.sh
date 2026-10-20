@@ -8,14 +8,17 @@
 #   .toolchain/node        Node, the binary only (no npm, npx or corepack), for the web tests
 #   .toolchain/zig         Zig, whose zig cc builds the browser emulator (web/emu/); its cache in .toolchain/zig-cache
 #   .toolchain/bin         osv-scanner (tools/osv_scan.sh)
+#   .toolchain/uv          uv, where none is installed (a fresh CI runner): it makes .venv
 #   .venv                  Python 3.14 with the packages in uv.lock (uv sync --frozen)
+#   .toolchain/fm1-reader  fm1-reader at its pinned commit, when there is no checkout next to this repo (the emulator
+#                          page's screen reader: web/emu/build.sh; tools/speak_audit.sh)
 #   .toolchain/emulators   with --hw: the pi32v2 hardware emulator for tools/hw_check.sh (needs cargo)
 # A step is skipped when its folder already holds the pinned version; change a pin and run it again to update.
-# --only takes a comma-separated list of steps (jieli, ac79-sdk, node, python, zig, osv-scanner, hw): CI fetches
+# --only takes a comma-separated list of steps (uv, jieli, ac79-sdk, node, python, zig, osv-scanner, fm1-reader, hw): CI fetches
 # just what a job needs through the same checks.
 #   tools/setup_toolchain.sh [--hw] [--only STEP,...]
 set -eu
-STEPS=jieli,ac79-sdk,node,python,zig,osv-scanner
+STEPS=jieli,ac79-sdk,node,python,zig,osv-scanner,fm1-reader
 USAGE="usage: tools/setup_toolchain.sh [--hw] [--only STEP,...]"
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -118,10 +121,23 @@ if want node; then
     $TC/node/bin/node --version >/dev/null || die "$TC/node: node doesn't run"
 fi
 
+# uv, the pinned release (only asked for where none is installed: CI). Its archive holds uv and uvx in one folder.
+if want uv; then
+    set -- $(pin uv)
+    if ! current $TC/uv "$2"; then
+        file=$(fetch "$3" "$2") || exit 1
+        unpack "$file" $TC/uv "$2"
+        for d in $TC/uv/uv-*/*; do mv "$d" $TC/uv/; done
+        rmdir $TC/uv/uv-*
+    fi
+    [ "$($TC/uv/uv --version | cut -d' ' -f2)" = "$1" ] || die "$TC/uv: uv doesn't run, or isn't $1"
+fi
+
 # Python 3.14 and the packages in uv.lock (hash-pinned; pyproject.toml says why these versions).
 if want python; then
-    command -v uv >/dev/null 2>&1 || die "needs uv (https://docs.astral.sh/uv/)"
-    uv sync --frozen
+    UV=$TC/uv/uv
+    [ -x $UV ] || UV=$(command -v uv) || die "needs uv (https://docs.astral.sh/uv/, or --only uv)"
+    "$UV" sync --frozen
 fi
 
 # Zig: one archive, minisign-signed by its maintainers (the pin's hash was taken after checking that signature,
@@ -149,6 +165,12 @@ if want osv-scanner; then
         chmod 755 $TC/bin/osv-scanner
         echo "$2" > $TC/bin/osv-scanner.pin
     fi
+fi
+
+# fm1-reader at its pinned commit (MIT; its voice GPL-3.0-or-later), when no checkout sits next to this repo.
+if want fm1-reader && [ ! -f ../fm1-reader/web/words.js ]; then
+    set -- $(pin fm1-reader)
+    checkout $TC/fm1-reader "$1" "$2" "$3"
 fi
 
 # The hardware emulator (optional: Rust; cargo builds only what its Cargo.lock pins).

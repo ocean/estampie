@@ -17,6 +17,11 @@ node           linux-x64     24.22.0                        cc2f601cee82d9a5a233
 #   tools/minisign_verify.py RWSGOq2NVecA2UPNdBUZykf1CCb147pkmdtYxgb3Ti+JO/wCYvhbAb/U zig-....tar.xz
 zig            darwin-arm64  0.17.0                         b607e9b9234790a008116ae5bdb71c6243b84b9fb42a53a9e70fde41c06c536a  https://ziglang.org/download/0.17.0/zig-aarch64-macos-0.17.0.tar.xz
 zig            linux-x64     0.17.0                         1cbe9df9f27e6b78d14ccbca43b6703a404ef79ef1c463de901d7f088d4e2026  https://ziglang.org/download/0.17.0/zig-x86_64-linux-0.17.0.tar.xz
+# uv: makes .venv from uv.lock (hash-checked), and the Python 3.14 it runs on. Only where none is installed, e.g. a
+# fresh CI runner (tools/ci_release.sh); each archive's GitHub build attestation was verified before pinning
+# (gh attestation verify uv-....tar.gz --repo astral-sh/uv: signed by astral-sh/uv's release.yml).
+uv             darwin-arm64  0.13.1                         cfe454573412ff7380d15fc7dae5997ab53ffce72fce0a78e91ddbc84001acd2  https://github.com/astral-sh/uv/releases/download/0.13.1/uv-aarch64-apple-darwin.tar.gz
+uv             linux-x64     0.13.1                         eadd9d27c134ab5ac1ffd4473b97a741407f3ea238288f03121fc4deddf90220  https://github.com/astral-sh/uv/releases/download/0.13.1/uv-x86_64-unknown-linux-gnu.tar.gz
 # osv-scanner: the vulnerability scanner itself (tools/osv_scan.sh); hashes from the release's osv-scanner_SHA256SUMS.
 osv-scanner    darwin-arm64  2.7.0                          d4926ef8da134332543be276dff157e4c170f99ad91fc48e89448a8816bdf70b  https://github.com/google/osv-scanner/releases/download/v2.7.0/osv-scanner_darwin_arm64
 osv-scanner    linux-x64     2.7.0                          160c6253e2922e9e0a6a9771c5c4c40a4b3c6090b34a3cdd5e80c96cc2e4218b  https://github.com/google/osv-scanner/releases/download/v2.7.0/osv-scanner_linux_amd64
