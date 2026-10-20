@@ -53,7 +53,7 @@ is Felucca's. The remotes `ghoulbox` and `felucca` are fetch-only.
 | `tests/` | Host tests (`run_tests.sh` runs them all), `hostsim.c` (the firmware's sound and UI on the host), `estampie_host.c` (the scripted simulator), `scenarios/` (its scripts). |
 | `web/` | The site: `make_site.py`, `home.html`, `index_pkg.html` (the installer), `editor.html`, `fm1*.js`. `web/emu/`: the browser emulator (`felucca_web.c` compiled to WebAssembly with `zig cc`), the Sound Lab (`lab.html`). `web/words/`: the published words files. |
 | `docs/guide/` | The user guide (`guide.html`, built by `make_guide.py`). `docs/releases/X.Y.Z.md`: each release's notes. `docs/readme/`: the README pictures and the page that composes them (`hero.html`). |
-| `assets/` | Fonts (OFL), CC0 samples, M-VAVE's official V15 firmware (Apache-2.0, for the installer's way back), and `generated/`: generated files kept in the repo because they differ between platforms. |
+| `assets/` | Fonts (OFL), CC0 samples, M-VAVE's official V15 firmware (Apache-2.0, for the installer's way back). |
 | `tools/toolchain.lock` | Every external download, pinned. |
 
 ## Build and test
@@ -117,12 +117,14 @@ A **dry run** (Actions › release › Run workflow on a branch) builds and sign
 generated art headers for comparison.
 
 **Reproducibility.** A release builds byte for byte the same on any machine: from any clone, on macOS and on
-GitHub's Linux runner. The site zip's files are dated at the commit and zipped in UTC for that reason. One generated
-file isn't the same on every platform: the keycap pills (`tools/gen_aa_keycaps.py`). Pillow draws Inter Tight's glyphs
-a pixel apart on macOS and Linux, so that file is committed in `assets/generated/` and copied into the build
-(`assets/generated/README.md`). After changing that generator, run it on macOS and commit its output; the tests check,
-on macOS, that the two still match. `tools/ci_release.sh` logs the rasteriser's versions and the generated headers'
-hashes, and a dry run attaches the headers, so a difference shows up quickly.
+GitHub's Linux runner (checked on every dry run and by `tools/verify_release.sh`). What made that work:
+- **The site zip:** its files are dated at the commit and zipped in UTC.
+- **ABOUT's date:** the commit's (`ESTAMPIE_DATE`), not the build day's.
+- **The site's pictures:** PNGs written with Python's own zlib (`tools/gen_emu_art.py`), not each platform's Pillow's.
+- **Pillow 13 or later:** 12.x drew Inter Tight's keycap glyphs a pixel apart on macOS and Linux.
+
+If a dry run's files ever differ from a local build, compare the generated headers it attaches and the rasteriser
+versions `tools/ci_release.sh` logs.
 
 ## The site and the other repositories
 

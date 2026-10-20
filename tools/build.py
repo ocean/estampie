@@ -124,6 +124,7 @@ def generate():
     tools = SRC / "tools"
     cmds = [[tools / "gen_aa_font.py", GEN / "ui_fonts.h", "--preset", "estampie"],
             [tools / "gen_aa_icons.py", GEN / "ui_icons.h"],
+            [tools / "gen_aa_keycaps.py", GEN / "ui_keycaps.h"],
             [tools / "gen_ui_palettes.py", GEN / "ui_palettes.h"],
             [tools / "gen_tables.py", GEN / "felucca_tables.h"],
             [tools / "gen_fm6_patches.py", GEN / "felucca_fm6.h"],
@@ -140,10 +141,6 @@ def generate():
             failed.append(c[0].name)
     if failed:
         raise SystemExit(f"build: {', '.join(failed)} failed")
-    # ESTAMPIE: the keycaps are committed (assets/generated/README.md): Inter Tight's glyphs come out a pixel apart in
-    # macOS's and Linux's Pillow, and a release must build the same everywhere. tests/run_tests.sh checks on macOS that
-    # tools/gen_aa_keycaps.py still makes exactly this file
-    shutil.copyfile(SRC / "assets/generated/ui_keycaps.h", GEN / "ui_keycaps.h")
 
 
 # ---- update loader

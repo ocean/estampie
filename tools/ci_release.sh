@@ -27,9 +27,6 @@ export FM1_READER="${FM1_READER:-$PWD/.toolchain/fm1-reader}"
 print("rasteriser: Pillow", v, *(k + " " + str(f.version(k)) for k in ("freetype2", "raqm", "fribidi", "harfbuzz")))'
 tools/release.sh "$VER"
 sha256sum build/gen/ui_fonts.h build/gen/ui_keycaps.h build/gen/ui_icons.h build/gen/estampie_art.h | sed 's/^/generated: /'
-# (the keycaps are committed, assets/generated/README.md: what their generator makes on this platform, for comparison)
-mkdir -p build/host && .venv/bin/python3 tools/gen_aa_keycaps.py build/host/ui_keycaps.fresh.h > /dev/null 2>&1 &&
-    sha256sum build/host/ui_keycaps.fresh.h | sed 's|^|generated here (not used): |' || true
 case "$REF" in
     v[0-9]*) ;;
     *) cp build/gen/ui_fonts.h build/gen/ui_keycaps.h build/gen/ui_icons.h build/gen/estampie_art.h build/dist/ ;;
