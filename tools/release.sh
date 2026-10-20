@@ -40,7 +40,9 @@ echo "release: build/$ZIP ($(wc -c < "build/$ZIP" | tr -d ' ') B), sha256 $(cut 
 if [ "$PUBLISH" = 1 ]; then
     git tag -a "v$VER" -m "ESTAMPIE $VER"
     git push origin "v$VER"
-    gh release create "v$VER" --title "ESTAMPIE $VER" --notes "ESTAMPIE $VER. Install it from https://fm-1.drewr.dev/estampie/webapp/installer/ (or the .fwsc with FM1Kit / FM-SWITCH).
+    NOTES="ESTAMPIE $VER. Install it from https://fm-1.drewr.dev/estampie/webapp/installer/ (or the .fwsc with FM1Kit / FM-SWITCH)."
+    [ -f "docs/releases/$VER.md" ] && NOTES="$(cat "docs/releases/$VER.md")"   # (the release's own notes, when written)
+    gh release create "v$VER" --title "ESTAMPIE $VER" --notes "$NOTES
 
 Site zip SHA-256: $(cut -d' ' -f1 "build/$ZIP.sha256")" \
         "build/estampie-$VER.fwsc" "build/release-$VER/estampie-$VER-app.bin" "build/release-$VER/SHA256SUMS" \

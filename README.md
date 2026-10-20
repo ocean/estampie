@@ -23,10 +23,11 @@ history of both projects is kept in this repository.
 Inspired by the idea of teenage engineering's EP-1320 *medieval*; not affiliated with them, and none of their
 sounds are used.
 
-**Status: 0.1, early work.** So far: the VELLUM look (parchment, iron-gall ink, vermilion rubrics, lapis), the
+**Status: 0.2.0, early work.** So far: the VELLUM look (parchment, iron-gall ink, vermilion rubrics, lapis), the
 screen's type (Alegreya Sans, with Cinzel's Roman capitals for the large text), the illuminated boot screen and the
-browser emulator page. The sounds are still mostly GHOULBOX's, with ESTAMPIE's TROTTO scene, DANCE drum kit and
-mediæval presets. See [ROADMAP.md](ROADMAP.md).
+browser emulator page; KEY TOUCH, velocity and aftertouch from the FM-1's own keys (after Charles Vestal's Velo and
+MONK-1), with a calibration anyone can run; and the web installer, editor and site. The sounds are still mostly
+GHOULBOX's, with ESTAMPIE's TROTTO scene, DANCE drum kit and mediæval presets. See [ROADMAP.md](ROADMAP.md).
 
 Its site (coming soon) is <https://fm-1.drewr.dev/estampie/>: play it in the browser, install it, edit sounds and
 read the guide. It sits beside Drew's other FM-1 projects, FM1Kit and FM-SWITCH ([BUILDING.md](BUILDING.md#the-site)).

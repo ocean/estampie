@@ -3,7 +3,15 @@
 Plans change; nothing here is a promise. GHOULBOX's own roadmap is kept at
 [docs/GHOULBOX-ROADMAP.md](docs/GHOULBOX-ROADMAP.md).
 
-## Done: 0.1, the look
+## Done: 0.2.0, the touch (the first release)
+
+- KEY TOUCH: velocity and aftertouch from the 20 lower keys, with no hardware change (Charles Vestal's Velo and
+  MONK-1): each key learns your touch as you play, and MENU > SYSTEM > CALIBRATION > KEY TOUCH calibrates it.
+- The installer: official V15 bundled (and its factory sounds restored, as a separate step), sturdier connecting,
+  build IDs, an optional full backup first. The editor checks a saved project against the FM-1's.
+- The site: a front page, llms.txt, link-preview cards; the Sound Lab with touch and the MOD matrix.
+
+## Done: 0.1, the look (not published on its own)
 
 - Builds with an in-repo toolchain (`tools/setup_toolchain.sh`), checked on emulated hardware (`tools/hw_check.sh`).
 - VELLUM palette (the default), an illuminated boot screen, ABOUT and credits.
