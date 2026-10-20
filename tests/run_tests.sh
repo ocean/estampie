@@ -453,6 +453,15 @@ if [ -f build/gen/felucca_tables.h ]; then
     run "full backup: CRC before writes, stale runtime, USB reset / timeout, malformed objects, older projects" "$OUT/backup_test"
     $CC -w -o "$OUT/key_touch_test" tests/key_touch_test.c -lm
     run "KEY TOUCH: velocity and aftertouch from the keys (key_touch.c), the gate, the settings row, calibration" "$OUT/key_touch_test"
+    $CC -O1 -w -Ibuild/gen -Ifirmware/src -o "$OUT/estampie_host" tests/estampie_host.c -lm
+    for f in tests/scenarios/*.txt; do                 # ESTAMPIE: the screen reader, as a reader hears it
+        run "screen reader: $(basename "$f" .txt) (tests/scenarios: what the FM-1 says, ui_speak.c)" "$OUT/estampie_host" "$f"
+    done
+    if [ -f "${FM1_READER:-../fm1-reader}/tools/audit.mjs" ] && command -v node >/dev/null; then
+        run "screen reader: the audit (fm1-reader's rules: every screen, knob value, row, message in words)" tools/speak_audit.sh
+    else
+        echo "screen reader audit: skipped (no fm1-reader next to this repo, or no node: FM1_READER)"
+    fi
     $CC -w -Ibuild/gen -Ifirmware/src -o "$OUT/fm6bank_test" tests/fm6bank_test.c -lm
     run "FM6 voice bank (1.4.1): write / read, power cuts, CRC, SLOT B1..B32, stored SLOT values as before" "$OUT/fm6bank_test"
     $CC -w -Ibuild/gen -Ifirmware/src -o "$OUT/editor_test" tests/editor_test.c -lm

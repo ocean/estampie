@@ -77,6 +77,15 @@ if (typeof registerProcessor === "function") {
       }
       const ex = this.ex;
       if (!ex) return;
+      if (m.type === "reader") {                      // ESTAMPIE: the screen reader on (HELLO, again every 2 s) or off (BYE)
+        this.reader = !!m.on && !!ex.web_sysex;
+        if (ex.web_sysex) this.readerSend(m.on ? [1, 1] : [2]);
+        return;
+      }
+      if (m.type === "reader-where") {                // .. the whole screen, now
+        if (this.reader) this.readerSend([3]);
+        return;
+      }
       if (m.type === "snapshot") {
         const p = ex.web_project_capture(), n = ex.web_project_size();
         if (!p || !n) { this.port.postMessage({ type: "snapshot", id: m.id, error: "Could not capture the live project" }); return; }
@@ -121,6 +130,38 @@ if (typeof registerProcessor === "function") {
       if (result.stopped)
         this.port.postMessage({ type: "record-stopped", frames: result.frames, peak: result.peak,
                                 clipped: result.clipped, reason: "limit" });
+    }
+
+    // ESTAMPIE: the screen reader (fm1-reader's protocol, ui_speak.c): a reader's SysEx F0 7D 53 52 cmd .. F7 in, the
+    // device's frames out (HELLO's answer: its name and words link; SAY: flags and text), posted to the page
+    readerSend(body) {
+      const ex = this.ex, f = [0xF0, 0x7D, 0x53, 0x52, ...body, 0xF7];
+      new Uint8Array(ex.memory.buffer, ex.web_sysex_in(), f.length).set(f);
+      ex.web_sysex(f.length);
+      this.helloAt = ex.web_now_ms();
+    }
+    readerFrames() {
+      const ex = this.ex;
+      if (this.reader && ex.web_now_ms() - this.helloAt >= 2000) this.readerSend([1, 1]);
+      const n = ex.web_said_len();
+      if (!n) return;
+      const b = new Uint8Array(ex.memory.buffer, ex.web_said_buf(), n).slice(), items = [];
+      ex.web_said_clear();
+      for (let i = 0; i < n; ) {
+        let e = i;
+        while (e < n && b[e] !== 0xF7) e++;
+        if (b[i] === 0xF0 && b[i + 1] === 0x7D && b[i + 2] === 0x53 && b[i + 3] === 0x52 && e - i >= 6) {
+          const cmd = b[i + 4], flags = b[i + 5], body = b.subarray(i + 6, e);
+          if (cmd === 16) items.push({ cmd, flags, text: String.fromCharCode(...body) });
+          else if (cmd === 1) {
+            const z = body.indexOf(0);
+            items.push({ cmd, name: String.fromCharCode(...body.subarray(0, z < 0 ? body.length : z)),
+                         link: z < 0 ? "" : String.fromCharCode(...body.subarray(z + 1)) });
+          }
+        }
+        i = e + 1;
+      }
+      if (items.length && this.reader) this.port.postMessage({ type: "said", items });
     }
 
     publish() {
@@ -180,6 +221,7 @@ if (typeof registerProcessor === "function") {
       out[0].set(new Float32Array(ex.memory.buffer, ex.web_out_l(), n));
       if (out[1]) out[1].set(new Float32Array(ex.memory.buffer, ex.web_out_r(), n));
       this.record(out[0], out[1] || out[0]);
+      if (this.reader || ex.web_said_len && ex.web_said_len()) this.readerFrames();
       if (currentTime - this.lastFrame >= this.period) {
         this.lastFrame = currentTime;
         this.publish();

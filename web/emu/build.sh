@@ -35,6 +35,23 @@ cp web/emu/audio_encode.js web/emu/audio_encode_worker.js build/emu/
 cp web/emu/audio_session.js build/emu/
 cp web/emu/tools.html build/emu/
 cp web/emu/lab.html web/emu/lab_worklet.js web/emu/lab_sounds.js build/emu/   # ESTAMPIE: the sound lab
+# ESTAMPIE: the screen reader's words and voice (fm1-reader, pinned in tools/toolchain.lock; FM1_READER: its checkout)
+# in reader/, the words files in words/ (the site has them at its root: make_site.py)
+R="${FM1_READER:-../fm1-reader}"
+rm -rf build/emu/reader build/emu/words
+if [ -f "$R/web/words.js" ]; then
+    PIN=$(awk '$1 == "fm1-reader" { print $4 }' tools/toolchain.lock)
+    HEAD=$(git -C "$R" rev-parse HEAD 2>/dev/null || echo none)
+    [ "$HEAD" = "$PIN" ] || { echo "emu: $R is at $HEAD, tools/toolchain.lock pins fm1-reader $PIN"; exit 1; }
+    mkdir -p build/emu/reader/espeak
+    cp "$R/web/words.js" "$R/web/tts.js" "$R/web/tts_worker.js" build/emu/reader/
+    cp "$R/web/espeak/espeak.js" "$R/web/espeak/espeak.wasm" "$R/web/espeak/LICENSE" "$R/web/espeak/README.md" \
+        "$R/web/espeak/tts_wrap.c" build/emu/reader/espeak/
+    cp "$R/LICENSE" build/emu/reader/LICENSE-MIT
+    cp -R web/words build/emu/words
+else
+    echo "emu: no fm1-reader at $R: the page's screen reader has no words or voice (the site refuses this build)"
+fi
 cp web/emu/vendor/libflac/libflac.min.wasm.js web/emu/vendor/libflac/libflac.min.wasm.wasm build/emu/vendor/libflac/
 cp web/emu/vendor/mp3/WasmMediaEncoder.min.js web/emu/vendor/mp3/mp3.wasm build/emu/vendor/mp3/
 cp web/emu/vendor/README.md build/emu/vendor/

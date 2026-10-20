@@ -857,6 +857,14 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 <p>On the selected track, while it is armed (<span class="k">REC</span>), these moves are recorded as automation, as when turning its knob. The mod wheel, aftertouch and expression pedal are sources in the MOD matrix (chapter 10).</p>
 <h3>Recording to a computer</h3>
 <p>The FM-1 appears on a computer as a USB audio input named <b>"Felucca"</b>, carrying the master output in stereo at 44.1 kHz, with no driver. Chapter 25 walks through it.</p>
+<h3>A screen reader</h3>
+<p>ESTAMPIE can tell a screen reader on your computer what its screen shows, so you can play and edit it without seeing the screen. Plug the FM-1 into the computer, open the <a href="https://charlesvestal.github.io/fm1-reader/">FM-1 Screen Reader</a> page in Chrome or Edge, and press <b>Connect</b>. It reads the screen with its own voice, or hands it to your own screen reader (VoiceOver, NVDA, JAWS, TalkBack).</p>
+<ul>
+  <li><b>When it connects</b>, and when you ask it to read the whole screen: the track and its sound, the page and its four knobs, the steps that are on, and whether it is playing.</li>
+  <li><b>As you play:</b> each new page with its knobs, a knob's value once you stop turning it, the menu's rows (with their place, "3 of 8"), the sound the PRESETS knob picks, messages, questions with the buttons that answer them, and each letter as you name a sound or a project.</li>
+  <li>The FM-1 says nothing until a reader asks, so nothing changes for a DAW on the same USB port. The words it uses come from this site (<span class="path">{{SITE}}/words/</span>): "ATK 12 ms" is read as "attack 12 milliseconds".</li>
+</ul>
+<p>The browser version reads its screen too: under its panel, choose <b>Your screen reader</b> or <b>This page’s voice</b>. The screen reader is Charles Vestal's <a href="https://github.com/charlesvestal/fm1-reader">fm1-reader</a>, shared by many FM-1 firmwares.</p>
 </section>
 
 <!-- ============================================================ PART IV -->

@@ -22,5 +22,10 @@ osv-scanner    darwin-arm64  2.7.0                          d4926ef8da134332543b
 osv-scanner    linux-x64     2.7.0                          160c6253e2922e9e0a6a9771c5c4c40a4b3c6090b34a3cdd5e80c96cc2e4218b  https://github.com/google/osv-scanner/releases/download/v2.7.0/osv-scanner_linux_amd64
 # The pi32v2 hardware emulator (tools/hw_check.sh), built with cargo --locked; optional (setup_toolchain.sh --hw).
 fm1-hw-emu     git           main                           056621b0c3187e6712326ef854d0a78ed9605600                          https://github.com/shcherbakov7/m-wave-fm1-browser-emulator.git
+# fm1-reader (Charles Vestal, MIT; its voice, eSpeak NG compiled to WebAssembly, GPL-3.0-or-later): the screen
+# reader. Its announce.c and gen_words.py are copied into this repo (tools/sync_announce.sh); its words.js, tts.js,
+# tts_worker.js and espeak/ go into the emulator page (web/emu/build.sh, from a checkout next to this repo at this
+# commit), and tools/speak_audit.sh runs its audit. espeak/ is built from espeak-ng ba90c8e9f440 (its README.md).
+fm1-reader     git           main                           2f49d91c142b1304fc5654496b35d40607d8511e                          https://github.com/charlesvestal/fm1-reader.git
 # The container the JieLi tools run in on macOS / non-x86 hosts (tools/build.py): sha256 is the image index digest.
 build-image    linux-amd64   cc-debian13:nonroot            e792ab3d241a468a4fd7519ddbbebe66b49b5f365771716ea688ad40b6c6f1c2  gcr.io/distroless/cc-debian13:nonroot

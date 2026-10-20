@@ -4,6 +4,19 @@
  * Flat: SURF cards and panels on the palette's background, no rules, one type family (Inter Tight, three sizes), tracks
  * named by their numbers 1..4 on a cushion (icons.c trk_icon). Four columns <-> KNOB 1..4. Rendering is lazy:
  * every element remembers what it last drew and is redrawn only on change. */
+/* ESTAMPIE: the screen reader (fm1-reader's announce.c, a copy: tools/gen_words.py's words file; ui_speak.c says
+ * what the screen shows). Its bytes go where the build sends them: ANN_WIRE (felucca.c: USB; the emulator: its
+ * buffer), else nowhere (the host tests: no reader listens) */
+#include "ann_words.h"
+#define ANN_NAME "ESTAMPIE " ESTAMPIE_VERSION
+#define ANN_DATA __attribute__((section(".pool")))
+#include "announce.c"
+#ifdef ANN_WIRE
+static int ann_wire_send(const uint8_t *p, uint32_t n) { return ANN_WIRE(p, n); }
+#else
+static int ann_wire_send(const uint8_t *p, uint32_t n) { (void)p; (void)n; return -1; }
+#endif
+static void sp_card_put(uint32_t c, const char *label, const char *val, const char *unit);   /* (ui_speak.c) */
 static int project_save(uint32_t slot);
 static void panel_setup(void);
 static void calibration_choose(void);       /* ESTAMPIE: PANEL or KEY TOUCH (ui_input.c) */

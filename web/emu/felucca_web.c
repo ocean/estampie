@@ -162,6 +162,23 @@ static void lcd_init(void) {}
 
 #include "../../firmware/src/gfx.c"
 #include "../../firmware/src/panel.c"
+/* ESTAMPIE: the screen reader (ui.c announce.c, ui_speak.c): its SysEx frames, F0..F7 each, kept for the page
+ * (web_said_buf / web_said_len, then web_said_clear); a frame that does not fit is not sent, as on the device with
+ * a full USB queue. WEB_SAID_HOOK: the host simulator's log of every SAY (tests/estampie_host.c) */
+static uint8_t web_said[4096];
+static uint32_t web_said_n;
+static int web_said_put(const uint8_t *p, uint32_t n)
+{
+#ifdef WEB_SAID_HOOK
+    WEB_SAID_HOOK(p, n);
+#endif
+    if (web_said_n + n > sizeof web_said)
+        return -1;
+    memcpy(web_said + web_said_n, p, n);
+    web_said_n += n;
+    return 0;
+}
+#define ANN_WIRE web_said_put
 #include "../../firmware/src/ui.c"
 #include "../../firmware/src/menu_items.c"
 #include "../../firmware/src/icons.c"
@@ -301,6 +318,7 @@ static void web_frame(void)
     autosave_poll();
     ui_leds();
     ui_draw();
+    ui_speak(fm1_ms);                     /* ESTAMPIE: the screen reader (web_sysex in, web_said_buf out) */
 }
 
 /* output ring, stereo float, filled by web_ms, drained by web_render */
@@ -495,6 +513,26 @@ EXPORT void web_track_touch(uint32_t k, uint32_t at, uint32_t mw)
     trk[k].at = (uint8_t)(at > 127u ? 127u : at);
     trk[k].mw = (uint8_t)(mw > 127u ? 127u : mw);
 }
+/* ESTAMPIE: the screen reader, for the page: a reader's SysEx in (web_sysex_in, n bytes, F0..F7 or what is between
+ * them: HELLO every 2 s, BYE, WHERE; 1 if it was the reader's), and the device's frames out */
+static uint8_t web_sx_in[64];
+EXPORT uint8_t *web_sysex_in(void) { return web_sx_in; }
+EXPORT uint32_t web_sysex(uint32_t n)
+{
+    const uint8_t *p = web_sx_in;
+    if (n > sizeof web_sx_in)
+        return 0;
+    if (n && p[0] == 0xF0u) {
+        p++;
+        n--;
+    }
+    if (n && p[n - 1u] == 0xF7u)
+        n--;
+    return (uint32_t)ann_frame(p, n, fm1_ms);
+}
+EXPORT uint8_t *web_said_buf(void) { return web_said; }
+EXPORT uint32_t web_said_len(void) { return web_said_n; }
+EXPORT void web_said_clear(void) { web_said_n = 0; }
 EXPORT void web_transport(uint32_t req) { if (req >= 1u && req <= 3u) transport_req = (uint8_t)req; }
 EXPORT int32_t web_track_get(uint32_t k, uint32_t id) { return k < NTRK && id < P_COUNT ? trk[k].p[id] : 0; }
 EXPORT uint32_t web_track_engine_of(uint32_t k) { return k < NTRK ? trk[k].eng_req : 0u; }

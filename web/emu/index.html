@@ -124,7 +124,21 @@ kbd { font: 600 12px ui-monospace, Menlo, monospace; border: 1px solid var(--ink
 footer { margin-top: 12px; font-size: 12px; }
 footer nav a { margin: 0 6px; }
 footer small { font-size: 11px; opacity: .8; }
-.utility { text-align: left; }
+.utility, .reader { text-align: left; }
+/* ESTAMPIE: the screen reader (fm1-reader): who reads the screen, what it said */
+.reader { max-width: 1040px; margin: 18px auto 0; padding: 12px 18px; color: var(--ink); }
+.reader h2 { margin: 0 0 4px; color: var(--vermilion); font: 400 19px/1.4 "IM Fell English SC", Georgia, serif; letter-spacing: .04em; }
+.reader p { margin: 0 0 8px; }
+.reader fieldset { display: inline-flex; flex-wrap: wrap; gap: 6px 16px; margin: 0 14px 8px 0; padding: 6px 10px;
+                   border: 1px solid rgba(46, 30, 20, .35); }
+.reader legend { padding: 0 4px; color: var(--ink-soft); }
+.reader label { white-space: nowrap; cursor: pointer; }
+.reader input { accent-color: var(--vermilion); }
+.reader button { border: 1px solid var(--ink-soft); color: var(--ink); background: var(--vellum); font: inherit; min-height: 34px;
+                 padding: 6px 11px; margin: 0 8px 8px 0; cursor: pointer; box-shadow: inset 0 -2px rgba(80, 50, 20, .25); }
+.reader button:hover, .reader button:focus-visible { border-color: var(--vermilion); }
+.reader .said { min-height: 1.6em; padding: 6px 10px; border-left: 3px solid var(--gold, #b8892a); background: rgba(255, 248, 228, .45); }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .utility > summary { cursor: pointer; color: var(--vermilion); font: 19px/1.4 "IM Fell English SC", Georgia, serif; letter-spacing: .04em; }
 .utility-grid { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin-top: 12px; }
 .utility label { white-space: nowrap; }
@@ -197,6 +211,21 @@ body.focus-mode .audio-recovery { position: fixed; top: max(16px, env(safe-area-
   <span><kbd>Shift</kbd>-click a button to keep it held (for GLO + a key, and the like).</span>
   <span class="screen-hint">Click the screen for Focus Mode.</span>
 </p>
+
+<section class="reader" aria-labelledby="reader-h">
+  <h2 id="reader-h">Screen reader</h2>
+  <p>ESTAMPIE tells a screen reader what its screen shows: each page and its knobs, a knob as it turns, the menu, messages
+    and questions. The same works on a real FM-1 with the <a href="https://charlesvestal.github.io/fm1-reader/">FM-1 Screen Reader</a> page.</p>
+  <fieldset><legend>Read the screen with</legend>
+    <label><input type="radio" name="reader-who" value="sr" checked> Your screen reader</label>
+    <label><input type="radio" name="reader-who" value="voice"> This page’s voice</label>
+    <label><input type="radio" name="reader-who" value="off"> Nobody</label>
+  </fieldset>
+  <button type="button" id="reader-where">Read the whole screen</button>
+  <button type="button" id="reader-again">Say it again</button>
+  <p class="said" id="reader-said" role="status" aria-live="polite">Switch on ESTAMPIE, and the screen is read from here.</p>
+  <p class="vh" id="reader-alert" role="alert"></p>
+</section>
 
 <details class="utility" id="utility">
   <summary>MIDI, saves, audio &amp; display</summary>
@@ -1014,6 +1043,7 @@ async function switchOn() {
           res();
         }
         else if (m.type === "error") rej(new Error(m.message));
+        else if (m.type === "said") readerSay(m.items);
         else if (m.type === "frame") {
           if (m.fb) drawScreen(m.fb);
           if (m.leds) drawLights(lastLeds = m.leds, m.anim);
@@ -1031,6 +1061,7 @@ async function switchOn() {
     syncButtons();
     syncKeys();
     send({ type: "visible", on: !document.hidden });
+    readerOn();
     toolsReady();
     midiOn();
   } catch (err) {
@@ -1042,6 +1073,71 @@ async function switchOn() {
   }
 }
 document.getElementById("go").addEventListener("click", switchOn);
+
+// ---- ESTAMPIE: the screen reader (fm1-reader's words.js and voice, copied to reader/ by the build). The worklet says
+// HELLO every 2 s while it is on; each SAY comes back here, is put in words with the firmware's words file (the
+// HELLO's link: this site's words/), and goes to the live region (your screen reader) or this page's voice.
+const reader = { who: "sr", words: null, wordsId: "", lib: null, tts: null, last: "", pending: null, timer: 0 };
+const readerSaid = document.getElementById("reader-said"), readerAlert = document.getElementById("reader-alert");
+async function readerLib() {
+  if (!reader.lib) reader.lib = import("./reader/words.js").catch(() => null);
+  return reader.lib;
+}
+async function readerWords(link) {
+  const id = (link.match(/[^/]+\.json$/) || [""])[0];
+  if (!id || id === reader.wordsId) return;
+  reader.wordsId = id;
+  const lib = await readerLib();
+  for (const url of ["../../words/" + id, "words/" + id]) {      // (the site's words/; the local build keeps a copy)
+    try {
+      const r = await fetch(url);
+      if (r.ok && lib) { reader.words = lib.wordsOf(await r.json()); return; }
+    } catch { /* the next place */ }
+  }
+}
+function readerShow(text, flags) {
+  reader.last = text;
+  if (flags & 2) { readerAlert.textContent = ""; readerAlert.textContent = text; }
+  if (reader.who === "voice" && reader.tts) reader.tts.speak(text, { interrupt: !!(flags & 1) });
+  readerSaid.textContent = text;
+}
+async function readerSay(items) {
+  const lib = await readerLib();
+  for (const it of items) {
+    if (it.cmd === 1) { if (it.link) await readerWords(it.link); continue; }
+    const text = lib ? lib.spoken(it.text, reader.words || []) : it.text.toLowerCase();
+    if (it.flags & 1) {                                // NOW: one a later NOW replaces before it is shown is dropped
+      reader.pending = { text, flags: it.flags };
+      clearTimeout(reader.timer);
+      reader.timer = setTimeout(() => { const p = reader.pending; reader.pending = null; if (p) readerShow(p.text, p.flags); }, 60);
+    } else {
+      readerShow(text, it.flags);
+    }
+  }
+}
+function readerOn() { send({ type: "reader", on: reader.who !== "off" }); }
+for (const r of document.querySelectorAll('input[name="reader-who"]')) {
+  r.addEventListener("change", async () => {
+    reader.who = r.value;
+    if (reader.who === "voice" && !reader.tts) {       // (the voice: started by this click, as browsers ask)
+      try {
+        const { createTTS } = await import("./reader/tts.js");
+        reader.tts = await createTTS(new URL("reader/", location.href).href);
+        reader.tts.unlock();
+      } catch { readerSaid.textContent = "This page’s voice could not start here. Your screen reader can still read it."; }
+    } else if (reader.tts) reader.tts.unlock();
+    if (reader.who === "off") readerSaid.textContent = "Nobody reads the screen.";
+    readerOn();
+  });
+}
+document.getElementById("reader-where").addEventListener("click", () => {
+  if (!node) { readerSaid.textContent = "Switch on ESTAMPIE first."; return; }
+  if (reader.who === "off") { reader.who = "sr"; document.querySelector('input[name="reader-who"][value="sr"]').checked = true; readerOn(); }
+  send({ type: "reader-where" });
+});
+document.getElementById("reader-again").addEventListener("click", () => {
+  if (reader.last) readerShow(reader.last, 1);
+});
 document.addEventListener("visibilitychange", () => {
   send({ type: "visible", on: !document.hidden });
   if (!document.hidden) audioRecoveryState();

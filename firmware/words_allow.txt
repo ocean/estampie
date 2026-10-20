@@ -1,0 +1,18 @@
+# Words ESTAMPIE's screen says that the audit's dictionary lacks (node ../fm1-reader/tools/audit.mjs --allow):
+# names and real words, kept as they are.
+estampie
+trotto
+trompette
+kalimba
+casio
+glitch
+aah
+vox
+omni
+automation
+kilohertz
+hurdy-gurdy
+lo-fi
+Pythagorean
+initialise
+favourite

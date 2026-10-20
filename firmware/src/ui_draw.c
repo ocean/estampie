@@ -682,6 +682,7 @@ static void draw_column(uint32_t c, const char *label, const char *val, const ch
     int32_t kid = kc_tag(val, &kn);
     card_span_t sp = card_span;                         /* (#251: what the knob shows, this card only) */
     card_span.fn = 0;
+    sp_card_put(c, label, val, unit);                   /* ESTAMPIE: the screen reader's copy (ui_speak.c) */
     fmt_named = 0;                                      /* (params.c: a name, for this card only) */
     card_mot_next = 0;                                  /* (the same: MOTION, this card only) */
     card_mot = (uint8_t)((card_mot & ~(1u << c)) | (uint32_t)mot << c);

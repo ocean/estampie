@@ -2,16 +2,19 @@
 
 # ESTAMPIE: a mediæval groovebox for the FM-1
 
-**ESTAMPIE** is custom firmware for the **M-VAVE FM-1**, named after the *estampie*, a fast dance of the
-13th and 14th centuries. It is a groovebox for lively mediæval music: tavern and court dances rather than the
-crypt, with plucked lutes and citoles, buzzing hurdy-gurdies, shawms and bagpipes over drones, frame drums,
-tabors and nakers, chant, and the church modes.
+[**ESTAMPIE**](https://fm-1.drewr.dev/estampie/) is custom firmware for the **M-VAVE FM-1**, named after the [*estampie*](https://en.wikipedia.org/wiki/Estampie),
+a fast dance of the 13th and 14th centuries. It is a groovebox for lively mediæval music: tavern and court dances
+and celebrations, with plucked lutes and citoles, buzzing hurdy-gurdies, shawms and bagpipes over drones, frame drums,
+tabors and nakers, chant, and the mediæval modes. This is inspired by the idea of teenage engineering's EP-1320 *medieval*
+(but not affiliated with them, and none of their sounds are used).
 
-It is a fork of [GHOULBOX](https://github.com/jasonpersinger/ghoulbox-fm1-dungeon-synth) by Jason Persinger, the
-dungeon-synth firmware, which is itself a fork of [Felucca](https://github.com/hugelton/Felucca) by Leo Kuroshita
+It started as a fork of [GHOULBOX](https://github.com/jasonpersinger/ghoulbox-fm1-dungeon-synth) by Jason Persinger, the
+"dungeon-synth" firmware, which is itself a fork of [Felucca](https://github.com/hugelton/Felucca) by Leo Kuroshita
 (Hügelton Instruments). Nearly everything here is their work: Felucca's engines, sequencer, effects, editor,
 installer and tests, and GHOULBOX's hurdy-gurdy, medieval tunings, drone latch, dungeon sounds and browser synth.
-Thank you both. ESTAMPIE is on Felucca 1.6.1 (Felucca's last feature release: Leo has stepped back from active
+Thank you both!
+
+ESTAMPIE is on Felucca 1.6.1 (Maybe Felucca's last feature release? Leo says he has stepped back from active
 development), with Felucca's ANALOG, LOFI, TRIO, WHEEL and NOISE engines from
 [Felucca-Engines](https://github.com/hugelton/Felucca-Engines) (MIT) in `firmware/engines/`. The browser emulator
 follows the design of Charles Vestal's [X0X](https://github.com/charlesvestal/fm1-x0x), and HOME's chord readout (the
@@ -20,17 +23,14 @@ Felucca fork. Felucca's second-core renderer (MENU > SYSTEM > 2ND CORE, a beta, 
 gospodindilly-ops and builds on X0X, Melodee and zednaked's [Jangada](https://github.com/zednaked/jangada). The full
 history of both projects is kept in this repository.
 
-Inspired by the idea of teenage engineering's EP-1320 *medieval*; not affiliated with them, and none of their
-sounds are used.
-
-**Status: 0.2.0, early work.** So far: the VELLUM look (parchment, iron-gall ink, vermilion rubrics, lapis), the
+**Status: 0.2.0, early but ready for use.** So far: the VELLUM look (parchment, iron-gall ink, vermilion rubrics, lapis), the
 screen's type (Alegreya Sans, with Cinzel's Roman capitals for the large text), the illuminated boot screen and the
 browser emulator page; KEY TOUCH, velocity and aftertouch from the FM-1's own keys (after Charles Vestal's Velo and
 MONK-1), with a calibration anyone can run; and the web installer, editor and site. The sounds are still mostly
 GHOULBOX's, with ESTAMPIE's TROTTO scene, DANCE drum kit and mediæval presets. See [ROADMAP.md](ROADMAP.md).
 
-Its site (coming soon) is <https://fm-1.drewr.dev/estampie/>: play it in the browser, install it, edit sounds and
-read the guide. It sits beside Drew's other FM-1 projects, FM1Kit and FM-SWITCH ([BUILDING.md](BUILDING.md#the-site)).
+The full site is <https://fm-1.drewr.dev/estampie/>: play it in the browser, install it, edit sounds and
+read the guide. This is beside my other FM-1 projects, [FM1Kit](https://fm-1.drewr.dev/fm1kit/) and [FM-SWITCH](https://fm-1.drewr.dev/fm-switch/).
 
 ## What it does
 
@@ -41,7 +41,10 @@ The hurdy-gurdy's drones can keep sounding through the sequencer's rests, as a r
 (RING, from GHOULBOX 2.3). **KEY TOUCH** (MENU › AUDIO, calibrated in MENU › SYSTEM › CALIBRATION) measures how hard 20 of
 the FM-1's own keys are pressed, for velocity and aftertouch with no hardware change: Charles Vestal's trick from his
 [Velo](https://github.com/charlesvestal/fm1-velocity) and [MONK-1](https://github.com/charlesvestal/fm1-monk) firmwares
-(new, not yet tried widely).
+(new, not yet tried widely). A **screen reader** on the computer can read the FM-1's screen: open Charles Vestal's
+[FM-1 Screen Reader](https://charlesvestal.github.io/fm1-reader/) page with the FM-1 plugged in. Pages, knobs as they
+turn, the menu, messages and questions are read, with ESTAMPIE's own words (`firmware/words.tsv`, published at
+`/estampie/words/`); the browser emulator reads its screen too ([fm1-reader](https://github.com/charlesvestal/fm1-reader)).
 
 From Felucca 1.5–1.6.1 (merged into ESTAMPIE 0.1):
 

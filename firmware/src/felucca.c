@@ -97,6 +97,15 @@ static int kt_led_ok(uint32_t k);
 #include "audio.c"
 
 /* -------------------------------------------------------------- UI --- */
+/* ESTAMPIE: the screen reader's SysEx (ui.c announce.c): one whole message into the USB queue, or none, never a wait
+ * (no room: nobody reading). The editor's replies share the queue, each sent whole */
+static int ann_usb_send(const uint8_t *p, uint32_t n)
+{
+    if (!usb.config || usb.suspended || SXQ - (so_w - so_r) < (n + 2u) / 3u)
+        return -1;
+    return ota_wire_send(p, n);
+}
+#define ANN_WIRE ann_usb_send
 #include "panel.c"
 #include "ui.c"
 #include "menu_items.c"          /* MENU's rows and settings (ui_menu.c, editor_menu.c) */

@@ -6,6 +6,9 @@
 #   hw-emu       the Rust hardware emulator's Cargo.lock (when tools/setup_toolchain.sh --hw fetched it)
 #   build-image  the pinned container the JieLi tools run in (needs Docker); accepted findings, each with a reason and
 #                an expiry, are in tools/osv-build-image.toml
+#   espeak       the screen reader's voice (fm1-reader's web/espeak/, in the emulator page): eSpeak NG at the commit it
+#                was built from, asked of osv.dev by commit (osv-scanner scans no prebuilt WebAssembly); accepted findings,
+#                one id a line with its reason, in tools/osv-espeak-accepted.txt
 # Zig has no package dependencies to scan (its wasi-libc is built from the source it ships); its pin is a signed
 # release. Parts whose tools aren't fetched are skipped (CI has only uv.lock). Reports (JSON) in build/osv/. Exits 1 on any finding.
 #   tools/osv_scan.sh [part ...]       (default: every part)
@@ -14,7 +17,7 @@ cd "$(dirname "$0")/.."
 OSV=.toolchain/bin/osv-scanner
 [ -x "$OSV" ] || OSV=$(command -v osv-scanner) || { echo "osv_scan: no osv-scanner (tools/setup_toolchain.sh)"; exit 1; }
 mkdir -p build/osv
-PARTS=${*:-python node hw-emu build-image}
+PARTS=${*:-python node hw-emu build-image espeak}
 fail=0
 
 # Scan with the given arguments; the report goes to build/osv/NAME.json, a summary to the terminal. A scan that sees
@@ -80,6 +83,25 @@ print(" ".join(r["version"] for r in newer if r["security"]))' "$have") || newer
             [ -z "$latest" ] || [ "${IMG#*@}" = "$latest" ] ||
                 echo "osv_scan: build-image: ${IMG%@*} has a newer digest, $latest (update tools/toolchain.lock)"
         else skip build-image "no Docker"; fi ;;
+    espeak)
+        R="${FM1_READER:-../fm1-reader}"
+        C=$(sed -n 's/.*espeak-ng commit `\([0-9a-f]\{40\}\)`.*/\1/p' "$R/web/espeak/README.md" 2>/dev/null)
+        if [ -n "$C" ]; then
+            curl --proto '=https' -fsS -X POST https://api.osv.dev/v1/query -d "{\"commit\":\"$C\"}" > build/osv/espeak.json &&
+            python3 -I - build/osv/espeak.json tools/osv-espeak-accepted.txt "$C" <<'PY' || fail=1
+import json, sys
+found = [v["id"] for v in json.load(open(sys.argv[1])).get("vulns", [])]
+try:
+    ok = {l.split()[0] for l in open(sys.argv[2]) if l.strip() and not l.startswith("#")}
+except OSError:
+    ok = set()
+new = sorted(set(found) - ok)
+if new:
+    print(f"osv_scan: espeak: espeak-ng {sys.argv[3][:12]}: {len(new)} FINDINGS not accepted (build/osv/espeak.json): {' '.join(new)}")
+    sys.exit(1)
+print(f"osv_scan: espeak: espeak-ng {sys.argv[3][:12]}: {len(found)} known, all accepted in {sys.argv[2]}")
+PY
+        else skip espeak "no fm1-reader (FM1_READER)"; fi ;;
     *) echo "osv_scan: no part $part"; exit 2 ;;
     esac
 done

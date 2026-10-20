@@ -1318,3 +1318,5 @@ static void draw_layer(void)
         ui.foot_sig = 0;
     }
 }
+
+#include "ui_speak.c"                                   /* ESTAMPIE: the screen reader: what the screen shows */

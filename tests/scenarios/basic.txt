@@ -1,0 +1,90 @@
+# ESTAMPIE's screen reader: the main paths, as a reader hears them (tests/estampie_host.c). tools/speak_audit.sh
+# runs every scenario here and audits all they said; tests/run_tests.sh runs them as tests.
+# a reader connects: everything on the screen, at once
+listen
+wait 300
+said T1 GURDY: TROTTO GURDY. HOME.
+# a knob: its card, once it settles
+turn K1 3
+wait 400
+said BUZZ
+# pages: their names and knobs
+press ENV
+wait 400
+said ENV (1/2). ATK
+press ENV
+wait 400
+said ENV DEST (2/2)
+press HOME
+wait 400
+said HOME.
+# play and stop, and nothing while it plays
+press PLAY
+wait 300
+said PLAY
+wait 2500
+quiet
+press PLAY
+wait 300
+said STOP
+# the PRESETS knob into the next engine: the message, then the track's new sound and its knobs
+turn PRESETS 1
+wait 600
+said ENGINE NOISE
+turn PRESETS -1
+wait 600
+said GURDY
+# the menu: its tab and row, a row moved to, a value changed
+hold HOME
+wait 900
+release HOME
+wait 400
+said MENU, DISPLAY TAB
+turn PRESETS 2
+wait 400
+said LARGE OFF, 3 of 8
+turn K1 1
+wait 400
+said LARGE ON
+turn K1 -1
+wait 400
+said LARGE OFF
+press HOME
+wait 400
+said HOME.
+# a layer: its name, its keys, its knobs (the tracks' levels)
+hold GLO
+wait 700
+said SET LAYER
+release GLO
+wait 400
+said HOME.
+# SAVE: a user preset named and saved, then the question before it is written over
+press SAVE
+wait 400
+said USER (1/5)
+press OCT+
+wait 400
+said NAME THE SOUND
+press OCT+
+wait 600
+said SAVED U01
+turn K4 1
+wait 400
+said SAVE OCT+ BUTTON
+press OCT+
+wait 400
+said OVERWRITE U01? GURDY 01. OCT+ BUTTON: YES. OCT- BUTTON: NO.
+press OCT-
+wait 400
+said USER (1/5)
+press HOME
+wait 400
+# WHERE: everything again, the steps that are on too
+where
+wait 300
+said STEPS ON: 1-4, 6-16
+# the reader leaves: nothing more
+bye
+wait 3000
+quiet

@@ -9,6 +9,8 @@ tools read the file with no base URL). No CNAME: the domain belongs to the site 
   index.html                  ESTAMPIE: the front page (web/home.html): what it is, the ways in, the thanks
   llms.txt, llms-full.txt     ESTAMPIE: the site for language models (llmstxt.org): the pages; the README and the guide
   card.jpg                    ESTAMPIE: the link preview (web/card.jpg, docs/readme/hero.html?card): each page's og:image
+  words/<id>.json             ESTAMPIE: the screen reader's words files (web/words/, every one ever made: an FM-1 out
+                              there links to its own, firmware/words.tsv; fm1-reader's page fetches it from here)
   favicon.ico                 ESTAMPIE: the pages' icon (also in webapp/art/, with the home-screen icons)
   firmware/estampie-VER.fwsc   the package (+ LICENSE, LICENSING.md, LICENSES/: the package holds
                               JieLi SDK files under Apache-2.0, see LICENSING.md)
@@ -246,6 +248,15 @@ def main(pkg, version, out):
     make_guide.build(out / "guide")
     if not (out / "webapp/emu/index.html").exists():
         print("site: warning: no webapp/emu: the front page's 'Play it in your browser' leads nowhere")
+    elif not (out / "webapp/emu/reader/words.js").exists():
+        raise SystemExit("site: the emulator has no screen reader (webapp/emu/reader/): build it next to fm1-reader "
+                         "(web/emu/build.sh, FM1_READER)")
+    shutil.rmtree(out / "webapp/emu/words", ignore_errors=True)   # (the emulator's local copy: the site's own is words/)
+    shutil.rmtree(out / "words", ignore_errors=True)            # ESTAMPIE: the screen reader's words files, all of them
+    shutil.copytree(HERE / "words", out / "words")
+    wid = re.search(r'words/([0-9a-f]+\.json)', (root / "build/gen/ann_words.h").read_text())
+    if not wid or not (out / "words" / wid[1]).exists():
+        raise SystemExit("site: the words file this build links to is not in web/words/ (tools/build.py --gen-only)")
     front = {"VERSION": html_escape(version), "PRODUCT": product, "PKG": "firmware/" + name, "PKG_NAME": name,
              "PKG_KB": str(round(len(raw) / 1024)), "PKG_SHA256": hashlib.sha256(raw).hexdigest()}
     page = (HERE / "home.html").read_text(encoding="utf-8")
