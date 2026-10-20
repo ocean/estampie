@@ -21,4 +21,9 @@ UV_SYNC_ARGS="--no-default-groups --group qr" tools/setup_toolchain.sh --only uv
 export JIELI_TOOLCHAIN="$PWD/.toolchain/jieli/toolchain" AC79_SDK="$PWD/.toolchain/ac79-sdk"   # (not the workflow's)
 export FM1_READER="${FM1_READER:-$PWD/.toolchain/fm1-reader}"
 [ -f ../fm1-reader/web/words.js ] && FM1_READER=$(cd ../fm1-reader && pwd)
+# the text rasteriser's libraries (the UI's fonts, keycaps and icons are drawn with them: tools/aa_raster.py), so a
+# build here and one elsewhere can be compared
+.venv/bin/python3 -c 'from PIL import features as f, __version__ as v
+print("rasteriser: Pillow", v, *(k + " " + str(f.version(k)) for k in ("freetype2", "raqm", "fribidi", "harfbuzz")))'
 tools/release.sh "$VER"
+sha256sum build/gen/ui_fonts.h build/gen/ui_keycaps.h build/gen/ui_icons.h build/gen/estampie_art.h | sed 's/^/generated: /'
