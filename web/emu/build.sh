@@ -23,7 +23,8 @@ ESVERSION=$(sed -n 's/^#define ESTAMPIE_VERSION "\([^"]*\)".*/\1/p' firmware/src
 mkdir -p build/emu/fonts build/emu/vendor/libflac build/emu/vendor/mp3 build/emu/licenses
 # shellcheck disable=SC2086
 "$ZIG" cc -target wasm32-wasi -mexec-model=reactor ${EMU_OPT:--O2} -g0 -s -ffp-contract=off -std=gnu99 -w ${EMU_CFLAGS:-} \
-    "-DFELUCCA_VERSION=\"$VERSION\"" -Iweb/emu/wasi -Ibuild/gen -Ifirmware/src \
+    "-DFELUCCA_VERSION=\"$VERSION\"" "-DESTAMPIE_DATE=\"$(TZ=UTC git log -1 --format=%cd --date=format-local:'%b %e %Y')\"" \
+    -Iweb/emu/wasi -Ibuild/gen -Ifirmware/src \
     -Wl,--export-dynamic -Wl,-z,stack-size=1048576 -Wl,--initial-memory=33554432 \
     -o build/emu/felucca.wasm web/emu/felucca_web.c -lm
 [ "${EMU_PREVIEW:-1}" = 0 ] && PREVIEW='' || PREVIEW=' (preview)'

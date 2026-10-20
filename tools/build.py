@@ -218,6 +218,13 @@ def ld_regions():
     return regs
 
 
+def commit_date():
+    """the commit's date as __DATE__ writes one ("Oct 20 2026", UTC), or "" outside a git checkout"""
+    r = subprocess.run(["git", "-C", str(SRC), "log", "-1", "--format=%cd", "--date=format-local:%b %e %Y"],
+                       capture_output=True, text=True, env={**os.environ, "TZ": "UTC"})
+    return r.stdout.strip() if r.returncode == 0 else ""
+
+
 def build_app():
     flags = [*CFLAGS, "-Ifirmware/hal", "-Ifirmware/src", "-Ibuild/gen"]
     for flag in ("FELUCCA_FLASH", "FELUCCA_OTA", "FELUCCA_OTA_DRYRUN", "FELUCCA_OTA_RAMONLY", "FELUCCA_CDC",
@@ -230,6 +237,9 @@ def build_app():
     if v in ("0", "1", "2", "3"):
         flags.append(f"-DFELUCCA_USB_LAYOUT={v}")
     flags.append(f'-DFELUCCA_ID="{PRODUCT}"')
+    date = commit_date()
+    if date:                                     # ESTAMPIE: ABOUT's date, the commit's: reproducible (core.h)
+        flags.append(f'-DESTAMPIE_DATE="{date}"')
     if VERSION:
         flags.append(f'-DESTAMPIE_VERSION="{VERSION}"')
     # felucca.c goes to LLVM IR without the optimizer, the main-loop functions (UI, stores, editor) are

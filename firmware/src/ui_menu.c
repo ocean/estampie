@@ -176,7 +176,7 @@ static int32_t menu_document(int32_t y, int draw)
         cv_text(6 + ES_LOGO_S_W + 8, y + 12, &AF_M, ESTAMPIE_VERSION, T_THEME);   /* the version, in roman beside the blackletter */
         cv_text(6, y + 40, &AF_S, "Medi\xE6val groovebox", T_TEXT);
         cv_text(6, y + 58, &AF_S, "Drew Robinson", T_TEXT);
-        cv_text(6, y + 76, &AF_S, __DATE__, T_MID);     /* (ESTAMPIE: under the name, its site's code to the right) */
+        cv_text(6, y + 76, &AF_S, ESTAMPIE_DATE, T_MID);   /* (ESTAMPIE: under the name, its site's code to the right) */
         draw_about_qr(155, y + 33, ABOUT_QR_SITE, UI_QR_LAPIS, UI_QR_RED);       /* ESTAMPIE's site, under its version */
         /* GHOULBOX's credit right across, between the two codes: never both whole on the screen, each scans alone
          * (x 155: clear of the scrollbar) */

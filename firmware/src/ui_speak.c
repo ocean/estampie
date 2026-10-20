@@ -12,9 +12,9 @@
  * The cards' text comes from draw_column (sp_card_put), so every page says what it draws; the rest from the
  * functions that draw it (page_title, confirm_text, help_page, menu_vname). Its RAM is in the pool, its text built
  * there (sp_buf), never on the stack or in the audio interrupt. */
-#define SP_N (ANN_MAX + 1u)
+#define SPK_N (ANN_MAX + 1u)
 static struct {
-    char buf[SP_N], tmp[SP_N];
+    char buf[SPK_N], tmp[SPK_N];
     char card[4][40];                      /* this frame's cards, as drawn (sp_card_put) */
     char said[4][40];                      /* .. as last said or taken in */
     char msg[24], sound[20], name[NM_LEN + 1u];
@@ -35,7 +35,7 @@ static int sp_starts(const char *s, const char *p)
 static void sp_cat(char *b, const char *s)
 {
     uint32_t n = str_len(b);
-    while (*s && n + 1u < SP_N)
+    while (*s && n + 1u < SPK_N)
         b[n++] = *s++;
     b[n] = 0;
 }

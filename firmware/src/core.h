@@ -21,6 +21,10 @@
 #define FELUCCA_FM4 0            /* the DIGITAL engine (eng_digital.c, four-operator FM): kept in the tree, not built
                                   * by default; replaced by FM6, its sounds convert (fm4_convert.c) */
 #endif
+#ifndef ESTAMPIE_DATE
+#define ESTAMPIE_DATE __DATE__   /* ESTAMPIE: ABOUT's date. Builds pass the commit's (UTC; tools/build.py, web/emu/build.sh),
+                                  * so a release is the same whenever and wherever it is built */
+#endif
 #ifndef ESTAMPIE_VERSION
 #define ESTAMPIE_VERSION "0.3.1"   /* ESTAMPIE's own: the ABOUT screen; build.py --release X.Y */
 #endif

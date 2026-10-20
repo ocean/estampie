@@ -98,7 +98,7 @@ static void draw_now(void)
 static void dump_cards(int values)
 {
     uint32_t c;
-    char b[SP_N];
+    char b[SPK_N];
     for (c = 0; c < 4u; c++) {
         if (!((sp.drawn >> c) & 1u))
             continue;
@@ -128,7 +128,7 @@ static void dump_cards(int values)
 }
 static void speakdump(void)
 {
-    char b[SP_N], one[2];
+    char b[SPK_N], one[2];
     uint32_t e, i, k, row, v;
     track_t *t = TSEL;
     ann.on = 1;                                        /* (sp_card_put takes the cards only for a reader) */
@@ -337,7 +337,7 @@ int main(int argc, char **argv)
             speakdump();
         } else if (!strcmp(cmd, "messages")) {         /* (tools/speak_audit.sh: the sources' messages) */
             FILE *m = fopen(arg, "r");
-            char ml[128], b[SP_N];
+            char ml[128], b[SPK_N];
             while (m && fgets(ml, sizeof ml, m)) {
                 ml[strcspn(ml, "\r\n")] = 0;
                 b[0] = 0;

@@ -11,7 +11,9 @@
 # still draws the firmware's.) The pages show them at 2x.
 #   gen_emu_art.py build/gen OUTDIR
 import re
+import struct
 import sys
+import zlib
 from pathlib import Path
 
 from PIL import Image, ImageDraw
@@ -60,6 +62,37 @@ def on_vellum(crest, n, v):
     return im
 
 
+# PNG and ICO written here, with Python's own zlib, not Pillow's: each platform's Pillow bundles its own zlib, which
+# compresses the same pixels to other bytes, and the site zip must be the same wherever it is built (BUILDING.md)
+def png_bytes(im):
+    """an RGB or RGBA image as a PNG: 8 bits a channel, no filter, zlib level 9"""
+    ct = {"RGB": 2, "RGBA": 6}[im.mode]
+    w, h = im.size
+    row = w * len(im.mode)
+    px = im.tobytes()
+    raw = b"".join(b"\0" + px[y * row:(y + 1) * row] for y in range(h))
+    def chunk(kind, data):
+        return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data) & 0xFFFFFFFF)
+    return (b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, ct, 0, 0, 0)) +
+            chunk(b"IDAT", zlib.compress(raw, 9)) + chunk(b"IEND", b""))
+
+
+def save_png(im, path):
+    Path(path).write_bytes(png_bytes(im))
+
+
+def save_ico(images, path):
+    """an ICO of square RGBA images, each held as a PNG (as Pillow writes them)"""
+    pngs = [png_bytes(im) for im in images]
+    head = struct.pack("<HHH", 0, 1, len(images))
+    off = 6 + 16 * len(images)
+    for im, p in zip(images, pngs):
+        s = im.size[0]
+        head += struct.pack("<BBBBHHII", s % 256, s % 256, 0, 0, 1, 32, len(p), off)
+        off += len(p)
+    Path(path).write_bytes(head + b"".join(pngs))
+
+
 def main():
     gen, out = Path(sys.argv[1]), Path(sys.argv[2])
     out.mkdir(parents=True, exist_ok=True)
@@ -67,15 +100,14 @@ def main():
     field, rule = initial(4)
     crest = tinted(field, v["accent"])
     crest.alpha_composite(tinted(rule, v["theme"]))
-    crest.save(out / "initial.png")
-    tinted(word("stampie", 156, 46, 4), v["theme"]).save(out / "word.png")
+    save_png(crest, out / "initial.png")
+    save_png(tinted(word("stampie", 156, 46, 4), v["theme"]), out / "word.png")
     big = initial(8)                                    # (the home-screen icon: drawn at 8x, then scaled down)
     crest8 = tinted(big[0], v["accent"])
     crest8.alpha_composite(tinted(big[1], v["theme"]))
-    on_vellum(crest8, 180, v).convert("RGB").save(out / "icon-180.png")
-    m = mark(48, v)
-    m.save(out / "favicon.ico", sizes=[(16, 16), (32, 32), (48, 48)], append_images=[mark(16, v), mark(32, v)])
-    mark(32, v).save(out / "favicon-32.png")
+    save_png(on_vellum(crest8, 180, v).convert("RGB"), out / "icon-180.png")
+    save_ico([mark(16, v), mark(32, v), mark(48, v)], out / "favicon.ico")
+    save_png(mark(32, v), out / "favicon-32.png")
 
 
 if __name__ == "__main__":
