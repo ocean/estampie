@@ -137,7 +137,7 @@ fi
 if want python; then
     UV=$TC/uv/uv
     [ -x $UV ] || UV=$(command -v uv) || die "needs uv (https://docs.astral.sh/uv/, or --only uv)"
-    "$UV" sync --frozen
+    "$UV" sync --frozen ${UV_SYNC_ARGS:-}              # (UV_SYNC_ARGS: other groups, as CI wants)
 fi
 
 # Zig: one archive, minisign-signed by its maintainers (the pin's hash was taken after checking that signature,

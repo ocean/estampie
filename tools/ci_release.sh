@@ -16,7 +16,8 @@ case "$REF" in
              [ "$VER" = "$HAS" ] || { echo "ci_release: tag $REF, but core.h says $HAS: tag the commit that sets it"; exit 1; } ;;
     *)       VER=$HAS; echo "ci_release: $REF is not a version tag: a dry run of $VER (signed, not released)" ;;
 esac
-tools/setup_toolchain.sh --only uv,jieli,ac79-sdk,python,zig,node,fm1-reader
+# (Python: the build's and the tests' packages; not the device group, whose MIDI library needs ALSA's headers)
+UV_SYNC_ARGS="--no-default-groups --group qr" tools/setup_toolchain.sh --only uv,jieli,ac79-sdk,python,zig,node,fm1-reader
 export JIELI_TOOLCHAIN="$PWD/.toolchain/jieli/toolchain" AC79_SDK="$PWD/.toolchain/ac79-sdk"   # (not the workflow's)
 export FM1_READER="${FM1_READER:-$PWD/.toolchain/fm1-reader}"
 [ -f ../fm1-reader/web/words.js ] && FM1_READER=$(cd ../fm1-reader && pwd)
