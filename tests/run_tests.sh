@@ -235,6 +235,15 @@ if [ ! -f build/felucca.fwsc ]; then
 fi
 
 lane_quick() {
+# ESTAMPIE: the committed generated files (assets/generated/README.md) are still exactly what their generators make.
+# On macOS only: that is where they are made (on Linux, Pillow draws Inter Tight's glyphs a pixel apart)
+if [ "$(uname -s)" = Darwin ] && [ -x .venv/bin/python3 ]; then
+    .venv/bin/python3 tools/gen_aa_keycaps.py "$OUT/ui_keycaps.h" > /dev/null
+    run "generated files kept in the repository: ui_keycaps.h is what tools/gen_aa_keycaps.py makes" \
+        cmp "$OUT/ui_keycaps.h" assets/generated/ui_keycaps.h
+else
+    echo "== generated files kept in the repository: checked on macOS only (assets/generated/README.md)"
+fi
 $CC -o "$OUT/storage_test" tests/storage_test.c
 run "flash storage (A/B, torn writes)" "$OUT/storage_test"
 
