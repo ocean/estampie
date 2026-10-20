@@ -17,8 +17,9 @@ permissions: {}
 jobs:
   build:
     # @v1, not a commit: the hub gives its badge to this tag only (it promises never to move it; v1 is
-    # 85a003ab455b1c074b0bd6d7c282c096a464b973). What it can do here: write releases and sign, in this repository only;
-    # it is given no secrets.
+    # 85a003ab455b1c074b0bd6d7c282c096a464b973). Asked whether it would accept that commit too (zvenson/fm1-build#1):
+    # once it does, pin it here (and v2's commit if that PR becomes v2). What it can do here: write releases and sign,
+    # in this repository only; it is given no secrets.
     uses: zvenson/fm1-build/.github/workflows/build.yml@v1   # zizmor: ignore[unpinned-uses]
     permissions:
       contents: write
