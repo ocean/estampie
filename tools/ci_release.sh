@@ -27,3 +27,7 @@ export FM1_READER="${FM1_READER:-$PWD/.toolchain/fm1-reader}"
 print("rasteriser: Pillow", v, *(k + " " + str(f.version(k)) for k in ("freetype2", "raqm", "fribidi", "harfbuzz")))'
 tools/release.sh "$VER"
 sha256sum build/gen/ui_fonts.h build/gen/ui_keycaps.h build/gen/ui_icons.h build/gen/estampie_art.h | sed 's/^/generated: /'
+case "$REF" in
+    v[0-9]*) ;;
+    *) cp build/gen/ui_fonts.h build/gen/ui_keycaps.h build/gen/ui_icons.h build/gen/estampie_art.h build/dist/ ;;
+esac                     # (a dry run also carries the generated art, to compare with a build elsewhere: never a release)
