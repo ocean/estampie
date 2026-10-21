@@ -128,7 +128,7 @@ versions `tools/ci_release.sh` logs.
 
 ## The site and the other repositories
 
-- **[ocean/fm1-site](https://github.com/ocean/fm1-site)** serves <https://fm-1.drewr.dev/>, deployed to Cloudflare. ESTAMPIE ships its part, `/estampie/`, as the release's site zip. Keep the zip's name and its `.sha256`'s. The site's CI checks every page for accessibility (axe, WCAG 2.2 AA), contrast and links, and the reader's words files carry a CORS header from its `_headers`. It's maintained by another agent session (`fm1-site-2e`); coordinate through it, or through Drew.
+- **[ocean/fm1-site](https://github.com/ocean/fm1-site)** serves <https://fm-1.drewr.dev/>, hosted on GitHub Pages. ESTAMPIE ships its part, `/estampie/`, as the release's site zip. Keep the zip's name and its `.sha256`'s. The site's CI checks every page for accessibility (axe, WCAG 2.2 AA), contrast and links. Pages sets each file's type from its extension and takes no per-file headers, so anything meant for reading in a browser is `.txt` or `.html` (`firmware/LICENSE.txt`, not `LICENSE`; `.md` may download). The words files and `.wasm` get the right headers already. It's maintained by another agent session (`fm1-site-2e`); coordinate through it, or through Drew.
 - **What `make_site.py` makes:** every page's link-preview card, `llms.txt` and `llms-full.txt` (with absolute links), `words/`, and the emulator's screen reader. It refuses to build without the reader.
 - **[charlesvestal/fm1-reader](https://github.com/charlesvestal/fm1-reader)** is pinned in `toolchain.lock`.
 - **[zvenson/fm1-build](https://github.com/zvenson/fm1-build)** is used `@v1`, which the hub requires.

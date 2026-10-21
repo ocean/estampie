@@ -12,7 +12,7 @@ tools read the file with no base URL). No CNAME: the domain belongs to the site 
   words/<id>.json             ESTAMPIE: the screen reader's words files (web/words/, every one ever made: an FM-1 out
                               there links to its own, firmware/words.tsv; fm1-reader's page fetches it from here)
   favicon.ico                 ESTAMPIE: the pages' icon (also in webapp/art/, with the home-screen icons)
-  firmware/estampie-VER.fwsc   the package (+ LICENSE, LICENSING.md, LICENSES/: the package holds
+  firmware/estampie-VER.fwsc   the package (+ LICENSE.txt, LICENSING.txt, LICENSES/: the package holds
                               JieLi SDK files under Apache-2.0, see LICENSING.md)
   firmware/stock/             ESTAMPIE: official V15 for "Return to official V15", M-VAVE's, unmodified (Apache-2.0,
                               with the licence and assets/m-vave/README.md)
@@ -109,7 +109,7 @@ def write_llms(out, version, product, name, sha):
             f"- [Editor]({base}webapp/editor/): edit sounds, patterns, songs and samples, and make backups, over USB MIDI\n"
             f"- [User guide]({base}guide/): from first notes to every page and setting\n"
             f"- [Firmware download]({base}firmware/{name}): the .fwsc package, SHA-256 {sha}\n"
-            f"- [Licences]({base}firmware/LICENSING.md)\n\n")
+            f"- [Licences]({base}firmware/LICENSING.txt)\n\n")
     (out / "llms.txt").write_text(head + f"## Optional\n\n- [Full text]({base}llms-full.txt): the README and the user guide\n",
                                   encoding="utf-8")
     readme = (HERE.parent / "README.md").read_text(encoding="utf-8")
@@ -212,20 +212,22 @@ def main(pkg, version, out):
     (fw / "LICENSES" / "index.html").write_text(    # the installer links this folder: Pages lists no folders
         '<!doctype html><meta charset="utf-8"><title>Felucca licences</title><h1>Licence texts</h1><ul>'
         + "".join(f'<li><a href="{n}">{n}</a></li>' for n in names)
-        + '</ul><p><a href="../LICENSING.md">LICENSING.md</a> · <a href="../LICENSE">LICENSE (GPL-3.0)</a></p>\n',
+        + '</ul><p><a href="../LICENSING.txt">LICENSING</a> · <a href="../LICENSE.txt">LICENSE (GPL-3.0)</a></p>\n',
         encoding="utf-8")
-    for doc in ("LICENSE", "LICENSING.md"):
-        shutil.copy(HERE.parent / doc, fw / doc)
+    for old in ("LICENSE", "LICENSING.md"):         # (now .txt: GitHub Pages serves those as text, these as downloads)
+        (fw / old).unlink(missing_ok=True)
+    shutil.copy(HERE.parent / "LICENSE", fw / "LICENSE.txt")
+    shutil.copy(HERE.parent / "LICENSING.md", fw / "LICENSING.txt")
     st = fw / "stock"                               # ESTAMPIE: official V15, as M-VAVE publish it (Apache-2.0)
     shutil.rmtree(st, ignore_errors=True)
     st.mkdir()
     shutil.copy(stock, st / stock.name)
     shutil.copy(lic / "Apache-2.0.txt", st / "LICENSE-Apache-2.0.txt")
-    shutil.copy(stock.with_name("README.md"), st / "README.md")
+    shutil.copy(stock.with_name("README.md"), st / "README.txt")
     (st / "index.html").write_text(                 # the installer links this folder: Pages lists no folders
         '<!doctype html><meta charset="utf-8"><title>Official FM-1 V15</title><h1>Official FM-1 V15 (M-VAVE)</h1>'
         f'<ul><li><a href="{stock.name}">{stock.name}</a> (SHA-256 {STOCK_V15_SHA256})</li>'
-        '<li><a href="README.md">README.md</a>: where it comes from, its terms</li>'
+        '<li><a href="README.txt">README</a>: where it comes from, its terms</li>'
         '<li><a href="LICENSE-Apache-2.0.txt">Apache License, Version 2.0</a></li></ul>\n', encoding="utf-8")
     shutil.copy(HERE / "editor.html", ed / "index.html")
     root = HERE.parent                              # GHOULBOX: the art, and the emulator when it was built
