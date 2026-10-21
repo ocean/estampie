@@ -232,6 +232,9 @@ static void fz_play(void)
 static void setup(uint32_t synth)
 {
     uint32_t i;
+#ifdef PREEMPT
+    host_irq_mask = 1;                                    /* power-on before the audio ISR, as felucca_init: no BPM 0 */
+#endif
     ui_power_on();
     for (i = 0; i < MI_VALUES; i++)                       /* the MENU at random (HELP, LARGE, PREVIEW, ACCEL ..) */
         if (menu_valued(i) && i != MI_SERIAL && rnd(2))
@@ -245,6 +248,10 @@ static void setup(uint32_t synth)
     trk[0].p[P_SLEN] = 16;
     song.g[G_BPM] = (int16_t)(60 + rnd(180));
     song.master_q12 = 4096;
+#ifdef PREEMPT
+    host_irq_pend = 0;
+    host_irq_mask = 0;
+#endif
     fz_audio(8);
     if (fz_song) {
         uint32_t k, j;
