@@ -1837,7 +1837,7 @@ async function updaterChecks(image) {
   ok(r6 === "FM-1_378001", "fm1ota.js: a firmware that does not report its build is let be (the identity is right)");
 
   const running = new FakeFM1(image, { build: BUILD });
-  running.boot("FM-1_378001", "Felucca");
+  running.boot("FM-1_378001", "FM-1 ESTAMPIE");
   const now = await new Updater(running.access).current();
   const link = { q: [], waiter: null, drain() {}, send: () => false, read: async () => null };
   ok(now && now.id === "FM-1_378001" && now.build === BUILD && await buildOf(link) === null,
@@ -1859,7 +1859,7 @@ async function factorySounds() {
      eq(w[0][1], [5, 0, 0, 0, 0]) && eq(pieces[1][1].slice(0, 8), [5, 0, 2, 0, 0, 0, 2, 0]) && fr.at(-1) === 1,
      "fm1ota.js restoreFactorySounds: four banks begun, 32 pieces, the sounds byte for byte");
   const ours = new FakeFM1(new Uint8Array(16));
-  ours.boot("FM-1_378001", "Felucca");
+  ours.boot("FM-1_378001", "FM-1 ESTAMPIE");
   const e1 = await new Updater(ours.access).restoreFactorySounds(sounds).then(() => null, (x) => x);
   ok(e1 && e1.code === "notstock" && !ours.soundWrites, "fm1ota.js restoreFactorySounds: refused to anything but official V15, nothing sent");
   const no = new FakeFM1(new Uint8Array(16));

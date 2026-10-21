@@ -135,7 +135,9 @@ versions `tools/ci_release.sh` logs.
 
 ## Things that will surprise you
 
-- **The FM-1 shows up as "Felucca"** on USB, both for MIDI and as the audio input, not "ESTAMPIE".
+- **The FM-1 shows up as "FM-1 ESTAMPIE"** on USB, both for MIDI and as the audio input (its update loader as
+  "FM-1 ESTAMPIE Update"), from 0.3.4; "Felucca" before. "FM-1" stays in front because tools (the Firmware Hub,
+  fm1-reader) look for it. The USB id is still Felucca's, pid.codes' test `1209:0001`. Tools accept both names.
 - **Some settings live in odd places.** Settings bytes sit in spare rows of the favourites record (`favorites.factory[...]`). KEY TOUCH has row 1 (the retired DIGITAL engine's). Check `settings_persist.c` before taking a byte.
 - **The emulator and the device share `ui.c`.** Anything the firmware sends goes through a hook each build supplies, such as `ANN_WIRE`: USB on the device, a buffer in the browser, nothing in the host tests.
 - **gcc and clang differ on the HAL.** Host programs that include `hostsim.c` need `-O1` with gcc: at `-O0` it keeps unused HAL functions and chokes on their pi32v2 instructions.

@@ -54,6 +54,9 @@ def pack7(b):
     return out
 
 
+NAMES = ("FM-1 ESTAMPIE", "Felucca")             # ESTAMPIE's port name (0.3.4 on), and before
+
+
 class Link:
     def __init__(self):
         try:
@@ -61,10 +64,10 @@ class Link:
         except ImportError:
             sys.exit("needs mido: uv sync (the device group)")
         self.mido = mido
-        outs = [n for n in mido.get_output_names() if "Felucca" in n]
-        ins = [n for n in mido.get_input_names() if "Felucca" in n]
+        outs = [n for n in mido.get_output_names() if any(k in n for k in NAMES)]
+        ins = [n for n in mido.get_input_names() if any(k in n for k in NAMES)]
         if not outs or not ins:
-            sys.exit("no MIDI port named Felucca: connect the FM-1 (running Felucca) by USB")
+            sys.exit("no FM-1 ESTAMPIE (or Felucca) MIDI port: connect the FM-1 by USB")
         self.o = mido.open_output(outs[0])
         self.i = mido.open_input(ins[0])
         for _ in range(3):                          # the first frame after opening the port can be lost
@@ -151,4 +154,4 @@ if __name__ == "__main__":
     try:
         main()
     except TimeoutError as e:
-        sys.exit(f"{e}: is Felucca running, and no other app using its MIDI port?")
+        sys.exit(f"{e}: is ESTAMPIE running, and no other app using its MIDI port?")
