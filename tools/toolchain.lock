@@ -10,8 +10,8 @@ ac79-sdk       git           AC79NN_SDK_V1.2.1_2023-12-13   d179b448475942331207
 # Node: the web page and browser emulator tests (web/*.mjs) run on it; only the node binary is kept, npm, npx and
 # corepack are deleted after unpacking. The SHASUMS256.txt.asc of each release is signed by a key in
 # github.com/nodejs/release-keys.
-node           darwin-arm64  24.22.0                        75ddfb875bbd868ebe57536f4442225f54dd10f6d2178dd439de869a5c648dc3  https://nodejs.org/dist/v24.22.0/node-v24.22.0-darwin-arm64.tar.xz
-node           linux-x64     24.22.0                        cc2f601cee82d9a5a233302fe307abc600727035fd7d2c3a3571755989e95008  https://nodejs.org/dist/v24.22.0/node-v24.22.0-linux-x64.tar.xz
+node           darwin-arm64  24.22.1                        654ba79de6155647e22321932b45f2a1ccb705976cc337c9b8e278beb085a628  https://nodejs.org/dist/v24.22.1/node-v24.22.1-darwin-arm64.tar.xz
+node           linux-x64     24.22.1                        6c172a9ab6718f7b801fb5a7bd486af2ee5e32758086a04b84fcce2aa77095e6  https://nodejs.org/dist/v24.22.1/node-v24.22.1-linux-x64.tar.xz
 # Zig: its `zig cc` (clang, with wasi-libc built from the source it ships) compiles the browser emulator to
 # WebAssembly (web/emu/build.sh). Each release is minisign-signed with Zig's key, shown on ziglang.org/download:
 #   tools/minisign_verify.py RWSGOq2NVecA2UPNdBUZykf1CCb147pkmdtYxgb3Ti+JO/wCYvhbAb/U zig-....tar.xz

@@ -51,10 +51,9 @@ for part in $PARTS; do
     python)
         scan python source --lockfile uv.lock ;;
     node)
-        NODE=.toolchain/node/bin/node
-        [ -x $NODE ] || NODE=$(command -v node) || NODE=
-        if [ -n "$NODE" ]; then
-            have=$($NODE --version)
+        # The Node pinned in the lock, not whatever node is on the PATH (a CI runner's own is not ours).
+        have=$(awk '$1 == "node" { print "v" $3; exit }' tools/toolchain.lock)
+        if [ -n "$have" ]; then
             newer=$(curl --proto '=https' -fsSL https://nodejs.org/dist/index.json | python3 -I -c '
 import json, sys
 have = sys.argv[1].lstrip("v").split(".")
@@ -66,7 +65,7 @@ print(" ".join(r["version"] for r in newer if r["security"]))' "$have") || newer
                 "?") echo "osv_scan: node: couldn't read nodejs.org/dist/index.json"; fail=1 ;;
                 *) echo "osv_scan: node: $have; security releases since: $newer (update tools/toolchain.lock)"; fail=1 ;;
             esac
-        else skip node "no node"; fi ;;
+        else skip node "no node in tools/toolchain.lock"; fi ;;
     hw-emu)
         EMU=.toolchain/emulators/m-wave-fm1-browser-emulator
         if [ -d $EMU ]; then
