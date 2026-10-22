@@ -77,12 +77,23 @@ unpack() {
     rm -rf "$dest" && mv "$dest.new" "$dest"
 }
 
-# A git checkout at exactly the pinned commit (fetched by REF, a tag or branch, then checked).
+# A git checkout at exactly the pinned commit (fetched by REF, a tag or branch, then checked). Any further arguments
+# are the only paths checked out, and only their contents are fetched (sparse, blob-less): the rest of the repository
+# never lands on disk. An older, whole checkout is cloned again.
 checkout() {
     dest=$1 ref=$2 commit=$3 url=$4
-    if [ ! -d "$dest/.git" ] || [ "$(git -C "$dest" rev-parse HEAD)" != "$commit" ]; then
+    shift 4
+    if [ ! -d "$dest/.git" ] || [ "$(git -C "$dest" rev-parse HEAD)" != "$commit" ] ||
+        { [ $# -gt 0 ] && [ "$(git -C "$dest" sparse-checkout list 2>/dev/null)" != "$(printf '%s\n' "$@")" ]; } ||
+        { [ $# -gt 0 ] && [ "$(git -C "$dest" config --get remote.origin.partialclonefilter)" != blob:none ]; }; then
         rm -rf "$dest"
-        git -c advice.detachedHead=false clone --quiet --no-recurse-submodules --depth 50 --branch "$ref" "$url" "$dest"
+        if [ $# -eq 0 ]; then
+            git clone --quiet --no-recurse-submodules --depth 50 --no-checkout --branch "$ref" "$url" "$dest"
+        else
+            git clone --quiet --no-recurse-submodules --depth 50 --no-checkout --filter=blob:none --branch "$ref" \
+                "$url" "$dest"
+            git -C "$dest" sparse-checkout set --no-cone "$@"
+        fi
         git -C "$dest" -c advice.detachedHead=false checkout --quiet "$commit" 2>/dev/null \
             || { rm -rf "$dest"; die "$url: $ref doesn't reach the pinned commit $commit"; }
     fi
@@ -103,7 +114,10 @@ fi
 # AC79 SDK.
 if want ac79-sdk; then
     set -- $(pin ac79-sdk)
-    checkout $TC/ac79-sdk "$1" "$2" "$3"
+    # Only the three files a package takes (tools/build.py SDK_SHA256). The SDK's Windows tools (its JTAG debug server,
+    # make, isd_download ..) are never used here, and antivirus flags some of them as potentially unwanted.
+    checkout $TC/ac79-sdk "$1" "$2" "$3" /cpu/wl82/tools/uboot.boot /cpu/wl82/tools/cfg_tool.bin \
+        /cpu/wl82/tools/cfg/eq_cfg_hw.bin
 fi
 
 # Node: the web page and browser emulator tests run on it. npm, npx and corepack are deleted: nothing here installs
