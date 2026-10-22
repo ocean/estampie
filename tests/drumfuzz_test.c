@@ -22,10 +22,11 @@
 #define HOST_IRQ_STUBS 1
 #define FM1_IRQ_TARGET 1
 static volatile int host_irq_mask, host_irq_pend;
+static volatile int host_irq_hold;                       /* setup's power-on: no ISR, whatever fm1_irq_on says */
 static uint32_t fm1_icfg(void) { return (uint32_t)host_irq_mask; }
 static void host_isr(void);
 static void fm1_irq_off(void) { host_irq_mask = 1; }
-static void fm1_irq_on(void) { host_irq_mask = 0; if (host_irq_pend) { host_irq_pend = 0; host_isr(); } }
+static void fm1_irq_on(void) { host_irq_mask = 0; if (host_irq_pend && !host_irq_hold) { host_irq_pend = 0; host_isr(); } }
 static void fm1_icfg_set(uint32_t f) { if (f) host_irq_mask = 1; else fm1_irq_on(); }
 #endif
 #include "ui_test.c"
@@ -45,7 +46,7 @@ static void on_vt(int s)
 {
     (void)s;
     host_sig_n++;
-    if (host_irq_mask || host_in_isr) { host_irq_pend = 1; return; }
+    if (host_irq_mask || host_in_isr || host_irq_hold) { host_irq_pend = 1; return; }
     host_isr();
 }
 #endif
@@ -233,7 +234,7 @@ static void setup(uint32_t synth)
 {
     uint32_t i;
 #ifdef PREEMPT
-    host_irq_mask = 1;                                    /* power-on before the audio ISR, as felucca_init: no BPM 0 */
+    host_irq_hold = 1;                                    /* power-on before the audio ISR, as felucca_init: no BPM 0 */
 #endif
     ui_power_on();
     for (i = 0; i < MI_VALUES; i++)                       /* the MENU at random (HELP, LARGE, PREVIEW, ACCEL ..) */
@@ -250,6 +251,7 @@ static void setup(uint32_t synth)
     song.master_q12 = 4096;
 #ifdef PREEMPT
     host_irq_pend = 0;
+    host_irq_hold = 0;
     host_irq_mask = 0;
 #endif
     fz_audio(8);
