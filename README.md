@@ -61,6 +61,17 @@ The user guide is [docs/guide/guide.html](docs/guide/guide.html), Jason Persinge
 ESTAMPIE: `python3 docs/guide/make_guide.py html OUTDIR` builds it as a page (the site has it at `guide/`), `pdf
 OUT.pdf` prints it. `tools/guide_shots.sh` draws its screenshots with the firmware's own UI code.
 
+## Screens
+
+ESTAMPIE playing its TROTTO, in the VELLUM look (parchment) and TAVERN (dark): the boot screen, HOME, the mixer, the
+piano roll, the drum grid, FX, SCALE, ENV, LFO, MENU and ABOUT. They are the firmware's own screens, taken in the
+simulator by `tools/screens.sh`. Each one on its own, at 720 × 720: [VELLUM](docs/screens/vellum/) ·
+[TAVERN](docs/screens/tavern/).
+
+<p align="center"><a href="docs/screens/vellum/"><img src="docs/screens/vellum.png" width="880" alt="Eleven ESTAMPIE screens in the VELLUM look, red and blue ink on parchment: the illuminated Estampie boot screen, HOME's waveform as the TROTTO plays, the four-track mixer, the hurdy-gurdy's melody on the piano roll, the DANCE kit's drum grid, the FX, scale, envelope and LFO pages, the menu and ABOUT"></a></p>
+
+<p align="center"><a href="docs/screens/tavern/"><img src="docs/screens/tavern.png" width="880" alt="The same eleven ESTAMPIE screens in the TAVERN look, orange and blue on dark brown"></a></p>
+
 ## Building
 
 Everything the build needs is fetched into the repository (`.toolchain/`, `.venv/`, both git-ignored), so
