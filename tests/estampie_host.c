@@ -12,6 +12,8 @@
  *   print                   the SAYs since the last check
  *   speakdump               every screen, page, knob value, menu row, dialog, layer, NAME and hint, as KIND<TAB>text
  *   messages FILE           each line of FILE as a message on the screen, said as the FM-1 says it: MSG (or WARN)
+ *   colour NAME             MENU > COLOUR set to the palette NAME (VELLUM, TAVERN ..)
+ *   shot FILE               the screen as it is now, a 240 x 240 PPM (in OUTDIR, if given)
  * ESTAMPIE_SAID_LOG=FILE appends every SAY to FILE as MSG<TAB>text (WARN: ANN_KEEP). Exit 1 if a check failed.
  *   cc -O1 -w -Ibuild/gen -Ifirmware/src -o build/host/estampie_host tests/estampie_host.c -lm
  *   build/host/estampie_host SCRIPT [OUTDIR] */
@@ -346,6 +348,31 @@ int main(int argc, char **argv)
             }
             if (m)
                 fclose(m);
+        } else if (!strcmp(cmd, "colour")) {
+            uint32_t i;
+            for (i = 0; i < palette_n() && strcasecmp(palette_name(i), arg); i++)
+                ;
+            if (i == palette_n()) {
+                fprintf(stderr, "host: line %u: no palette %s\n", n, arg);
+                return 2;
+            }
+            menu_put(MI_COLOR, i);
+            run(100);
+        } else if (!strcmp(cmd, "shot")) {             /* RGB565 as the panel gets it, high byte first */
+            char path[512];
+            FILE *o;
+            uint32_t i;
+            snprintf(path, sizeof path, "%s%s%s", argc > 2 ? argv[2] : "", argc > 2 ? "/" : "", arg);
+            if (!(o = fopen(path, "wb")))
+                return 2;
+            fprintf(o, "P6\n240 240\n255\n");
+            for (i = 0; i < 240u * 240u; i++) {
+                uint32_t v = ((web_fb[i] & 0xFFu) << 8) | (web_fb[i] >> 8);
+                fputc((int)(((v >> 11) & 31u) * 255u / 31u), o);
+                fputc((int)(((v >> 5) & 63u) * 255u / 63u), o);
+                fputc((int)((v & 31u) * 255u / 31u), o);
+            }
+            fclose(o);
         } else {
             fprintf(stderr, "host: line %u: what is %s?\n", n, cmd);
             return 2;
