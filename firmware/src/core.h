@@ -26,7 +26,7 @@
                                   * so a release is the same whenever and wherever it is built */
 #endif
 #ifndef ESTAMPIE_VERSION
-#define ESTAMPIE_VERSION "0.3.4"   /* ESTAMPIE's own: the ABOUT screen; build.py --release X.Y */
+#define ESTAMPIE_VERSION "0.3.5"   /* ESTAMPIE's own: the ABOUT screen; build.py --release X.Y */
 #endif
 #ifndef GHOULBOX_VERSION
 #define GHOULBOX_VERSION "2.1"   /* GHOULBOX's own: the ABOUT screen; the editor's version string ends " GB" it */
