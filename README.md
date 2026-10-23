@@ -27,7 +27,7 @@ history of both projects is kept in this repository.
 screen's type (Alegreya Sans, with Cinzel's Roman capitals for the large text), the illuminated boot screen and the
 browser emulator page; KEY TOUCH, velocity and aftertouch from the FM-1's own keys (after Charles Vestal's Velo and
 MONK-1), with a calibration anyone can run; the screen reader; and the web installer, editor and site. The sounds are still mostly
-GHOULBOX's, with ESTAMPIE's TROTTO scene, DANCE drum kit and mediæval presets. See [the screens](#screens) and [ROADMAP.md](ROADMAP.md).
+GHOULBOX's, with ESTAMPIE's TROTTO scene, DANCE drum kit and mediæval presets. See [the screens](docs/screens/) and [ROADMAP.md](ROADMAP.md).
 
 The full site is <https://fm-1.drewr.dev/estampie/>: play it in the browser, install it, edit sounds and
 read the guide. This is beside my other FM-1 projects, [FM1Kit](https://fm-1.drewr.dev/fm1kit/) and [FM-SWITCH](https://fm-1.drewr.dev/fm-switch/).
