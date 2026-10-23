@@ -217,7 +217,7 @@ static void sp_screen(char *b, int full)
         sp_cat(b, "ABOUT AND CREDITS. ESTAMPIE " ESTAMPIE_VERSION);
     } else if (ui.menu == 3) {
         static const char *const USB_N[5] = {"OFF", "WAITING", "BUS", "STARTING", "MIDI"};
-        sp_cat(b, "INFO. FIRMWARE " FELUCCA_VERSION ", USB ");
+        sp_cat(b, "INFO. FIRMWARE " ESTAMPIE_VERSION ", USB ");
         sp_cat(b, USB_N[info_usb()]);
         sp_cat(b, ", CPU ");
         sp_num(b, info.cpu);
