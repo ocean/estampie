@@ -103,6 +103,14 @@ Three levels, cheapest first:
 
 Then a real FM-1. M-VAVE's own updater returns it to stock firmware.
 
+## AI / LLM disclaimer
+
+ESTAMPIE is developed with the help of LLM coding agents (code, tests, documentation and maintenance). Its idea,
+design, features, sounds and direction are mine, or the work of the people credited above, and I put as much care
+and thought into refining and iterating on the design and features as I personally can, and review output
+as much as possible. See [On AI-assisted development](docs/AI.md), inspired by Leo Kuroshita's
+[note for Felucca](https://github.com/hugelton/Felucca/discussions/166).
+
 ## Licence
 
 GPL-3.0-only, as GHOULBOX and Felucca. The engines in `firmware/engines/` are MIT (Felucca-Engines) and the Hügelton
