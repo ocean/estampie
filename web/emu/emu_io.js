@@ -20,7 +20,7 @@ export const PANEL_KNOBS = [
 /* Skip CC32 (Bank Select LSB) and CC38 (Data Entry LSB). None of these is in
  * GHOULBOX's direct sound-control map; panel messages are consumed by the page. */
 export const PANEL_BUTTONS = [
-  { cc: 25, name: "FX", bit: 0 }, { cc: 26, name: "SCL", bit: 1 },
+  { cc: 25, name: "FX", bit: 0 }, { cc: 26, name: "SEL", bit: 1 },
   { cc: 27, name: "ENV", bit: 2 }, { cc: 28, name: "LFO", bit: 3 },
   { cc: 29, name: "EDIT", bit: 4 }, { cc: 30, name: "GLO", bit: 5 },
   { cc: 31, name: "HOME", bit: 6 }, { cc: 33, name: "SAVE", bit: 7 },

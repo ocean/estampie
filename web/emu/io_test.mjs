@@ -12,7 +12,7 @@ const all = [...PANEL_KNOBS, ...PANEL_BUTTONS].map((x) => x.cc);
 check("all 8 knobs and 14 buttons have unique CCs", PANEL_KNOBS.length === 8 && PANEL_BUTTONS.length === 14 && new Set(all).size === 22);
 check("the CC list names every physical control in panel order",
   PANEL_KNOBS.map((x) => x.name).join() === "MASTER,SELECT,PRESETS,ALGORITHM,KNOB 1,KNOB 2,KNOB 3,KNOB 4" &&
-  PANEL_BUTTONS.map((x) => x.name).join() === "FX,SCL,ENV,LFO,EDIT,GLO,HOME,SAVE,ARP,SEQ,PLAY,REC,OCT-,OCT+" &&
+  PANEL_BUTTONS.map((x) => x.name).join() === "FX,SEL,ENV,LFO,EDIT,GLO,HOME,SAVE,ARP,SEQ,PLAY,REC,OCT-,OCT+" &&
   PANEL_BUTTONS.every((x, i) => x.bit === i));
 check("the map avoids GHOULBOX's direct parameter CCs and channel-mode CCs",
   all.every((x) => ![5, 7, 10, 21, 22, 23, 24, 71, 72, 73, 74, 75, 76, 77, 78, 79, 85, 86, 91, 92, 93, 94,

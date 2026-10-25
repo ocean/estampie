@@ -276,7 +276,7 @@ import { preparePlaybackSession, resumeAudio, withTimeout } from "./audio_sessio
 
 const NS = "http://www.w3.org/2000/svg";
 // panel.c's labels (bit = label) and encoder roles
-const B = { FX: 0, SCL: 1, ENV: 2, LFO: 3, EDIT: 4, GLO: 5, HOME: 6, SAVE: 7, ARP: 8, SEQ: 9, PLAY: 10, REC: 11, "OCT-": 12, "OCT+": 13 };
+const B = { FX: 0, SEL: 1, ENV: 2, LFO: 3, EDIT: 4, GLO: 5, HOME: 6, SAVE: 7, ARP: 8, SEQ: 9, PLAY: 10, REC: 11, "OCT-": 12, "OCT+": 13 };
 const EN = { SELECT: 0, ALGORITHM: 1, PRESETS: 2, "KNOB 1": 3, "KNOB 2": 4, "KNOB 3": 5, "KNOB 4": 6 };
 const PLAY_GREEN = 14;
 // the 27 keys F3..G5: key k = k semitones above F3
@@ -292,7 +292,7 @@ const FIRMWARE = "ESTAMPIE @ESVERSION@ on GHOULBOX @GBVERSION@ on Felucca @VERSI
 // ------------------------------------------------------------------ the panel
 // Two drawings of the same controls: WIDE after the FM-1's own layout, TALL for a phone held upright (the
 // screen larger, the keys across the whole width). Rebuilt when the orientation changes; the state stays.
-const ROW1 = ["FX", "SCL", "ENV", "LFO", "EDIT", "GLO"], ROW2 = ["HOME", "SAVE", "ARP", "SEQ", "PLAY", "REC"];
+const ROW1 = ["FX", "SEL", "ENV", "LFO", "EDIT", "GLO"], ROW2 = ["HOME", "SAVE", "ARP", "SEQ", "PLAY", "REC"];
 const KNOBS = ["MASTER", "SELECT", "PRESETS", "ALGORITHM", "KNOB 1", "KNOB 2", "KNOB 3", "KNOB 4"];
 // the computer keyboard, every key one control: F3..A#4 on the Z (white) and A (black) rows, B4..G5 on Q..O
 // in semitones, the twelve buttons on the number row in the panel's order (held while the key is), [ ] OCT
@@ -653,7 +653,7 @@ function keepPending(runtime) {
 // ------------------------------------------------------------------ Web MIDI in (notes, direct sound CCs, and the optional panel CC map)
 const midiBox = document.getElementById("midi"), panelMidiBox = document.getElementById("panel-midi");
 const knobMode = document.getElementById("midi-knob-mode"), velocity = document.getElementById("midi-velocity");
-const LAYER_BUTTONS = [B.FX, B.GLO, B.SCL, B.EDIT, B.SEQ, B.REC].reduce((m, b) => m | 1 << b, 0);
+const LAYER_BUTTONS = [B.FX, B.GLO, B.SEL, B.EDIT, B.SEQ, B.REC].reduce((m, b) => m | 1 << b, 0);
 let midiAccess = null;
 try {
   midiBox.checked = localStorage.getItem(MIDI_PREF) === "1";

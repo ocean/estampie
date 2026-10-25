@@ -135,7 +135,7 @@ td:first-child { color: var(--lapis); font-family: ui-monospace, Menlo, monospac
     <div><h3>Buttons</h3><div class="table-wrap"><table><thead><tr><th>CC</th><th>Control</th><th>Send</th></tr></thead><tbody id="button-map"></tbody></table></div></div>
   </div>
   <p><strong>Absolute 0–127</strong> is the usual choice for standard knobs. The first value establishes the knob position without jumping; later values turn it. Choose <strong>Relative 1 / 127</strong> when an endless encoder sends <code>1</code> clockwise and <code>127</code> counter-clockwise. MASTER is always absolute.</p>
-  <div class="note"><strong>Button combinations with MIDI notes:</strong> hold a mapped layer button—FX, GLO, SCL, EDIT, SEQ or REC—then play notes F3 through G5. Those notes act as the FM-1’s 27 physical keys until released, so combinations such as FX + B work from a MIDI keyboard. Notes outside that range continue to play normally.</div>
+  <div class="note"><strong>Button combinations with MIDI notes:</strong> hold a mapped layer button—FX, GLO, SEL, EDIT, SEQ or REC—then play notes F3 through G5. Those notes act as the FM-1’s 27 physical keys until released, so combinations such as FX + B work from a MIDI keyboard. Notes outside that range continue to play normally.</div>
   <div class="warning"><strong>Buttons need both edges.</strong> Configure each button to send a high value when pressed and <code>0</code> when released. A toggle-only controller can leave a panel button held.</div>
 </section>
 

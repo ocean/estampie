@@ -289,17 +289,18 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 <p>The FM-1's controls, as Felucca (and so GHOULBOX and ESTAMPIE) use them. The labels printed on the panel are M-VAVE's; most still fit, and the diagram shows what each one does now.</p>
 <img src="controls.jpg" alt="FM-1 controls: knobs, page buttons, keys, transport and octave buttons">
 <p class="small">Panel diagram from Felucca's documentation (Hügelton Instruments, GPL-3.0). The screen in it shows Felucca's look; ESTAMPIE's is in the next chapter.</p>
+<p>The page key printed <span class="k">SEL</span> on the panel opens the scale page, which the screen calls <b>SCL</b>. SCL is also that page's KNOB 2, the scale itself (MAJ, MIN, DOR …).</p>
 <h3>Three ways to press a button</h3>
 <ul>
   <li><b>Tap</b> a page button for its page, and again for the next page in its group (chapter 14 lists them all). <span class="k">HOME</span> returns to the home screen.</li>
-  <li><b>Hold</b> <span class="k">FX</span>, <span class="k">GLO</span>, <span class="k">SCL</span>, <span class="k">EDIT</span>, <span class="k">SEQ</span> or <span class="k">REC</span> for a <b>quick layer</b>: shortcuts on the keys and knobs, with a map on the screen. Let go to close it.</li>
+  <li><b>Hold</b> <span class="k">FX</span>, <span class="k">GLO</span>, <span class="k">SEL</span>, <span class="k">EDIT</span>, <span class="k">SEQ</span> or <span class="k">REC</span> for a <b>quick layer</b>: shortcuts on the keys and knobs, with a map on the screen. Let go to close it.</li>
   <li><b>Double-tap</b> one of them to keep its layer open without holding; tap it again to close.</li>
 </ul>
 <p>Other holds: <span class="k">HOME</span> opens the menu and <span class="k">SAVE</span> undoes. What the layers hold:</p>
 <ul>
   <li><b>FX</b>: performance effects on the keys (chapter 16).</li>
   <li><b>GLO</b>: the black keys F♯ G♯ A♯ C♯ of the lower octave mute tracks 1–4, the white keys F–B solo them while held, C unmutes all, D starts MIDI LEARN (LRN), E plays the FILL steps while held, the upper F taps the tempo, and the upper F♯ G♯ A♯ C♯ latch a drone (chapter 15). KNOB 1–4 are the four tracks' levels; SELECT is the tempo even when BPM LOCK is on.</li>
-  <li><b>SCL</b>: press any key to make it the ROOT; KNOB 1–4 are ROOT, SCL, CHRD and VOIC.</li>
+  <li><b>SEL</b>: press any key to make it the ROOT; KNOB 1–4 are ROOT, SCL, CHRD and VOIC.</li>
   <li><b>EDIT</b>: each white key picks an engine.</li>
   <li><b>SEQ</b> (SEQ TOOLS): the white keys from the lowest F are tools for the selected track's steps: CLEAR, REVERSE, SHIFT ‹, SHIFT ›, RANDOM and COOK (a few notes changed). KNOB 1–4 are LEN, DIV, SWG and GATE (chapter 13).</li>
   <li><b>REC</b>: the white keys from the lowest F are CLEAR (the selected track's steps and automation, at once; hold SAVE to undo), CLICK, COUNT-IN and CLICK LEVEL; each press steps to the next value.</li>
@@ -390,12 +391,12 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
   <tr><td>MAJ (major)</td><td>Bright, happy: a tavern, a sunrise (the Ionian mode)</td></tr>
 </table>
 <h3>Let the FM-1 play only the right notes</h3>
-<p>On <span class="k">SCL</span>, set <b>ROOT</b> (KNOB 1) and <b>SCL</b> (KNOB 2), then <b>QNT</b> (KNOB 3) to <b>WHITE</b>. Now the white keys play only the notes of your scale, starting on the root at the C key, and the black keys are silent. You can't hit a wrong note.</p>
+<p>On <span class="k">SEL</span>, set <b>ROOT</b> (KNOB 1) and <b>SCL</b> (KNOB 2), then <b>QNT</b> (KNOB 3) to <b>WHITE</b>. Now the white keys play only the notes of your scale, starting on the root at the C key, and the black keys are silent. You can't hit a wrong note.</p>
 <p>QNT <b>SNAP</b> keeps every key but moves a note that isn't in the scale down to the nearest one that is. QNT <b>OFF</b> is the plain keyboard.</p>
 <div class="try"><b class="t">TRY THIS · D minor on the white keys</b>
 <ol>
   <li>Stop playback. Choose T1 with <span class="k">ALGORITHM</span>.</li>
-  <li>Tap <span class="k">SCL</span>. Turn KNOB 1 to ROOT <b>D</b>, KNOB 2 to SCL <b>MIN</b>, KNOB 3 to QNT <b>WHITE</b>.</li>
+  <li>Tap <span class="k">SEL</span>. Turn KNOB 1 to ROOT <b>D</b>, KNOB 2 to SCL <b>MIN</b>, KNOB 3 to QNT <b>WHITE</b>.</li>
   <li>Play the white keys from C upwards: you hear the D minor scale. Play a slow, simple tune; finish it on the C key (now D) and hear it come home.</li>
   <li>Change SCL to <b>DOR</b> and play the same tune: the sixth note lifts, and it sounds like a dance. Try <b>PHRY</b>: darker. Try HARM: suddenly a castle.</li>
 </ol></div>
@@ -599,7 +600,7 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
   <tr><td>REVERB</td><td>TYPE (ROOM, SPRING, HALL) · SIZE · DAMP</td></tr>
   <tr><td>CHORUS</td><td>CRT (rate) · CDP (depth)</td></tr>
   <tr><td>TAPE</td><td>TAPE · CRSH · AMB · CRKL</td></tr>
-  <tr><td rowspan="2"><span class="k">SCL</span></td><td>SCL</td><td>ROOT · SCL · QNT (OFF, SNAP, WHITE, SEQ, SEQ+T: the sequence follows TRN too) · TRN (transpose)</td></tr>
+  <tr><td rowspan="2"><span class="k">SEL</span></td><td>SCL</td><td>ROOT · SCL · QNT (OFF, SNAP, WHITE, SEQ, SEQ+T: the sequence follows TRN too) · TRN (transpose)</td></tr>
   <tr><td>CHORD</td><td>CHRD (OFF, DIA3, DIA7, MAJ, MIN, DOM7, MAJ7, MIN7, SUS4, POW) · VOIC (CLOSE, OPEN, INV1, INV2, +OCT) · TEMP (EQUAL, PYTH, MEAN, JUST)</td></tr>
   <tr><td rowspan="5"><span class="k">EDIT</span></td><td>EDIT 1 · EDIT 2</td><td>The engine's eight controls, four per page (chapter 15)</td></tr>
   <tr><td>FILTER</td><td>ANALOG only: TYPE (LP, BP, HP: low-, band- or high-pass) · CUT · RES · KTR</td></tr>
@@ -934,7 +935,7 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 </ol>
 <h3>3. The chords (track 2)</h3>
 <ol>
-  <li>Choose T2 and turn <span class="k">PRESETS</span> to <b>REN ORGAN</b>, a small Renaissance chamber organ (or keep CRYPT PAD, for a darker dance). On <span class="k">SCL</span>: ROOT <b>D</b>, SCL <b>MIN</b>, QNT <b>WHITE</b>.</li>
+  <li>Choose T2 and turn <span class="k">PRESETS</span> to <b>REN ORGAN</b>, a small Renaissance chamber organ (or keep CRYPT PAD, for a darker dance). On <span class="k">SEL</span>: ROOT <b>D</b>, SCL <b>MIN</b>, QNT <b>WHITE</b>.</li>
   <li>Hold <span class="k">SEQ</span> and set LEN (KNOB 1) to <b>4</b> and DIV (KNOB 2) to <b>1/1</b>. Four steps, a bar each.</li>
   <li><span class="k">SEQ</span> › STEP, cursor on step 1 (KNOB 1). Press and release each chord shape in turn; each fills one step:
     <ul>
@@ -947,7 +948,7 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 </ol>
 <h3>4. The melody (track 1)</h3>
 <ol>
-  <li>Choose T1 (HURDY GURDY). On <span class="k">SCL</span>: ROOT D, SCL MIN, QNT WHITE. On <span class="k">EDIT</span>, set COUP to <b>1/8</b>: the trompette buzzes in strokes, in time, as a player's wrist drives the dance.</li>
+  <li>Choose T1 (HURDY GURDY). On <span class="k">SEL</span>: ROOT D, SCL MIN, QNT WHITE. On <span class="k">EDIT</span>, set COUP to <b>1/8</b>: the trompette buzzes in strokes, in time, as a player's wrist drives the dance.</li>
   <li>Hold <span class="k">SEQ</span>: LEN <b>32</b>, DIV <b>1/8</b> (four bars, the same length as the chords).</li>
   <li>Play along with the chords, slowly, until a few notes feel right. Simple is good: a handful of notes, mostly stepping to neighbours, ending on the C key (D).</li>
   <li>Press <span class="k">REC</span>, wait for the loop to come round, and play it. Press REC again when you're done. Not right? Hold <span class="k">REC</span> and press the lowest F key to clear, and try again.</li>
@@ -1020,9 +1021,9 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 </table>
 <p>In Dorian the chord shapes above change in two places: F · A · C plays <b>G major</b> (the bright sixth's chord, a lift), and A · C · E a sour diminished chord, best left out. A dance in Dorian often just swings between the home chord and the one a step below: in D Dorian, <b>Dm – C</b> (C · E · G, then B · D · F), over a drone on D. Mediæval players thought less in chords than in a tune over a drone: if a chord sounds wrong, play only the drone and the tune.</p>
 <h3>One finger, whole chords</h3>
-<p>On <span class="k">SCL</span> › CHORD, set CHRD to <b>DIA3</b>: each key plays the triad of the scale that starts on it (DIA7 adds a fourth note for a richer sound). In WHITE mode with ROOT D, one finger on the C key plays D minor, on A plays B♭, and so on. VOIC spreads the notes: OPEN for a wide, airy pad, +OCT to double the bass an octave down.</p>
+<p>On <span class="k">SEL</span> › CHORD, set CHRD to <b>DIA3</b>: each key plays the triad of the scale that starts on it (DIA7 adds a fourth note for a richer sound). In WHITE mode with ROOT D, one finger on the C key plays D minor, on A plays B♭, and so on. VOIC spreads the notes: OPEN for a wide, airy pad, +OCT to double the bass an octave down.</p>
 <h3>Old tunings</h3>
-<p>A modern keyboard is tuned in <b>equal temperament</b>: every step the same size, so every key sounds equally (slightly) out of tune. Mediæval and Renaissance players tuned to pure ratios instead, and their chords shimmer less and ring more. On <span class="k">SCL</span> › CHORD, <b>TEMP</b> (KNOB 3) tunes the track from its ROOT:</p>
+<p>A modern keyboard is tuned in <b>equal temperament</b>: every step the same size, so every key sounds equally (slightly) out of tune. Mediæval and Renaissance players tuned to pure ratios instead, and their chords shimmer less and ring more. On <span class="k">SEL</span> › CHORD, <b>TEMP</b> (KNOB 3) tunes the track from its ROOT:</p>
 <table>
   <tr><th>TEMP</th><th>Sound</th></tr>
   <tr><td>EQUAL</td><td>The default: every note as on any synth</td></tr>
@@ -1111,8 +1112,8 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
   <tr><td>No sound</td><td>Turn up MASTER; check the track isn't muted (HOME › MIXER, or hold GLO: a muted track's black key is dark) and its level isn't at zero; headphones in the jack silence the speaker.</td></tr>
   <tr><td>Sound from the speaker even with headphones in</td><td>Use a stereo (TRS) plug; a headset (TRRS) plug may not switch the speaker off.</td></tr>
   <tr><td>Notes cut off or missing</td><td>All four tracks share 12 voices. Use MONO on parts that play one note at a time, fewer UNI tracks, or shorter releases.</td></tr>
-  <tr><td>A key plays nothing</td><td>QNT is on WHITE: the black keys are silent. Set QNT to OFF on <span class="k">SCL</span> for the full keyboard.</td></tr>
-  <tr><td>The keys play the wrong notes</td><td>Check SCL (ROOT, QNT, TRN) and the octave (OCT− / OCT+).</td></tr>
+  <tr><td>A key plays nothing</td><td>QNT is on WHITE: the black keys are silent. Set QNT to OFF on <span class="k">SEL</span> for the full keyboard.</td></tr>
+  <tr><td>The keys play the wrong notes</td><td>Check the SCL page (<span class="k">SEL</span>: ROOT, SCL, QNT, TRN) and the octave (OCT− / OCT+).</td></tr>
   <tr><td>"STOP TO EDIT" / "STOP TO SAVE"</td><td>Stop playback first. Songs and saving need the transport stopped.</td></tr>
   <tr><td>The song won't play</td><td>Each row's section (A–D) needs a saved project in that slot (A = project 1). The SONG page needs at least one row.</td></tr>
   <tr><td>The tempo won't change</td><td>MENU › CONTROL › BPM LOCK is on, or HOME › CLOCK › CLK follows an external clock (set it to INT).</td></tr>

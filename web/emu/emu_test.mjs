@@ -15,7 +15,7 @@ import { storeSectors, restoreSectors } from "./worklet.js";
 
 const wasmPath = process.argv[2] || "build/emu/felucca.wasm", nativePath = process.argv[3];
 const bytes = fs.readFileSync(wasmPath);
-const B = { FX: 0, SCL: 1, ENV: 2, LFO: 3, EDIT: 4, GLO: 5, HOME: 6, SAVE: 7, ARP: 8, SEQ: 9, PLAY: 10, REC: 11, OCTDN: 12, OCTUP: 13 };
+const B = { FX: 0, SEL: 1, ENV: 2, LFO: 3, EDIT: 4, GLO: 5, HOME: 6, SAVE: 7, ARP: 8, SEQ: 9, PLAY: 10, REC: 11, OCTDN: 12, OCTUP: 13 };
 const EN = { SELECT: 0, ALGO: 1, PRESETS: 2, K1: 3, K2: 4, K3: 5, K4: 6 };
 let fails = 0;
 const check = (what, ok) => { console.log(`emu: ${what.padEnd(76)} ${ok ? "ok" : "FAIL"}`); if (!ok) fails++; };
@@ -81,7 +81,7 @@ check(`a key sounds (peak ${a.peak.toFixed(3)}) and lights its LED`, a.peak > 0.
   const c = await device(null);
   c.render(1000);
   c.turn(EN.ALGO, 1);                                   // T2: the power-on scene's polyphonic ANALOG track
-  c.tap(B.SCL); c.render(500); c.tap(B.SCL);            // SCL, let its quick layer settle, then CHORD
+  c.tap(B.SEL); c.render(500); c.tap(B.SEL);            // SCL, let its quick layer settle, then CHORD
   c.turn(EN.K1, 1);                                     // CHRD DIA3
   c.ex.web_keys(1 << 7);                                // C4 -> C E G with the default chromatic/C-major scale
   c.render(200);
