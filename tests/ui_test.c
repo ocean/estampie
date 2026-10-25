@@ -4050,7 +4050,7 @@ static int test_quick_layers(void)
 {
     static const uint8_t LB[3] = {B_GLO, B_SCL, B_EDIT};
     static const uint8_t LL[3] = {LAYER_GLO, LAYER_SCL, LAYER_EDIT};
-    static const char *const HINT[3] = {"HOLD [GLO] QUICK", "HOLD [SCL] QUICK", "HOLD [EDIT] QUICK"};
+    static const char *const HINT[3] = {"HOLD [GLO] QUICK", "HOLD [SEL] QUICK", "HOLD [EDIT] QUICK"};
     int bad = 0, ok, flash, hint;
     uint32_t i, k, a, b2, mo;
     track_t before;

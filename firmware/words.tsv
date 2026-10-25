@@ -290,7 +290,10 @@ INS	insert
 # ---- the first tap of a layer button: "HOLD [GLO] QUICK"
 HOLD FX BUTTON: QUICK	hold effects for its quick layer
 HOLD GLO BUTTON: QUICK	hold global for its quick layer
-HOLD SCL BUTTON: QUICK	hold scale for its quick layer
+HOLD SEL BUTTON: QUICK	hold scale for its quick layer
 HOLD EDIT BUTTON: QUICK	hold edit for its quick layer
 HOLD SEQ BUTTON: QUICK	hold sequence for its quick layer
 HOLD REC BUTTON: QUICK	hold record for its quick layer
+# the key printed SEL, which opens the SCL page ("SEL" alone is MIDI's selected track)
+SEL BUTTON	scale button
+PRESS SEL	press scale button
