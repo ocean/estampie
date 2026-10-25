@@ -1,0 +1,6 @@
+{
+  "what": "A groovebox for lively mediæval dance music: hurdy-gurdy, lutes, shawms and frame drums over drones, four tracks with 64-step sequencers, mediæval modes and temperaments, and velocity from the FM-1's own keys. Built on GHOULBOX and Felucca.",
+  "kinds": ["groove"],
+  "play": "https://fm-1.drewr.dev/estampie/webapp/emu/",
+  "editor": "https://fm-1.drewr.dev/estampie/webapp/editor/"
+}

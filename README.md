@@ -72,6 +72,13 @@ simulator by `tools/screens.sh`. Each one on its own, at 720 × 720: [VELLUM](do
 
 <p align="center"><a href="docs/screens/tavern/"><img src="docs/screens/tavern.png" width="880" alt="The same eleven ESTAMPIE screens in the TAVERN look, orange and blue on dark brown"></a></p>
 
+## Your projects and other firmwares
+
+ESTAMPIE opens the projects Felucca and GHOULBOX saved. It saves in GHOULBOX 2.3's format, which Felucca and
+GHOULBOX before 2.3 can't read: a slot holding an ESTAMPIE project shows EMPTY there, but stays in the flash
+until that slot is saved over. To keep your projects safe when you change firmware, back them up first with the
+[web editor](https://fm-1.drewr.dev/estampie/webapp/editor/).
+
 ## Building
 
 Everything the build needs is fetched into the repository (`.toolchain/`, `.venv/`, both git-ignored), so
