@@ -133,9 +133,10 @@ static uint32_t ota_body_off(void)                  /* ota.bin data + 0x20 in th
     return 0;
 }
 
-/* rewrite flash.bin's size in the logical image's UFW entry list (the entries' and the header's CRCs too): a package
- * of the same chip whose app area is another board's size */
-static void set_fl_size(uint8_t *lg, uint32_t size)
+/* rewrite flash.bin's entry in the logical image's UFW entry list (the entries' and the header's CRCs too): its size
+ * (a package of the same chip whose app area is another board's size), or its type (none 0: a package without a
+ * flash.bin, as m-bootloader's installer is) */
+static void set_fl_entry(uint8_t *lg, uint32_t size, uint16_t type)
 {
     uint8_t h[0x40 + 11 * 0x50];
     uint32_t i, n;
@@ -145,8 +146,10 @@ static void set_fl_size(uint8_t *lg, uint32_t size)
     for (i = 0; i < n; i++) {
         uint8_t *e = h + 0x40 + i * 0x50u;
         ota_jl_enc(e, 0x50);
-        if (ota_rd16(e) == 0)
+        if (ota_rd16(e) == 0) {
             ota_wr32(e + 12, size);
+            ota_wr16(e, type);
+        }
         ota_jl_enc(e, 0x50);
     }
     ota_wr16(h + 2, ota_crc16(h + 0x40, n * 0x50u, 0));   /* (over the entries as stored) */
@@ -234,15 +237,20 @@ int main(int argc, char **argv)
     bad += check("boot cleanup erases the area", ota_boot_cleanup() == 1 && area_erased());
     bad += check("second boot: nothing to do", ota_boot_cleanup() == 0);
 
-    /* 1.6.1: another board's package (flash.bin not this board's app area size): refused in step 1, nothing erased */
+    /* ESTAMPIE: after felucca-bsp afd83ed, any well-made package is staged (the writer it brings decides): Open
+     * V12 / V14's size, no flash.bin at all (m-bootloader's installer: its writer brings its own) */
     {
         uint8_t keep[0x40 + 11 * 0x50];
         memcpy(keep, logical, sizeof keep);
         reset_dev();
-        set_fl_size(logical, 0x9D000u);
+        set_fl_entry(logical, 0x73000u, 0);
         rc = ota_session();
-        bad += check("another board's size (0x9D000): -15, no commit, no erase", rc == -15 && !committed && erases == 0 &&
-                     area_erased());
+        bad += check("Open V12 / V14's flash.bin size (0x73000) commits", rc == 0 && committed);
+        memcpy(logical, keep, sizeof keep);
+        reset_dev();
+        set_fl_entry(logical, 0x93000u, 0xFFFEu);
+        rc = ota_session();
+        bad += check("no flash.bin (m-bootloader's installer) commits", rc == 0 && committed);
         memcpy(logical, keep, sizeof keep);
     }
     /* host disappears in the middle */

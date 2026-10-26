@@ -24,6 +24,9 @@ thanks the work below; each keeps its own licence (see [LICENSE](LICENSE), [LICE
   [charlesvestal](https://github.com/charlesvestal) (MIT; its voice, eSpeak NG, GPL-3.0-or-later): the protocol, the
   words-file format, the audit and the reader page; ESTAMPIE's `ui_speak.c` says what its own screen shows
 - Browser emulator: after [X0X](https://github.com/charlesvestal/fm1-x0x) by [charlesvestal](https://github.com/charlesvestal) (GPL-3.0), a Felucca fork whose browser build showed the way
+- USB update: the boot-area check that lets V15 install over any bootloader the FM-1 can start, and m-bootloader's
+  installer be taken, from
+  [felucca-bsp](https://github.com/hugelton/felucca-bsp) `afd83ed` by [charlesvestal](https://github.com/charlesvestal) (MPL-2.0)
 - Package format and boot files: [JieLi AC79 SDK](https://gitee.com/Jieli-Tech/fw-AC79_AIoT_SDK) ([Apache-2.0](LICENSES/Apache-2.0.txt); three of its files are in every package, none in this tree)
 - Contributions: [keremimo](https://github.com/keremimo) (white-key scales, #2), [ChanceTheMaker](https://github.com/ChanceTheMaker)
   (TRS MIDI, bend, sustain and clock, palettes, favourites, editor display settings: #8, #10, #11, #12),

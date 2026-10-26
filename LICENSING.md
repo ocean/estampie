@@ -21,6 +21,12 @@ Three source files are ports and keep the licence of their originals:
 `firmware/src/fm6_core.c` (msfa, Apache-2.0). The firmware built with them is GPL-3.0-only as
 a whole.
 
+`firmware/src/ota.c` (GPL-3.0-only) includes `ota_boot_valid()` and the check in `ota_stage()` that
+calls it, from [felucca-bsp](https://github.com/hugelton/felucca-bsp) commit `afd83ed` by Charles
+Vestal, under the Mozilla Public License 2.0 (`LICENSES/MPL-2.0-felucca-bsp.txt`). MPL-2.0 lets that
+code be part of this GPL-3.0-only firmware; on its own it stays available under MPL-2.0 from
+felucca-bsp.
+
 Five engines and the code they share are under the MIT licence, not the GPL. They are
 Hügelton Instruments' own work and live in their own repository, Felucca-Engines
 (<https://github.com/hugelton/Felucca-Engines>), copied here (vendored at a pinned commit, see
