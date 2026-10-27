@@ -67,7 +67,7 @@ PRODUCT = "FM-1_378000"             # package identity: FM-1_378 ("EST" on a pho
 # its own identity (FM1Kit and FM-SWITCH see an update, not a reinstall). Every build of a version keeps its number until
 # that version is released (tagged on GitHub); the next version's line comes after, with the next number. Its
 # pre-releases (0.2-rc1) share it
-RELEASES = {"0.1": 1, "0.2.0": 2, "0.3.0": 3, "0.3.1": 4, "0.3.2": 5, "0.3.3": 6, "0.3.4": 7, "0.3.5": 8, "0.3.6": 9}   # (0.1 was never published)
+RELEASES = {"0.1": 1, "0.2.0": 2, "0.3.0": 3, "0.3.1": 4, "0.3.2": 5, "0.3.3": 6, "0.3.4": 7, "0.3.5": 8, "0.3.6": 9, "0.3.7": 10}   # (0.1 was never published)
 VERSION = None                      # ESTAMPIE_VERSION for release builds (default: firmware/src/core.h)
 # FELUCCA_CPU2 (firmware/src/felucca.c), unset or 1, the default (1.6.1): the second core is built in, its entry and
 # stacks (firmware/hal/fm1_cpu1.S) linked and its waiting loop (.c1_text) checked; MENU > SYSTEM > 2ND CORE starts it
