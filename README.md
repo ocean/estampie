@@ -87,7 +87,7 @@ nothing is installed in your home directory. Needs [uv](https://docs.astral.sh/u
 ```sh
 tools/setup_toolchain.sh     # every tool, pinned by hash (tools/toolchain.lock); Python 3.14 from uv.lock
 tools/osv_scan.sh            # known vulnerabilities in everything the build runs (docs/SECURITY.md)
-./build.sh                   # build/felucca.fwsc: the firmware package (Docker runs the JieLi tools on macOS)
+./build.sh                   # build/estampie.fwsc: the firmware package (Docker runs the JieLi tools on macOS)
 sh web/emu/build.sh          # build/emu/: the browser emulator (zig cc to WebAssembly)
 python3 -m http.server -d build/emu 8790     # open http://localhost:8790/
 ```
@@ -103,7 +103,7 @@ Three levels, cheapest first:
 2. **Host tests**: `tests/run_tests.sh` (with `AC79_SDK=.toolchain/ac79-sdk` and the venv on `PATH`): golden
    renders of every sound, the UI's layout lint, CPU budgets and more. The reverb's HALL cost check fails on
    Apple silicon hosts (it measures host instructions; CI has no counter and skips it); this is inherited.
-3. **Emulated hardware**: `tools/hw_check.sh` boots the real `build/felucca.fwsc` on an emulation of the
+3. **Emulated hardware**: `tools/hw_check.sh` boots the real `build/estampie.fwsc` on an emulation of the
    AC791N's pi32v2 cores and the board
    ([shcherbakov7/m-wave-fm1-browser-emulator](https://github.com/shcherbakov7/m-wave-fm1-browser-emulator), Rust),
    and saves the screen to `build/hw/screen.png`. This checks the real image: memory layout, start-up, timing.

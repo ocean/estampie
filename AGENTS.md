@@ -60,7 +60,7 @@ is Felucca's. The remotes `ghoulbox` and `felucca` are fetch-only.
 
 ```sh
 tools/setup_toolchain.sh          # once: everything into .toolchain/ and .venv/, each checked against tools/toolchain.lock
-./build.sh                        # the firmware: build/felucca.fwsc (dev identity FM-1_378000)
+./build.sh                        # the firmware: build/estampie.fwsc (dev identity FM-1_378000)
 web/emu/build.sh                  # the browser emulator: build/emu/ (serve it: python3 -m http.server -d build/emu)
 tests/run_tests.sh                # every host test (four lanes in parallel), about 7 minutes
 tools/release.sh X.Y.Z            # a whole release, here: build/dist/ (see Releasing)

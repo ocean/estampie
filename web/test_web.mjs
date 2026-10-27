@@ -7,7 +7,7 @@
 //   the user preset bank / librarian, library files, live pushes, older-firmware fallback, the v3 tracks
 //   and the mixer, the v5 drum grid in steps and user presets), its tab layout and ja/en strings,
 //   and the user-sample pipeline byte for byte against tools/sampleio.py
-// - fm1pkg.js: productOf and logicalImage on build/felucca.fwsc (skipped without a build)
+// - fm1pkg.js: productOf and logicalImage on build/estampie.fwsc (skipped without a build)
 // - fm1ota.js: a full install and an unplug during the write against a simulated FM-1
 
 import { execFileSync } from "node:child_process";
@@ -1657,7 +1657,7 @@ function savedProjectCheck() {
 }
 
 async function packages() {
-  const pkg = join(FW_ROOT, "build/felucca.fwsc");
+  const pkg = join(FW_ROOT, "build/estampie.fwsc");
   if (!existsSync(pkg)) {
     console.log("packages: skipped (run ./build.sh first)");
     return;

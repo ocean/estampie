@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
-# GHOULBOX: build the installer site for build/felucca.fwsc under a name of its own (the GHOULBOX version,
+# GHOULBOX: build the installer site for build/estampie.fwsc under a name of its own (the GHOULBOX version,
 # so a browser can never install a cached older package) and serve it on 127.0.0.1:8000 with no caching.
 #   python3 tools/ghoulbox_serve.py
 import functools
@@ -23,7 +23,7 @@ class NoCache(http.server.SimpleHTTPRequestHandler):
 def main():
     ver = re.search(r'#define GHOULBOX_VERSION "([^"]+)"', (ROOT / "firmware/src/core.h").read_text())[1]
     site = Path(tempfile.mkdtemp(prefix="ghoulbox-site-"))
-    subprocess.run([sys.executable, ROOT / "web/make_site.py", ROOT / "build/felucca.fwsc", f"gb{ver}", site], check=True)
+    subprocess.run([sys.executable, ROOT / "web/make_site.py", ROOT / "build/estampie.fwsc", f"gb{ver}", site], check=True)
     print(f"GHOULBOX {ver}: http://localhost:8000/webapp/installer/  (Ctrl+C to stop)")
     http.server.ThreadingHTTPServer(("127.0.0.1", 8000), functools.partial(NoCache, directory=str(site))).serve_forever()
 

@@ -90,7 +90,7 @@ Do it in a commit of its own, so the change is easy to review.
   browser emulator test must still match the native build bit for bit.
 - **Build container:** `docker buildx imagetools inspect gcr.io/distroless/cc-debian13:nonroot`, then copy the digest
   into `tools/toolchain.lock`. `tools/osv_scan.sh build-image` reports when the tag has moved. Rebuild and compare the
-  hashes of `build/felucca.bin` and `build/loader/ota.bin`: a new base image should not change the firmware. Then look
+  hashes of `build/estampie.bin` and `build/loader/ota.bin`: a new base image should not change the firmware. Then look
   through `tools/osv-build-image.toml` and delete entries whose fix is now in the image.
 - **JieLi toolchain or SDK:** download, record the hash or commit, rebuild, and run the host tests and
   `tools/hw_check.sh` before trying the result on hardware.

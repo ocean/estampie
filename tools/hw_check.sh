@@ -3,11 +3,11 @@
 # ESTAMPIE: boot a built package on emulated FM-1 hardware (two pi32v2 cores, the board's screen, keys, audio and
 # flash: shcherbakov7/m-wave-fm1-browser-emulator, Rust, GPL-3.0) and save what the screen shows. This checks the
 # real image (memory layout, start-up, the CPU's speed), which the browser build of the sources (web/emu/) can't.
-#   tools/hw_check.sh [package.fwsc] [instructions]   (default: build/felucca.fwsc, 600000000)
+#   tools/hw_check.sh [package.fwsc] [instructions]   (default: build/estampie.fwsc, 600000000)
 # Writes build/hw/screen.png. Fails when the firmware stops or draws nothing.
 set -e
 cd "$(dirname "$0")/.."
-PKG="${1:-build/felucca.fwsc}"
+PKG="${1:-build/estampie.fwsc}"
 LIMIT="${2:-600000000}"
 EMU=.toolchain/emulators/m-wave-fm1-browser-emulator
 DIAG="$EMU/emulator/target/release/examples/diagnose"
