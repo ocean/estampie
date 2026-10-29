@@ -20,7 +20,7 @@ device = [
 ]
 # Supply-chain checks (tools/osv_scan.sh runs osv-scanner; this lints the GitHub workflows): uv run --group audit zizmor .
 audit = [
-    "zizmor==1.31.0",
+    "zizmor==1.31.1",
 ]
 # The ABOUT screen's QR code (tools/gen_about_qr.py: segno encodes the address) and its check (tests/about_qr_test.py:
 # zxing-cpp reads the rendered screen, illumination and all, as a phone's camera would).
