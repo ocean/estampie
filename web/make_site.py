@@ -9,6 +9,7 @@ tools read the file with no base URL). No CNAME: the domain belongs to the site 
   index.html                  ESTAMPIE: the front page (web/home.html): what it is, the ways in, the thanks
   llms.txt, llms-full.txt     ESTAMPIE: the site for language models (llmstxt.org): the pages; the README and the guide
   card.jpg                    ESTAMPIE: the link preview (web/card.jpg, docs/readme/hero.html?card): each page's og:image
+                              (and each page's visit counter: COUNTER)
   words/<id>.json             ESTAMPIE: the screen reader's words files (web/words/, every one ever made: an FM-1 out
                               there links to its own, firmware/words.tsv; fm1-reader's page fetches it from here)
   favicon.ico                 ESTAMPIE: the pages' icon (also in webapp/art/, with the home-screen icons)
@@ -174,6 +175,27 @@ def write_cards(out):
         f.write_text(page.replace("</head>", meta + "</head>"), encoding="utf-8")
 
 
+# ESTAMPIE: the visit counter fm-1.drewr.dev uses on every page (GoatCounter: no cookies, no stored addresses; the
+# site's /privacy/ says so). A versioned script, which GoatCounter never changes, pinned by its hash (subresource
+# integrity: a browser won't run it if it differs), since the installer and the editor reach the FM-1 over USB. It
+# counts nothing on localhost, so a local build is never counted.
+COUNTER = ('<script data-goatcounter="https://fm1.goatcounter.com/count" async src="https://gc.zgo.at/count.v5.js" '
+           'integrity="sha384-atnOLvQb9t+jTSipvd75X2yginT4PjVbqDdlJAmxMm+wYElFmeR6EmLP5bYeoRVQ" '
+           'crossorigin="anonymous"></script>\n')
+
+
+def write_counter(out):
+    """the visit counter at the end of <head> on each of CARD_PAGES (ESTAMPIE's own pages)"""
+    for rel in CARD_PAGES:
+        f = out / rel
+        if not f.exists():
+            continue
+        page = f.read_text(encoding="utf-8")
+        if "data-goatcounter" in page or page.count("</head>") != 1:
+            raise SystemExit(f"{rel}: already counted, or not one </head>: update make_site.py")
+        f.write_text(page.replace("</head>", COUNTER + "</head>"), encoding="utf-8")
+
+
 def main(pkg, version, out):
     pkg, out = Path(pkg), Path(out)
     raw = pkg.read_bytes()
@@ -269,6 +291,7 @@ def main(pkg, version, out):
     (out / "index.html").write_text(page, encoding="utf-8")
     write_llms(out, version, product, name, front["PKG_SHA256"])
     write_cards(out)
+    write_counter(out)
     shutil.copy(out / "webapp/art/favicon.ico", out / "favicon.ico")   # ESTAMPIE: where a browser looks for it first
     print(f"site: {out}: webapp/installer ({len(html)} B), webapp/editor, firmware/{name} ({len(raw)} B, {product})")
 
