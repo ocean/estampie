@@ -196,6 +196,13 @@ def write_counter(out):
         f.write_text(page.replace("</head>", COUNTER + "</head>"), encoding="utf-8")
 
 
+def plain_page(title, body):
+    """a small page (a folder's listing) with the whole skeleton the other pages have"""
+    return (f'<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
+            f'<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>{title}</title>\n</head>\n'
+            f'<body>\n{body}\n</body>\n</html>\n')
+
+
 def main(pkg, version, out):
     pkg, out = Path(pkg), Path(out)
     raw = pkg.read_bytes()
@@ -232,9 +239,9 @@ def main(pkg, version, out):
     for n in names:
         shutil.copy(lic / n, fw / "LICENSES" / n)
     (fw / "LICENSES" / "index.html").write_text(    # the installer links this folder: Pages lists no folders
-        '<!doctype html><meta charset="utf-8"><title>Felucca licences</title><h1>Licence texts</h1><ul>'
-        + "".join(f'<li><a href="{n}">{n}</a></li>' for n in names)
-        + '</ul><p><a href="../LICENSING.txt">LICENSING</a> · <a href="../LICENSE.txt">LICENSE (GPL-3.0)</a></p>\n',
+        plain_page("Felucca licences", '<h1>Licence texts</h1><ul>'
+                   + "".join(f'<li><a href="{n}">{n}</a></li>' for n in names)
+                   + '</ul><p><a href="../LICENSING.txt">LICENSING</a> · <a href="../LICENSE.txt">LICENSE (GPL-3.0)</a></p>'),
         encoding="utf-8")
     for old in ("LICENSE", "LICENSING.md"):         # (now .txt: GitHub Pages serves those as text, these as downloads)
         (fw / old).unlink(missing_ok=True)
@@ -247,10 +254,10 @@ def main(pkg, version, out):
     shutil.copy(lic / "Apache-2.0.txt", st / "LICENSE-Apache-2.0.txt")
     shutil.copy(stock.with_name("README.md"), st / "README.txt")
     (st / "index.html").write_text(                 # the installer links this folder: Pages lists no folders
-        '<!doctype html><meta charset="utf-8"><title>Official FM-1 V15</title><h1>Official FM-1 V15 (M-VAVE)</h1>'
-        f'<ul><li><a href="{stock.name}">{stock.name}</a> (SHA-256 {STOCK_V15_SHA256})</li>'
-        '<li><a href="README.txt">README</a>: where it comes from, its terms</li>'
-        '<li><a href="LICENSE-Apache-2.0.txt">Apache License, Version 2.0</a></li></ul>\n', encoding="utf-8")
+        plain_page("Official FM-1 V15", '<h1>Official FM-1 V15 (M-VAVE)</h1>'
+                   f'<ul><li><a href="{stock.name}">{stock.name}</a> (SHA-256 {STOCK_V15_SHA256})</li>'
+                   '<li><a href="README.txt">README</a>: where it comes from, its terms</li>'
+                   '<li><a href="LICENSE-Apache-2.0.txt">Apache License, Version 2.0</a></li></ul>'), encoding="utf-8")
     shutil.copy(HERE / "editor.html", ed / "index.html")
     root = HERE.parent                              # GHOULBOX: the art, and the emulator when it was built
     subprocess.run([sys.executable, str(root / "tools/gen_emu_art.py"), str(root / "build/gen"), str(out / "webapp/art")],
