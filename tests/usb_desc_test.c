@@ -57,7 +57,6 @@ static uint32_t le16(const uint8_t *p) { return p[0] | (uint32_t)p[1] << 8; }
 #define CDC_SHOWN (T_CDC && T_ON)
 #define AUDIO_48K (T_UAC && T_48K)
 #define AS_FIRST (T_UAC && T_ASF)
-#define BCD_EXPECT (0x300u + 0x10 * (T_UAC + AUDIO_48K) + 0x08 * AS_FIRST + (CDC_SHOWN ? 1 + 2 * T_LAYOUT : 0))
 
 /* AppleUSBAudio-273.4.1 AUAConfigurationDictionary::parseConfigurationDescriptor (the kernel USB audio driver of
  * macOS up to 15), reduced to its walk of the AC collection: the list of baInterfaceNr is walked with the count
@@ -102,6 +101,7 @@ static int aua_parses_as(const uint8_t *c, uint32_t n)
 
 /* the 1.0 descriptors with 1.1's 48 kHz changes, nothing else: the format descriptor 11 -> 14 bytes
  * (bSamFreqType 2: 44100, 48000), EP 0x84's wMaxPacketSize 184 -> 196, wTotalLength + 3, bcdDevice x.1x -> x.2x */
+static const uint8_t V15_ID[6] = {0x4A, 0x4C, 0x55, 0xC7, 0x00, 0x01};   /* 4C4A:C755, bcdDevice 1.00 */
 static uint8_t v11_dev[18], v11_cfg[512];
 static uint32_t v11_from_v10(const uint8_t *dev, const uint8_t *cfg, uint32_t n)
 {
@@ -151,6 +151,9 @@ static int same_as(const uint8_t *dev, const uint8_t *c, uint32_t n, const uint8
                 break;
             }
     }
+    memcpy(v11_dev + 8, V15_ID, 6);                    /* ESTAMPIE: V15's ids and bcdDevice 1.00 (kata xbkc), */
+    v11_dev[14] = 0;                                   /* no manufacturer, a serial number */
+    v11_dev[16] = 3;
     return !memcmp(dev, v11_dev, 18) && n == rn && !memcmp(c, v11_cfg, n);
 }
 
@@ -185,10 +188,22 @@ int main(void)
     else
         check(T_LAYOUT == 2 ? "bcdUSB 2.00, class 00 00 01" : "bcdUSB 2.00, class 00 00 00",
               le16(dev + 2) == 0x0200 && !dev[4] && !dev[5] && dev[6] == (T_LAYOUT == 2));
-    check("VID 1209 PID 0001, strings 1 2, one configuration",
-          le16(dev + 8) == 0x1209 && le16(dev + 10) == 1 && dev[14] == 1 && dev[15] == 2 && dev[17] == 1);
-    snprintf(name, sizeof name, "bcdDevice 3.%02X", BCD_EXPECT & 0xFFu);
-    check(name, le16(dev + 12) == BCD_EXPECT);
+    check("V15's identity: 4C4A:C755, bcdDevice 1.00, no manufacturer, product 2, serial 3, one configuration",
+          !memcmp(dev + 8, V15_ID, 6) && dev[14] == 0 && dev[15] == 2 && dev[16] == 3 && dev[17] == 1);
+    {                                                  /* the strings: "FM-1", and the unit ID in hex once read */
+        static const uint8_t uid[8] = {0x41, 0x50, 0x35, 0x38, 0x35, 0x31, 0x37, 0x08};
+        static const char want[] = "4150353835313708";
+        const uint8_t *s;
+        uint16_t sl;
+        int i, ok = get_desc(0x0303, &s, &sl) && sl == 2 && s[0] == 2 && s[1] == 3;
+        usb_serial_set(uid);
+        ok &= get_desc(0x0303, &s, &sl) && sl == 34 && s[0] == 34 && s[1] == 3;
+        for (i = 0; ok && i < 16; i++)
+            ok &= s[2 + 2 * i] == (uint8_t)want[i] && !s[3 + 2 * i];
+        check("serial number: empty until read, then the unit ID as 16 hex digits", ok);
+        check("product \"FM-1\", no manufacturer string", get_desc(0x0302, &s, &sl) && sl == 10 && s[2] == 'F' &&
+              s[4] == 'M' && s[6] == '-' && s[8] == '1' && !get_desc(0x0301, &s, &sl));
+    }
 
     /* ---- the configuration, walked as a host does ---- */
     check("wTotalLength = the bytes sent", le16(c + 2) == n);
@@ -320,15 +335,15 @@ int main(void)
 
     /* ---- the released bytes ---- */
     if (CDC_SHOWN && T_LAYOUT == 0)
-        check(AS_FIRST    ? "layout 0 = Felucca 1.0 + the 48 kHz rate (if built) + the AC collection order, nothing else"
-              : AUDIO_48K ? "layout 0 = Felucca 1.0 + the 48 kHz rate (format, EP 0x84 size, bcdDevice), nothing else"
-                          : "layout 0 = Felucca 1.0 byte for byte",
+        check(AS_FIRST    ? "layout 0 = Felucca 1.0 + the 48 kHz rate (if built) + the AC collection order + V15's ids, nothing else"
+              : AUDIO_48K ? "layout 0 = Felucca 1.0 + the 48 kHz rate (format, EP 0x84 size) + V15's ids, nothing else"
+                          : "layout 0 = Felucca 1.0 + V15's ids, nothing else",
               T_UAC ? same_as(dev, c, n, V10_CDC_DEV, V10_CDC_CFG, sizeof V10_CDC_CFG)
                     : same_as(dev, c, n, V10_CDC_NOUAC_DEV, V10_CDC_NOUAC_CFG, sizeof V10_CDC_NOUAC_CFG));
     if (!CDC_SHOWN)
-        check(AS_FIRST    ? "without the console = 1.0's FELUCCA_CDC=0 build + 48 kHz (if built) + the AC order"
-              : AUDIO_48K ? "without the console = 1.0's FELUCCA_CDC=0 build + the 48 kHz rate, nothing else"
-                          : "without the console = a FELUCCA_CDC=0 build of 1.0 byte for byte",
+        check(AS_FIRST    ? "without the console = 1.0's FELUCCA_CDC=0 build + 48 kHz (if built) + the AC order + V15's ids"
+              : AUDIO_48K ? "without the console = 1.0's FELUCCA_CDC=0 build + the 48 kHz rate + V15's ids, nothing else"
+                          : "without the console = a FELUCCA_CDC=0 build of 1.0 + V15's ids, nothing else",
               T_UAC ? same_as(dev, c, n, V10_NOCDC_DEV, V10_NOCDC_CFG, sizeof V10_NOCDC_CFG)
                     : same_as(dev, c, n, V10_MIDI_DEV, V10_MIDI_CFG, sizeof V10_MIDI_CFG));
     if (T_UAC) {                                       /* the audio streaming format, as a host lists the rates */

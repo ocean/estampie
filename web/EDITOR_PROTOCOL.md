@@ -454,8 +454,9 @@ grid lives in the steps themselves, so every engine has it:
   (about 10 ms each); with the next piece sent before the reply, every second piece was dropped.
 - **Following the device.** With v2 firmware, `WATCH` and `PING` (above). Older firmware pushes
   nothing (no reply to `PING`): poll `DUMP` about every 300–500 ms while the page is visible.
-- **Port.** The device's MIDI port is named "FM-1 ESTAMPIE" (ESTAMPIE 0.3.4 on; "Felucca" before, and in
-  Felucca itself; USB 1209:0001). Updates use the same
+- **Port.** The device's MIDI port is named "FM-1", as V15's (after ESTAMPIE 0.3.7: USB 4C4A:C755, V15's ids, with the
+  unit ID as the serial number); "FM-1 ESTAMPIE" 0.3.4 to 0.3.7, "Felucca" before and in Felucca itself (USB
+  1209:0001). V15 has the same name, so tell them apart by the reply to `INFO`, not the name. Updates use the same
   port with other SysEx (the `F0 22 24 35 …` keys, `00 59 …` frames); never send those
   from the editor. Since 1.0 the same USB device also has an audio input ("Felucca",
   44.1 kHz stereo; bcdDevice 3.11; since 1.1 44.1 or 48 kHz, the host's choice, bcdDevice 3.21

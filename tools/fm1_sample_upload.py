@@ -54,7 +54,7 @@ def pack7(b):
     return out
 
 
-NAMES = ("FM-1 ESTAMPIE", "Felucca")             # ESTAMPIE's port name (0.3.4 on), and before
+NAMES = ("FM-1", "Felucca")                      # ESTAMPIE's port name ("FM-1", as V15's, after 0.3.7; "FM-1 ESTAMPIE" before), and Felucca's
 
 
 class Link:
@@ -67,7 +67,7 @@ class Link:
         outs = [n for n in mido.get_output_names() if any(k in n for k in NAMES)]
         ins = [n for n in mido.get_input_names() if any(k in n for k in NAMES)]
         if not outs or not ins:
-            sys.exit("no FM-1 ESTAMPIE (or Felucca) MIDI port: connect the FM-1 by USB")
+            sys.exit("no FM-1 (or Felucca) MIDI port: connect the FM-1 by USB")
         self.o = mido.open_output(outs[0])
         self.i = mido.open_input(ins[0])
         for _ in range(3):                          # the first frame after opening the port can be lost

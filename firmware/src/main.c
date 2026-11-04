@@ -179,6 +179,9 @@ static void fm1_main(void)
     }
 #endif
     audio_init();
+#if FELUCCA_FLASH
+    usb_serial_read();                        /* ESTAMPIE: the unit ID, USB's serial number (interrupts still off) */
+#endif
     usb_start();
 #if FELUCCA_UART
     uart_midi_init();

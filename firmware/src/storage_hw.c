@@ -4,6 +4,15 @@
  * audio keeps up, erases and writes only inside the storage areas, the audio buffer silenced
  * first. The host tests (storage_test.c) provide their own st_* on a simulated NOR. */
 static uint8_t flash_ok;                 /* JEDEC id matched at boot (persist_boot) */
+
+/* ESTAMPIE: the flash's unit ID as USB's serial number, as V15 gives it (usb.c usb_serial_set). Before usb_start,
+ * with interrupts off; on another flash part no serial. */
+static void usb_serial_read(void)
+{
+    uint8_t uid[8];
+    if (flash_ok && !FL_FAR(fl_uid_ram)(uid))
+        usb_serial_set(uid);
+}
 static int st_read(uint32_t off, void *dst, uint32_t n)   /* 256-byte IRQ-off windows: audio keeps up */
 {
     uint8_t *d = dst;

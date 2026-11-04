@@ -270,12 +270,14 @@ static void cdc_task(void) {}
 /* main.c's calls into the USB driver (registers): nothing here (usb.c's own functions stay as they are) */
 #define usb_poll() ((void)0)
 #define usb_start() ((void)0)
+#define usb_serial_read() ((void)0)
 #define usb_retry(ms) ((void)(ms))
 #define usb_detach() ((void)0)
 #include "../../firmware/src/master.c"
 #include "../../firmware/src/main.c"
 #undef usb_poll
 #undef usb_start
+#undef usb_serial_read
 #undef usb_retry
 #undef usb_detach
 

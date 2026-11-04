@@ -6,8 +6,8 @@
  * and no USB IRQ is needed. MIDI in goes to a ring the audio ISR drains;
  * MIDI out (the panel keys) comes from a ring the audio ISR fills.
  * SysEx F0 22 24 35 7D F7 (the stock soft key, tools/fm1_softkey.py) asks
- * the main loop to enter UBOOT. VID 0x1209 / PID 0x0001 is the pid.codes
- * TEST id: fine for the bench, must be replaced before any release.
+ * the main loop to enter UBOOT. ESTAMPIE: the app shows up as V15 does (USB_VID below); the update loader keeps
+ * pid.codes' TEST id, 0x1209 / 0x0002.
  * FELUCCA_CDC=1 adds a CDC-ACM serial function (IAD composite: EP2 notify,
  * EP3 bulk data) for the console in console.c; FELUCCA_USB_LAYOUT picks how
  * the composite presents itself, usb_cdc_switch / FELUCCA_CDC_DEFAULT=0 leave
@@ -226,6 +226,23 @@ static void midi_out_event(uint32_t pkt)            /* from the audio ISR */
 #ifndef FELUCCA_USB_PID
 #define FELUCCA_USB_PID 0x0001   /* the update loader is 0x0002 */
 #endif
+/* ESTAMPIE: the app shows up on USB as V15 does: 4C4A:C755, bcdDevice 1.00, the product "FM-1" with no
+ * manufacturer, and the flash's unit ID as the serial number (usb_serial_set). A computer then keeps the one "FM-1"
+ * it knows (its MIDI Studio entry, its port settings) whichever firmware runs, instead of a device for each
+ * (kata xbkc; tested first with CLEANSWEEP). Installers tell firmwares apart by the identity SysEx, as before. The
+ * update loader keeps pid.codes' test id and its own name, "FM-1 ESTAMPIE Update". */
+#ifdef FELUCCA_LOADER
+#define USB_VID 0x1209
+#define USB_PID FELUCCA_USB_PID
+#define USB_IMANUFACTURER 1
+#define USB_ISERIAL 0
+#else
+#define USB_VID 0x4C4A
+#define USB_PID 0xC755
+#define USB_BCD 0x0100
+#define USB_IMANUFACTURER 0
+#define USB_ISERIAL 3
+#endif
 #if FELUCCA_USB_LAYOUT < 0 || FELUCCA_USB_LAYOUT > 3
 #error "FELUCCA_USB_LAYOUT is 0..3"
 #endif
@@ -300,8 +317,15 @@ static void midi_out_event(uint32_t pkt)            /* from the audio ISR */
 #define BCD_LO(cdc)                                                                                  \
     (0x10 * (FELUCCA_UAC + FELUCCA_UAC_48K) + 0x08 * FELUCCA_UAC_AS_FIRST + ((cdc) ? 0x01 + 2 * FELUCCA_USB_LAYOUT : 0))
 #define D_DEV(bcdusb, cls, sub, proto, cdc)                                                          \
-    18, 1, (bcdusb) & 0xFF, (bcdusb) >> 8, (cls), (sub), (proto), 64, 0x09, 0x12, FELUCCA_USB_PID & 0xFF, \
-    FELUCCA_USB_PID >> 8, BCD_LO(cdc), 0x03, 1, 2, 0, 1
+    18, 1, (bcdusb) & 0xFF, (bcdusb) >> 8, (cls), (sub), (proto), 64, USB_VID & 0xFF, USB_VID >> 8, USB_PID & 0xFF, \
+    USB_PID >> 8, USB_BCD_LO(cdc), USB_BCD_HI, USB_IMANUFACTURER, 2, USB_ISERIAL, 1
+#ifdef USB_BCD
+#define USB_BCD_LO(cdc) (USB_BCD & 0xFF)
+#define USB_BCD_HI (USB_BCD >> 8)
+#else
+#define USB_BCD_LO(cdc) BCD_LO(cdc)
+#define USB_BCD_HI 0x03
+#endif
 
 /* without the console (FELUCCA_CDC=0, or usb_cdc_on = 0): class 0, no IAD, as a plain USB-MIDI / audio device */
 #define CFG_LEN_PLAIN (9 + AUD_LEN)
@@ -348,17 +372,29 @@ static uint8_t usb_cdc_on = FELUCCA_CDC_DEFAULT != 0;      /* the console is pre
 #endif
 #define UAC_AS_IF (AUD_IF + 2u)
 static const uint8_t STR0[4] = {4, 3, 0x09, 0x04};
-/* ESTAMPIE: its own names, so a host (the Firmware Hub, an installer, a DAW) can tell what is installed; "FM-1"
- * kept in front, as tools look for it. The USB id is still Felucca's (the top of this file). */
-static const uint8_t STR1[] = {18, 3, 'E', 0, 'S', 0, 'T', 0, 'A', 0, 'M', 0, 'P', 0, 'I', 0, 'E', 0};
+/* ESTAMPIE: the update loader's names, so an installer can tell it's there; the app's are V15's (USB_VID above):
+ * "FM-1", no manufacturer, and the unit ID as the serial number */
 #ifdef FELUCCA_LOADER
+static const uint8_t STR1[] = {18, 3, 'E', 0, 'S', 0, 'T', 0, 'A', 0, 'M', 0, 'P', 0, 'I', 0, 'E', 0};
 static const uint8_t STR2[] = {42, 3, 'F', 0, 'M', 0, '-', 0, '1', 0, ' ', 0, 'E', 0, 'S', 0, 'T', 0, 'A', 0, 'M', 0,
                                'P', 0, 'I', 0, 'E', 0, ' ', 0, 'U', 0, 'p', 0, 'd', 0, 'a', 0, 't', 0, 'e', 0};
+_Static_assert(sizeof STR1 == 18 && sizeof STR2 == 42, "the lengths in their first bytes");
 #else
-static const uint8_t STR2[] = {28, 3, 'F', 0, 'M', 0, '-', 0, '1', 0, ' ', 0, 'E', 0, 'S', 0, 'T', 0, 'A', 0, 'M', 0,
-                               'P', 0, 'I', 0, 'E', 0};
+static const uint8_t STR2[] = {10, 3, 'F', 0, 'M', 0, '-', 0, '1', 0};
+static uint8_t usb_serial[2 + 2 * 16] = {2, 3};       /* empty until usb_serial_set (no flash: none) */
+_Static_assert(sizeof STR2 == 10, "the length in its first byte");
+
+static void usb_serial_set(const uint8_t *uid)          /* the unit ID's eight bytes, as 16 hex digits */
+{
+    static const char hex[] = "0123456789ABCDEF";
+    uint32_t i;
+    for (i = 0; i < 16u; i++) {
+        usb_serial[2 + 2 * i] = (uint8_t)hex[(uid[i / 2u] >> (i & 1u ? 0 : 4)) & 15u];
+        usb_serial[3 + 2 * i] = 0;
+    }
+    usb_serial[0] = sizeof usb_serial;
+}
 #endif
-_Static_assert(sizeof STR1 == 18 && (sizeof STR2 == 42 || sizeof STR2 == 28), "the lengths in their first bytes");
 
 static int get_desc(uint32_t wvalue, const uint8_t **d, uint16_t *l)
 {
@@ -377,14 +413,22 @@ static int get_desc(uint32_t wvalue, const uint8_t **d, uint16_t *l)
             *d = STR0;
             *l = sizeof STR0;
             return 1;
+#ifdef FELUCCA_LOADER
         case 1:
             *d = STR1;
             *l = sizeof STR1;
             return 1;
+#endif
         case 2:
             *d = STR2;
             *l = sizeof STR2;
             return 1;
+#ifndef FELUCCA_LOADER
+        case 3:
+            *d = usb_serial;
+            *l = usb_serial[0];
+            return 1;
+#endif
         default:
             return 0;
         }
