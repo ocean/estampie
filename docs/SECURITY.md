@@ -98,9 +98,14 @@ Do it in a commit of its own, so the change is easy to review.
 ## Accepted findings
 
 `tools/osv-build-image.toml` lists the known vulnerabilities accepted in the build container, all due for review on
-15 January 2027. They are in glibc, the gcc-14 runtime libraries and zlib, and are fixed only in Debian unstable so
-far. The container can't be reached from outside: it has no network, runs one compiler on this repository's sources
-and is thrown away after each file. Distroless rebuilds the image when Debian ships the fixes.
+15 January 2027. They are in glibc, the gcc-14 runtime libraries and zlib, and have no fix in Debian 13 yet (some
+none in any Debian release). The container can't be reached from outside: it has no network, runs one compiler on this
+repository's sources and is thrown away after each file. Distroless rebuilds the image when Debian ships the fixes.
+
+The expiry is only the backstop. `tools/osv_scan.sh build-image`, run on every push and weekly, also scans the tag's
+newer image whenever there is one. Once that image fixes an accepted finding and is two days old, the scan fails: take
+it (a rebuild must be byte-identical) and delete the fixed entries. A newer image that fixes none is only reported, as
+are accepted ids the pinned image no longer has.
 
 An alternative with a faster patch cadence is Docker Hardened Images (`dhi.io`, free with a Docker account). They are
 also minimal, signed, and come with an SBOM and VEX statements. Switching only means changing the `build-image` line;

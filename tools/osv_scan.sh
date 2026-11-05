@@ -5,7 +5,8 @@
 #   node         whether a newer release of the pinned Node line is a security release (OSV doesn't cover Node)
 #   hw-emu       the Rust hardware emulator's Cargo.lock (when tools/setup_toolchain.sh --hw fetched it)
 #   build-image  the pinned container the JieLi tools run in (needs Docker); accepted findings, each with a reason and
-#                an expiry, are in tools/osv-build-image.toml
+#                an expiry, are in tools/osv-build-image.toml. A newer image of the tag is scanned too: once it fixes an
+#                accepted finding and is two days old, the scan fails, so the pin moves before the expiry
 #   espeak       the screen reader's voice (fm1-reader's web/espeak/, in the emulator page): eSpeak NG at the commit it
 #                was built from, asked of osv.dev by commit (osv-scanner scans no prebuilt WebAssembly); accepted findings,
 #                one id a line with its reason, in tools/osv-espeak-accepted.txt
@@ -76,11 +77,69 @@ print(" ".join(r["version"] for r in newer if r["security"]))' "$have") || newer
             IMG=$(awk '$1 == "build-image" { print $5 "@sha256:" $4 }' tools/toolchain.lock)
             docker pull -q --platform linux/amd64 "$IMG" >/dev/null &&
                 docker save --platform linux/amd64 -o build/osv/build-image.tar "$IMG" &&
-                scan build-image image --config tools/osv-build-image.toml --archive build/osv/build-image.tar
+                scan build-image image --config tools/osv-build-image.toml --archive build/osv/build-image.tar &&
+                "$OSV" scan image --archive build/osv/build-image.tar --format json --all-packages \
+                    > build/osv/build-image-all.json 2> /dev/null
             rm -f build/osv/build-image.tar
             latest=$(docker buildx imagetools inspect "${IMG%@*}" 2>/dev/null | awk '/^Digest:/ { print $2; exit }')
-            [ -z "$latest" ] || [ "${IMG#*@}" = "$latest" ] ||
-                echo "osv_scan: build-image: ${IMG%@*} has a newer digest, $latest (update tools/toolchain.lock)"
+            if [ -n "$latest" ] && [ "${IMG#*@}" != "$latest" ]; then
+                # A newer image: scan it too, without the accepted list, and fail once it fixes an accepted finding
+                # and is two days old (its upload time from the registry; distroless dates its images 1970), so a
+                # fix is taken soon, not at the accepted list's expiry. One that fixes none is only reported.
+                NEW="${IMG%@*}@$latest"
+                docker pull -q --platform linux/amd64 "$NEW" >/dev/null &&
+                    docker save --platform linux/amd64 -o build/osv/build-image-newer.tar "$NEW" &&
+                    "$OSV" scan image --archive build/osv/build-image-newer.tar --format json --all-packages \
+                        > build/osv/build-image-newer.json 2> /dev/null
+                rm -f build/osv/build-image-newer.tar
+                python3 -I - "$NEW" tools/osv-build-image.toml build/osv/build-image-all.json \
+                    build/osv/build-image-newer.json <<'PY' || fail=1
+import json, re, sys, time, urllib.request
+new, accepted_file, cur_file, newer_file = sys.argv[1:]
+def ids(path):
+    try:
+        results = json.load(open(path)).get("results") or []
+    except (OSError, ValueError):
+        return None
+    return {v["id"] for r in results for p in r["packages"] for v in p.get("vulnerabilities", [])}
+accepted = set(re.findall(r'^id = "([^"]+)"', open(accepted_file).read(), re.M))
+cur, newer = ids(cur_file), ids(newer_file)
+name, digest = new.split("@")
+print(f"osv_scan: build-image: {name} has a newer digest, {digest} (update tools/toolchain.lock)")
+if cur is None or newer is None:
+    sys.exit("osv_scan: build-image: FAILED, the newer image could not be scanned (build/osv/build-image-newer.json)")
+fixed = sorted(accepted & cur - newer)
+if not fixed:
+    print("osv_scan: build-image: the newer image fixes none of the accepted findings")
+    sys.exit(0)
+age = None
+m = re.match(r"gcr\.io/(.+):", name)                 # (the registry's upload time: gcr.io's tag list has it)
+if m:
+    try:
+        with urllib.request.urlopen(f"https://gcr.io/v2/{m.group(1)}/tags/list", timeout=30) as r:
+            age = (time.time() - int(json.load(r)["manifest"][digest]["timeUploadedMs"]) / 1000) / 86400
+    except (OSError, ValueError, KeyError):
+        pass
+print(f"osv_scan: build-image: the newer image fixes {len(fixed)} accepted: {' '.join(fixed)}")
+if age is not None and age < 2:
+    print(f"osv_scan: build-image: it is {age:.1f} days old; it fails this scan from 2 days")
+    sys.exit(0)
+sys.exit("osv_scan: build-image: FAILED, take the newer image (" + (f"{age:.0f} days old" if age is not None else
+         "age unknown") + "), check the build is byte-identical, and remove the fixed ids from " + accepted_file)
+PY
+            fi
+            python3 -I - tools/osv-build-image.toml build/osv/build-image-all.json <<'PY'
+import json, re, sys
+accepted = re.findall(r'^id = "([^"]+)"', open(sys.argv[1]).read(), re.M)
+try:                                                  # accepted ids the pinned image no longer has: report only
+    results = json.load(open(sys.argv[2])).get("results") or []
+except (OSError, ValueError):
+    sys.exit(0)
+have = {v["id"] for r in results for p in r["packages"] for v in p.get("vulnerabilities", [])}
+gone = [i for i in accepted if i not in have]
+if have and gone:
+    print(f"osv_scan: build-image: {len(gone)} accepted ids no longer found, can go from {sys.argv[1]}: {' '.join(gone)}")
+PY
         else skip build-image "no Docker"; fi ;;
     espeak)
         R="${FM1_READER:-../fm1-reader}"               # (no checkout next to it: the pinned one, setup_toolchain.sh)

@@ -101,6 +101,11 @@ ignoreUntil = 2027-01-15
 reason = "glibc in the distroless build image: no fix in Debian 13 yet; offline, unprivileged compile-only container"
 
 [[IgnoredVulns]]
+id = "DEBIAN-CVE-2026-76844"
+ignoreUntil = 2027-01-15
+reason = "zlib in the distroless build image (gz_write after a failed write()): no fix in any Debian release yet; offline, unprivileged compile-only container"
+
+[[IgnoredVulns]]
 id = "DEBIAN-CVE-2026-77117"
 ignoreUntil = 2027-01-15
 reason = "glibc in the distroless build image: no fix in Debian 13 yet; offline, unprivileged compile-only container"
