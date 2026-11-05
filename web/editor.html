@@ -82,10 +82,10 @@
   .fm6ops td, .fm6ops th { padding: 0 2px; }
   input.fm6n { width: 3.2em; }
   #steps tr.off td { color: var(--dim); }
-  .stepcols { columns: 470px; column-gap: 24px; }
-  .stepcols table { break-inside: avoid; }
+  .stepcols { display: flex; flex-wrap: wrap; gap: 0 24px; align-items: flex-start; }   /* ESTAMPIE: each table as wide as it */
+                                                                                     /* needs (chance and ratchet overran 470px columns) */
   @media (max-width: 600px) {
-    .stepcols { columns: auto; overflow-x: auto; }
+    .stepcols { display: block; overflow-x: auto; }
     #steps input[type=text] { width: 84px; }
     #steps input[type=number] { width: 42px; }
     #steps th, #steps td { padding-right: 3px; }
