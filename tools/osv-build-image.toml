@@ -46,6 +46,21 @@ ignoreUntil = 2027-01-15
 reason = "gcc-14 in the distroless build image: no fix in Debian 13 yet; offline, unprivileged compile-only container"
 
 [[IgnoredVulns]]
+id = "DEBIAN-CVE-2026-114690"
+ignoreUntil = 2027-01-15
+reason = "gcc-14 in the distroless build image: no fix in any Debian release yet (published 2026-10-30); offline, unprivileged compile-only container"
+
+[[IgnoredVulns]]
+id = "DEBIAN-CVE-2026-114691"
+ignoreUntil = 2027-01-15
+reason = "gcc-14 in the distroless build image: no fix in any Debian release yet (published 2026-10-30); offline, unprivileged compile-only container"
+
+[[IgnoredVulns]]
+id = "DEBIAN-CVE-2026-115455"
+ignoreUntil = 2027-01-15
+reason = "gcc-14 in the distroless build image: no fix in any Debian release yet (published 2026-10-30); offline, unprivileged compile-only container"
+
+[[IgnoredVulns]]
 id = "DEBIAN-CVE-2026-18374"
 ignoreUntil = 2027-01-15
 reason = "glibc in the distroless build image: no fix in Debian 13 yet; offline, unprivileged compile-only container"
@@ -94,6 +109,11 @@ reason = "glibc in the distroless build image: no fix in Debian 13 yet; offline,
 id = "DEBIAN-CVE-2026-80489"
 ignoreUntil = 2027-01-15
 reason = "glibc in the distroless build image: no fix in Debian 13 yet; offline, unprivileged compile-only container"
+
+[[IgnoredVulns]]
+id = "DEBIAN-CVE-2026-84243"
+ignoreUntil = 2027-01-15
+reason = "glibc in the distroless build image: no fix in any Debian release yet (published 2026-10-30); offline, unprivileged compile-only container"
 
 [[IgnoredVulns]]
 id = "DEBIAN-CVE-2026-85091"
