@@ -29,6 +29,7 @@ The package must be one made by tools/fm1pkg_make.py (Felucca's own loader, no v
 Its identity (FM-1_378NNN) is read from the package; the device must report it after
 the install.
 """
+import ast
 import hashlib
 import json
 import os
@@ -174,6 +175,15 @@ def write_cards(out):
         f.write_text(page.replace("</head>", meta + "</head>"), encoding="utf-8")
 
 
+def releases():
+    """ESTAMPIE: tools/build.py's RELEASES, identity number -> version, for the editor's header (editor.html
+    EST_RELEASES)."""
+    m = re.search(r"^RELEASES = (\{.*?\})", (HERE.parent / "tools/build.py").read_text(encoding="utf-8"), re.M)
+    if not m:
+        raise SystemExit("tools/build.py: no RELEASES line; update make_site.py")
+    return {n: v for v, n in ast.literal_eval(m.group(1)).items()}
+
+
 def plain_page(title, body):
     """a small page (a folder's listing) with the whole skeleton the other pages have"""
     return (f'<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
@@ -236,7 +246,11 @@ def main(pkg, version, out):
                    f'<ul><li><a href="{stock.name}">{stock.name}</a> (SHA-256 {STOCK_V15_SHA256})</li>'
                    '<li><a href="README.txt">README</a>: where it comes from, its terms</li>'
                    '<li><a href="LICENSE-Apache-2.0.txt">Apache License, Version 2.0</a></li></ul>'), encoding="utf-8")
-    shutil.copy(HERE / "editor.html", ed / "index.html")
+    editor = (HERE / "editor.html").read_text(encoding="utf-8")
+    if editor.count("/*RELEASES*/{}") != 1:
+        raise SystemExit("editor.html must contain /*RELEASES*/{} once; update make_site.py")
+    (ed / "index.html").write_text(editor.replace("/*RELEASES*/{}", json.dumps(releases(), separators=(",", ":"))),
+                                   encoding="utf-8")
     root = HERE.parent                              # GHOULBOX: the art, and the emulator when it was built
     subprocess.run([sys.executable, str(root / "tools/gen_emu_art.py"), str(root / "build/gen"), str(out / "webapp/art")],
                    check=True)

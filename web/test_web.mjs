@@ -44,8 +44,27 @@ const E = vm.runInNewContext(proto + `
    readDeviceMenu: typeof readDeviceMenu === "undefined" ? null : readDeviceMenu,
    parseMotionAll: typeof parseMotionAll === "undefined" ? null : parseMotionAll,
    fm6Bank: typeof fm6Bank === "undefined" ? null : fm6Bank, crc32: typeof crc32 === "undefined" ? null : crc32,
-   midiLearn: typeof midiLearn === "undefined" ? null : midiLearn, slotMatchesRuntime })`,
+   midiLearn: typeof midiLearn === "undefined" ? null : midiLearn, slotMatchesRuntime,
+   ID_ASK: typeof ID_ASK === "undefined" ? null : ID_ASK, identityOf: typeof identityOf === "undefined" ? null : identityOf })`,
 { setTimeout, clearTimeout, setInterval, clearInterval, console });
+
+/* ESTAMPIE: the header's identity question (ID_ASK) is the installer's handshake (fm1ota.js frame59 0x11, ota.c),
+   the mock answers it as a development build, and the editor's own frames are not taken for the answer */
+async function editorIdentity() {
+  if (!E.identityOf) { console.log("editor: identity (editor.html does not ask it)".padEnd(64) + " skip"); return; }
+  ok(JSON.stringify(Array.from(E.ID_ASK)) === JSON.stringify([0xF0, ...pack7([0x00, 0x59, 0x11, 0, 0, 0, 0xFF]), 0xF7]),
+     "editor: the identity question == the installer's handshake");
+  const m = E.makeMockDevice(), inp = [...m.access.inputs.values()][0], out = [...m.access.outputs.values()][0];
+  const got = [];
+  inp.onmidimessage = (e) => got.push(e.data);
+  out.send(E.ID_ASK);
+  await new Promise((r) => setTimeout(r, 30));
+  ok(got.length === 1 && E.identityOf(got[0]) === "FM-1_378000", "editor: the mock answers the identity: FM-1_378000");
+  got.length = 0;
+  out.send(E.frame(E.CMD.INFO));
+  await new Promise((r) => setTimeout(r, 40));
+  ok(got.length === 1 && E.identityOf(got[0]) === null, "editor: an editor reply is not taken for the identity");
+}
 
 async function editorMock() {
   const m = E.makeMockDevice();
@@ -1914,6 +1933,7 @@ async function updater() {
 }
 
 await editorMock();
+await editorIdentity();
 await editorSamplePresets();
 mockTables();
 await editorLibrarian();

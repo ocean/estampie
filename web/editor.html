@@ -387,6 +387,35 @@
 /* ---------------------------------------------------------------- protocol --- */
 const HDR = [0x7D, 0x46, 0x4C];
 const FM1_NAME = /fm-1|estampie|felucca/i;     // ESTAMPIE: its port name ("FM-1", V15's, after 0.3.7; "FM-1 ESTAMPIE" 0.3.4 to 0.3.7; "Felucca" before)
+/* ESTAMPIE: INFO's version is Felucca's and GHOULBOX's ("FELUCCA v1.6.1 GB2.1", which the installer wants first), so
+   the header asks the package identity too, as the installer does (fm1ota.js frame59: F0 bits7(00 59 11 len24 chk)
+   F7, answered by 00 59 11 and 27 bytes of "FM-1_378NNN"; ota.c), and names the release NNN is. EST_RELEASES is
+   tools/build.py's RELEASES the other way round (make_site.py fills it in; NNN 0 is a development build) */
+const EST_RELEASES = /*RELEASES*/{};
+function bits7(data) {                           /* the vendor protocol's 7-bit packing, a bit stream (fm1ota.js pack7; */
+  const out = []; let acc = 0, nb = 0;            /* not the editor's groups of 7) */
+  for (const b of data) {
+    acc |= b << nb; nb += 8;
+    while (nb >= 7) { out.push(acc & 0x7F); acc >>>= 7; nb -= 7; }
+  }
+  if (nb) out.push(acc & 0x7F);
+  return out;
+}
+function unbits7(s) {
+  const out = []; let acc = 0, nb = 0;
+  for (const b of s) {
+    acc |= (b & 0x7F) << nb; nb += 7;
+    while (nb >= 8) { out.push(acc & 0xFF); acc >>>= 8; nb -= 8; }
+  }
+  return out;
+}
+const ID_ASK = [0xF0, ...bits7([0x00, 0x59, 0x11, 0, 0, 0, 0xFF]), 0xF7];
+function identityOf(data) {                       /* the identity's text, or null when it is not that answer */
+  if (!data || data.length < 4 || data[0] !== 0xF0 || data[data.length - 1] !== 0xF7) return null;
+  const d = unbits7(Array.from(data.slice(1, -1)));
+  if (d.length !== 34 || d[0] !== 0 || d[1] !== 0x59 || d[2] !== 0x11) return null;
+  return String.fromCharCode(...d.slice(6, 33)).replace(/\0+$/, "");
+}
 const CMD = { INFO: 1, GET: 2, SET: 3, DUMP: 4, DESC: 5, STEP_GET: 6, STEP_SET: 7, PRESET: 8, PROJECT: 9, NAMES: 10,
   SMP_BEGIN: 11, SMP_WRITE: 12, SMP_END: 13, SMP_ERASE: 14, SMP_INFO: 15,
   UP_LIST: 16, UP_GET: 17, UP_PUT: 18, UP_STORE: 19, UP_LOAD: 20, UP_ERASE: 21,
@@ -2385,6 +2414,12 @@ function makeMockDevice(opt = {}) {
   const output = {
     id: "mock-out", name: "FM-1", type: "output", state: "connected",
     send(data) {
+      if (!opt.legacy && data.length === ID_ASK.length && data.every((x, i) => x === ID_ASK[i])) {   /* ESTAMPIE: the identity, a dev build's */
+        const id = [..."FM-1_378000"].map((c) => c.charCodeAt(0)).concat(Array(16).fill(0));
+        const r = [0xF0, ...bits7([0x00, 0x59, 0x11, 27, 0, 0, ...id, ~id.reduce((s, x) => s + x, 0) & 0xFF]), 0xF7];
+        setTimeout(() => { if (input.onmidimessage) input.onmidimessage({ data: Uint8Array.from(r) }); }, 2);
+        return;
+      }
       const f = unframe(data);
       if (!f) { console.error("mock: refused a frame that is not F0 7D 46 4C ... F7", data); return; }
       if (busy) { console.warn("mock: frame dropped (device holds only one frame)", data); return; }
@@ -2647,6 +2682,7 @@ const TEXT = {
     devicePending: "反映しました。再生を停止すると保存されます。",
 
     other: "English", connect: "接続", disconnect: "切断", mock: "モック（実機なし）",
+    estDev: "開発版", estBuild: "ビルド", onFelucca: "Felucca {v} ベース",
     sound: "音色", engine: "エンジン", presets: "プリセット", initSound: "音色を初期化",
     track: "トラック",
     saveFile: "ファイルに保存", loadFile: "ファイルを読み込む", projects: "プロジェクト",
@@ -2751,6 +2787,7 @@ const TEXT = {
     devicePending: "Applied. Settings will save when playback stops.",
 
     other: "日本語", connect: "Connect", disconnect: "Disconnect", mock: "Mock device (no hardware)",
+    estDev: "development build", estBuild: "build", onFelucca: "on Felucca {v}",
     sound: "Sound", engine: "Engine", presets: "Presets", initSound: "Init sound",
     track: "Track",
     saveFile: "Save to file", loadFile: "Load file", projects: "Projects",
@@ -3001,7 +3038,11 @@ async function connect() {
       onPush: (f) => onPush(f),
       onGap: () => { rewatch = true; },
     });
-    input.onmidimessage = (e) => link.receive(e.data);
+    input.onmidimessage = (e) => {                /* ESTAMPIE: the identity's answer is not the editor link's */
+      const id = identityOf(e.data);
+      if (id === null) link.receive(e.data);
+      else if (connectedDevice && connectedDevice.onIdentity) connectedDevice.onIdentity(id);
+    };
     if (input.open) await input.open().catch(() => {});
     dev = { link, input, output, info: null, pdesc: [], gdesc: [], names: [], dump: null, steps: [], slotUsed: [null, null, null, null],
       keys: null, watch: false, bank: null };
@@ -3065,13 +3106,32 @@ async function getDesc(scope, id, d = dev) { return parse[CMD.DESC](await sessio
 async function getDump(d = dev) { const reply = await sessionRequest(d, req.dump()); lastDump = Date.now(); return parse[CMD.DUMP](reply, d.info); }
 async function getStep(i, d = dev) { return parse[CMD.STEP_GET](await sessionRequest(d, req.stepGet(i))); }
 
+/* ESTAMPIE: the package identity ("FM-1_378NNN"), or null from a firmware that does not answer it in 300 ms */
+function askIdentity(d) {
+  if (!d.output) return Promise.resolve(null);
+  return new Promise((res) => {
+    const done = (id) => { clearTimeout(tm); d.onIdentity = null; res(id); };
+    const tm = setTimeout(() => done(null), 300);
+    d.onIdentity = done;
+    d.output.send(ID_ASK);
+  });
+}
+/* ESTAMPIE: "ESTAMPIE 0.3.8 · on Felucca 1.6.1", as ABOUT says it; INFO's own text for anything else */
+function versionLabel(info, id) {
+  const m = /^FM-1_378(\d{3})$/.exec(id || ""), f = /^FELUCCA v?(\d[\d.]*)/i.exec(info || "");
+  if (!m) return info;
+  const n = +m[1], ver = n ? EST_RELEASES[n] || `${t("estBuild")} ${n}` : t("estDev");
+  return `ESTAMPIE ${ver}` + (f ? ` · ${t("onFelucca").replace("{v}", f[1])}` : "");
+}
+
 /* the whole connect sequence */
 async function load(d) {
   const releaseBusy = beginBusy();
   try {
     /* the first frame after opening the port can be lost: a few tries */
     d.info = parse[CMD.INFO](await sessionRequest(d, req.info(), { timeout: 500, retries: 3 }));
-    $("version").textContent = d.info.version;
+    $("version").textContent = versionLabel(d.info.version, await askIdentity(d));
+    $("version").title = d.info.version;
     const total = d.info.pcount + d.info.gcount;
     for (let i = 0; i < d.info.pcount; i++) { sayK("reading", `${i + 1}/${total}`); d.pdesc[i] = await getDescOrNull(0, i, d); }
     for (let i = 0; i < d.info.gcount; i++) { sayK("reading", `${d.info.pcount + i + 1}/${total}`); d.gdesc[i] = await getDescOrNull(1, i, d); }
