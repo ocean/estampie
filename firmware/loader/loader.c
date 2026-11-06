@@ -54,6 +54,7 @@ static int ota_prog(uint32_t off, const void *p, uint32_t n) { (void)off; (void)
 static int ota_fread(uint32_t off, void *p, uint32_t n) { return fl_read_ram(off, p, n); }
 static void ota_show(uint32_t step, int32_t code) { (void)step; (void)code; }
 static void ota_commit(const uint8_t *parm) { (void)parm; }
+static uint32_t ota_flash_id(void) { return 0; }     /* ESTAMPIE: not read here. */
 #include "../src/ota.c"
 
 /* ---- ldr_core.c hooks: interrupts are off for the whole loader ---- */

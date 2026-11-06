@@ -3,7 +3,8 @@
 /* M-UPGRADE entry: "step 1 lite".
  *
  * The updater talks SysEx (F0 pack7(00 59 cmd len24 body chk) F7):
- *   cmd 0x11  handshake -> we answer our package identity (FELUCCA_ID)
+ *   cmd 0x11  handshake -> we answer our package identity (FELUCCA_ID); ESTAMPIE: bytes 24-26 the flash's
+ *             JEDEC ID, high byte first (0 = not read)
  *   cmd 0x12  ESTAMPIE: build -> "ESTB" and this build's ID (ota_build_id)
  *   F0 22 24 35 7F F7  upgrade -> ota_session(): pull parts of the package
  *     with cmd 0x30 read requests, check them, stage the package's update
@@ -25,6 +26,7 @@
  *   ota_erase(off) ota_prog(off, p, n) ota_fread(off, p, n)   flash, 0 = ok
  *   ota_show(step, code)       progress / result for the screen
  *   ota_commit(parm)           write RAM record + reset (never returns on hardware)
+ *   ota_flash_id()             ESTAMPIE: the flash's JEDEC ID read at boot, 0 = not read
  */
 #define OTA_AREA 0x000E0000u                     /* staged loader, 5 x 4 KiB */
 #define OTA_AREA_LEN 0x5000u
@@ -41,6 +43,7 @@ static int ota_prog(uint32_t off, const void *p, uint32_t n);
 static int ota_fread(uint32_t off, void *p, uint32_t n);
 static void ota_show(uint32_t step, int32_t code);
 static void ota_commit(const uint8_t *parm);
+static uint32_t ota_flash_id(void);
 
 static uint32_t ota_rd16(const uint8_t *p) { return (uint32_t)p[0] | (uint32_t)p[1] << 8; }
 static uint32_t ota_rd24(const uint8_t *p) { return ota_rd16(p) | (uint32_t)p[2] << 16; }
@@ -136,9 +139,12 @@ static void ota_reply_identity(void)
 {
     static const char ID[] = FELUCCA_ID;         /* == the package marker string */
     uint8_t id[27];
-    uint32_t i;
+    uint32_t i, j = ota_flash_id();
     for (i = 0; i < sizeof id; i++)
         id[i] = i < sizeof ID - 1u ? (uint8_t)ID[i] : 0;
+    id[24] = (uint8_t)(j >> 16);                 /* ESTAMPIE: the flash's JEDEC ID, as Felucca (Felucca#320) */
+    id[25] = (uint8_t)(j >> 8);
+    id[26] = (uint8_t)j;
     ota_send_msg(0x11, id, sizeof id);
 }
 

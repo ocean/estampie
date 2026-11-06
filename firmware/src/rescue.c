@@ -60,7 +60,8 @@ static void rescue_main(void)
     rescue_last = rescue_usb_last = fm1_ticks();
     rescue_fraction = 0;
     fm1_ms = 0;
-    flash_ok = FL_FAR(fl_jedec_ram)() == 0x856014u;     /* (as persist_boot: the expected 1 MiB part) */
+    flash_jedec = FL_FAR(fl_jedec_ram)();
+    flash_ok = flash_known(flash_jedec);                /* (as persist_boot: a known 1 MiB part) */
     usb_serial_read();                                  /* (interrupts still off) */
     lcd_init();
     lcd_fill(0, 0, 240, 240, 0);                        /* fixed colours: no palette is read here */

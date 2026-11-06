@@ -62,3 +62,4 @@ static void ota_commit(const uint8_t *parm)
     fm1_delay_ms(30);
     fm1_enter_update(parm);                             /* record into RAM, core reset (fm1_sys.h) */
 }
+static uint32_t ota_flash_id(void) { return flash_jedec; }   /* ESTAMPIE: as persist_boot or rescue_main read it. */

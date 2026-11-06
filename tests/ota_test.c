@@ -115,6 +115,7 @@ static int ota_prog(uint32_t off, const void *src, uint32_t n)
 static int ota_fread(uint32_t off, void *dst, uint32_t n) { memcpy(dst, nor + off, n); return 0; }
 static void ota_show(uint32_t step, int32_t code) { if (step == 9) last_code = code; }
 static void ota_commit(const uint8_t *parm) { committed = 1; memcpy(committed_parm, parm, 112); }
+static uint32_t ota_flash_id(void) { return 0xB36014u; }   /* a newer FM-1's flash */
 
 #include "../firmware/src/ota.c"
 
@@ -206,6 +207,8 @@ int main(int argc, char **argv)
         bad += check("handshake answered", ident_replies == 1);
         bad += check("identity frame is " FELUCCA_ID,
                      ota_msg[2] == 0x11 && !memcmp(ota_msg + 6, FELUCCA_ID, sizeof FELUCCA_ID - 1));
+        bad += check("  .. bytes 24-26 the flash's JEDEC ID, high byte first",
+                     ota_msg[6 + 24] == 0xB3 && ota_msg[6 + 25] == 0x60 && ota_msg[6 + 26] == 0x14);
     }
     reset_dev();
     {

@@ -433,6 +433,8 @@ int main(void)
     up_rec_t r;
     reset();
     settings_init();
+    bad += check("flash: the P25Q80 and the newer FM-1s' UC25HQ80 saved to, nothing else",
+                 flash_known(0x856014u) && flash_known(0xB36014u) && !flash_known(0) && !flash_known(0xEF4014u));
     {
         const uint8_t amber[] = {0, 2};
         song.playing = 1;

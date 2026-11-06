@@ -1208,12 +1208,19 @@ static uint8_t persist_pending;                 /* 1 requested, 2 waiting after 
 static uint32_t persist_retry_ms;
 #endif
 
+/* ESTAMPIE: the FM-1's 1 MiB flash parts: Puya's P25Q80, and UCUN's UC25HQ80 in units sold since autumn 2026 (Felucca
+ * 7435517, Felucca#320). Same commands; on any other part the saves stay in RAM. flash_jedec is what was read at boot
+ * (0 = not read), for the identity reply (ota.c). */
+static uint32_t flash_jedec;
+static int flash_known(uint32_t id) { return id == 0x856014u || id == 0xB36014u; }
+
 static void persist_boot(void)                    /* before settings_init / panel_init */
 {
 #if FELUCCA_FLASH
     persist_t p;
     uint32_t f = irq_save();
-    flash_ok = FL_FAR(fl_jedec_ram)() == 0x856014u;       /* the expected 1 MiB part, else stay RAM-only */
+    flash_jedec = FL_FAR(fl_jedec_ram)();
+    flash_ok = flash_known(flash_jedec);           /* a known 1 MiB part, else stay RAM-only */
     irq_restore(f);
     if (!flash_ok)
         return;
