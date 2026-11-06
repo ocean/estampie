@@ -207,8 +207,24 @@ int main(int argc, char **argv)
         bad += check("handshake answered", ident_replies == 1);
         bad += check("identity frame is " FELUCCA_ID,
                      ota_msg[2] == 0x11 && !memcmp(ota_msg + 6, FELUCCA_ID, sizeof FELUCCA_ID - 1));
+        bad += check("  .. text and zeros only: no chip for M-UPGRADE", !ota_msg[6 + 24] && !ota_msg[6 + 25] && !ota_msg[6 + 26]);
+    }
+    reset_dev();
+    {
+        uint8_t m[8] = {0, 0x59, 0x11, 1, 0, 0, 1, 0xFE};
+        host_reply(m, 8);
+        ota_service();
+        bad += check("full handshake (body 01) answered " FELUCCA_ID,
+                     ident_replies == 1 && ota_msg[2] == 0x11 && !memcmp(ota_msg + 6, FELUCCA_ID, sizeof FELUCCA_ID - 1));
         bad += check("  .. bytes 24-26 the flash's JEDEC ID, high byte first",
                      ota_msg[6 + 24] == 0xB3 && ota_msg[6 + 25] == 0x60 && ota_msg[6 + 26] == 0x14);
+    }
+    reset_dev();
+    {
+        uint8_t m[8] = {0, 0x59, 0x11, 1, 0, 0, 2, 0xFD};
+        host_reply(m, 8);
+        ota_service();
+        bad += check("a handshake with another body is not answered", ident_replies == 0);
     }
     reset_dev();
     {

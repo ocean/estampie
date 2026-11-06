@@ -119,7 +119,7 @@ def parse_identity(pkt):
     d = unpack7(pkt[1:-1])
     if len(d) != 34 or d[:3] != b"\x00\x59\x11":
         return None
-    txt = printable(d[6:33].rstrip(b"\0"))
+    txt = printable(d[6:33].split(b"\0")[0])   # the text ends at its first zero: binary may follow (a chip ID).
     m = re.fullmatch(r"([^_]+)_(\d+)", txt)
     return Identity(txt, m[1], int(m[2])) if m else None
 

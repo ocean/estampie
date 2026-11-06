@@ -3,8 +3,9 @@
 /* M-UPGRADE entry: "step 1 lite".
  *
  * The updater talks SysEx (F0 pack7(00 59 cmd len24 body chk) F7):
- *   cmd 0x11  handshake -> we answer our package identity (FELUCCA_ID); ESTAMPIE: bytes 24-26 the flash's
- *             JEDEC ID, high byte first (0 = not read)
+ *   cmd 0x11  handshake -> we answer our package identity (FELUCCA_ID); ESTAMPIE: to the query with the
+ *             one-byte body 01 (after PERF-1 775106b) also the flash's JEDEC ID in bytes 24-26, high byte
+ *             first (0 = not read). The plain query's answer stays text and zeros only, for M-UPGRADE
  *   cmd 0x12  ESTAMPIE: build -> "ESTB" and this build's ID (ota_build_id)
  *   F0 22 24 35 7F F7  upgrade -> ota_session(): pull parts of the package
  *     with cmd 0x30 read requests, check them, stage the package's update
@@ -135,17 +136,26 @@ static int ota_send_msg(uint32_t cmd, const uint8_t *body, uint32_t n)   /* n <=
     return ota_wire_send(ota_wire, w);
 }
 
-static void ota_reply_identity(void)
+static void ota_reply_identity(uint32_t full)
 {
     static const char ID[] = FELUCCA_ID;         /* == the package marker string */
     uint8_t id[27];
-    uint32_t i, j = ota_flash_id();
+    uint32_t i, j = full ? ota_flash_id() : 0u;
     for (i = 0; i < sizeof id; i++)
         id[i] = i < sizeof ID - 1u ? (uint8_t)ID[i] : 0;
-    id[24] = (uint8_t)(j >> 16);                 /* ESTAMPIE: the flash's JEDEC ID, as Felucca (Felucca#320) */
+    id[24] = (uint8_t)(j >> 16);                 /* ESTAMPIE: the flash's JEDEC ID, as Felucca (Felucca#320). */
     id[25] = (uint8_t)(j >> 8);
     id[26] = (uint8_t)j;
     ota_send_msg(0x11, id, sizeof id);
+}
+
+/* ESTAMPIE: a decoded handshake: 1 the plain query (M-UPGRADE's), 2 the one with the one-byte body 01 (ESTAMPIE's
+ * installers, FM1Kit; PERF-1's form, deamonSLINKY), 0 neither */
+static uint32_t ota_handshake(uint32_t d)
+{
+    if (ota_dec[2] != 0x11)
+        return 0;
+    return d == 7u ? 1u : d == 8u && ota_dec[6] == 1u ? 2u : 0u;
 }
 
 /* ESTAMPIE: this build's ID, after M-VAVE fm1_open's build hash: "ESTB" and 16 bytes tools/build.py fills in, the
@@ -183,9 +193,9 @@ static uint32_t ota_take(void)
 /* main loop, outside a session: answer handshakes */
 static void ota_service(void)
 {
-    uint32_t d = ota_take();
-    if (d == 7u && ota_dec[2] == 0x11)
-        ota_reply_identity();
+    uint32_t d = ota_take(), h = ota_handshake(d);
+    if (h)
+        ota_reply_identity(h == 2u);
     else if (d == 7u && ota_dec[2] == 0x12)
         ota_reply_build();
 }
@@ -196,7 +206,7 @@ static uint32_t ota_deadline;                    /* 0 = none; else ota_now_ms() 
 static int ota_read(uint32_t addr, uint8_t *dst, uint32_t len)
 {
     uint8_t q[8];
-    uint32_t tries, t, d, i;
+    uint32_t tries, t, d, i, h;
     if (ota_deadline && (int32_t)(ota_now_ms() - ota_deadline) > 0)
         return -1;                                  /* the whole session took too long: give up */
     q[0] = 0;
@@ -212,8 +222,8 @@ static int ota_read(uint32_t addr, uint8_t *dst, uint32_t len)
             d = ota_take();
             if (!d)
                 continue;
-            if (d == 7u && ota_dec[2] == 0x11) {
-                ota_reply_identity();
+            if ((h = ota_handshake(d)) != 0) {
+                ota_reply_identity(h == 2u);
                 continue;
             }
             if (d == len + 15u && ota_dec[2] == 0x30 && ota_rd24(ota_dec + 3) == len + 8u &&

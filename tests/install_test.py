@@ -71,6 +71,7 @@ class FakeFM1:
         self.image, self.unplug_after, self.after_write = image, unplug_after, after_write
         self.stall_after, self.bad_addr = stall_after, bad_addr
         self.served = self.bad = self.upgrades = 0
+        self.chip = bytes(3)                    # a JEDEC ID after the identity's text (Felucca#320).
         self.sent, self.links, self.gen, self.lock = [], [], 0, threading.Lock()
         self.boot(identity, name)
 
@@ -100,7 +101,7 @@ class FakeFM1:
     def rx(self, d):
         if d == I.HS_QUERY:
             t = self.identity.encode()
-            self.tx(b"\xF0" + I.pack7(bytes([0, 0x59, 0x11, 0, 0, 0]) + t + bytes(28 - len(t))) + b"\xF7")
+            self.tx(b"\xF0" + I.pack7(bytes([0, 0x59, 0x11, 0, 0, 0]) + t + bytes(24 - len(t)) + self.chip + b"\0") + b"\xF7")
         elif d == I.UPGRADE:
             self.upgrades += 1
             first = self.bad_addr if self.bad_addr is not None else 0
@@ -201,6 +202,11 @@ def installs():
     dev = FakeFM1(image, identity="FM-1_905", name="Felucca")
     rc, out, err = cli(["--info"], dev)
     ok(rc == 0 and "FM-1_905" in out and "running" in out and dev.upgrades == 0, "--info: identity of the connected FM-1")
+
+    dev = FakeFM1(image, identity="FM-1_378000", name="FM-1")
+    dev.chip = bytes([0x85, 0x60, 0x14])
+    rc, out, err = cli(["--info"], dev)
+    ok(rc == 0 and "FM-1_378000" in out, "--info: an identity with the flash's ID after its text is still read")
 
     dev = FakeFM1(image, identity="ota-FM-1_900", name="Felucca Update")
     rc, out, err = cli(["--info"], dev)

@@ -64,6 +64,9 @@ async function editorIdentity() {
   out.send(E.frame(E.CMD.INFO));
   await new Promise((r) => setTimeout(r, 40));
   ok(got.length === 1 && E.identityOf(got[0]) === null, "editor: an editor reply is not taken for the identity");
+  const t = [..."FM-1_378000"].map((c) => c.charCodeAt(0)), id = [...t, ...new Array(24 - t.length).fill(0), 0x85, 0x60, 0x14];
+  const withChip = [0xF0, ...pack7([0x00, 0x59, 0x11, 27, 0, 0, ...id, ~id.reduce((s, x) => s + x, 0) & 0xFF]), 0xF7];
+  ok(E.identityOf(Uint8Array.from(withChip)) === "FM-1_378000", "editor: an identity with the flash's ID after its text is still read");
 }
 
 async function editorMock() {
@@ -1736,8 +1739,8 @@ class FakeFM1 {
   tx(bytes) { const i = this.input; setTimeout(() => { if (i.state === "connected" && i.onmidimessage) i.onmidimessage({ data: Uint8Array.from(bytes) }); }, 1); }
   rx(d) {
     if (eq(d, HS)) {
-      const t = [...new TextEncoder().encode(this.identity)];
-      const body = [0, 0x59, 0x11, 0, 0, 0, ...t, ...new Array(28 - t.length).fill(0)];
+      const t = [...new TextEncoder().encode(this.identity)];   /* this.chip: a JEDEC ID after the text (Felucca#320). */
+      const body = [0, 0x59, 0x11, 0, 0, 0, ...t, ...new Array(24 - t.length).fill(0), ...(this.chip || [0, 0, 0]), 0];
       this.tx([0xF0, ...pack7(body), 0xF7]);
     } else if (eq(d, BUILD_Q)) {
       const b = this.identity.startsWith("ota-") || this.identity === "FM-1_015" ? null : this.build;
@@ -1861,6 +1864,9 @@ async function updaterChecks(image) {
   const link = { q: [], waiter: null, drain() {}, send: () => false, read: async () => null };
   ok(now && now.id === "FM-1_378001" && now.build === BUILD && await buildOf(link) === null,
      "fm1ota.js: current() reports the running build; no port, no build");
+  running.chip = [0x85, 0x60, 0x14];
+  const chip = await new Updater(running.access).current();
+  ok(chip && chip.id === "FM-1_378001", "fm1ota.js: an identity with the flash's ID after its text is still read");
 }
 
 /* ESTAMPIE: official V15's factory sounds (fm1pkg.js stockFactorySounds) written back, after M-VAVE fm1_open: only to

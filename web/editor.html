@@ -414,7 +414,7 @@ function identityOf(data) {                       /* the identity's text, or nul
   if (!data || data.length < 4 || data[0] !== 0xF0 || data[data.length - 1] !== 0xF7) return null;
   const d = unbits7(Array.from(data.slice(1, -1)));
   if (d.length !== 34 || d[0] !== 0 || d[1] !== 0x59 || d[2] !== 0x11) return null;
-  return String.fromCharCode(...d.slice(6, 33)).replace(/\0+$/, "");
+  return String.fromCharCode(...d.slice(6, 33)).split("\0")[0];   /* up to its first zero: binary may follow. */
 }
 const CMD = { INFO: 1, GET: 2, SET: 3, DUMP: 4, DESC: 5, STEP_GET: 6, STEP_SET: 7, PRESET: 8, PROJECT: 9, NAMES: 10,
   SMP_BEGIN: 11, SMP_WRITE: 12, SMP_END: 13, SMP_ERASE: 14, SMP_INFO: 15,
