@@ -79,6 +79,21 @@ GHOULBOX before 2.3 can't read: a slot holding an ESTAMPIE project shows EMPTY t
 until that slot is saved over. To keep your projects safe when you change firmware, back them up first with the
 [web editor](https://fm-1.drewr.dev/estampie/webapp/editor/).
 
+## Newer FM-1s
+
+FM-1s sold since autumn 2026 have a different flash chip: UCUN's UC25HQ80 rather than Puya's P25Q80. ESTAMPIE
+knows it from 0.3.8. Earlier versions don't, and on these units:
+
+- nothing you save survives switching off;
+- the recovery screen says UNKNOWN FLASH;
+- ESTAMPIE can't be updated over USB, so it can't install 0.3.8 or anything else itself.
+
+If your FM-1 is new and still on V15, install 0.3.8 as usual. If it already has an earlier ESTAMPIE and acts as
+above, there's no tested way off it yet: please [open an issue](https://github.com/ocean/estampie/issues) and we'll
+work it out with you. FM1Kit and other installers that ask for the full identity can tell you which chip yours
+has (0xB36014 is the newer one). 0.3.8 has only been tested on an FM-1 with the older chip so far, so a report from
+a newer one, good or bad, is very welcome.
+
 ## Building
 
 Everything the build needs is fetched into the repository (`.toolchain/`, `.venv/`, both git-ignored), so
