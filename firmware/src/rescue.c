@@ -4,7 +4,7 @@
  * projects or samples read, no UI. What is left is the M-UPGRADE updater (ota.c, as in normal play) and the UBOOT
  * request, so the web installer can always put a working firmware on. Entered when two boots in a row died in their
  * first 30 s (bootguard.h), or with OCT- alone held at power-on (main.c). A reset in here: the ROM's UBOOT. Nothing is
- * written to the flash just for entering it. */
+ * written to the flash just for entering it. REC alone held at power-on skips even this: straight to UBOOT. */
 static uint32_t rescue_last, rescue_fraction, rescue_usb_last;
 
 static void rescue_poll(void)                           /* the main loop's and ota_idle's: TIMER5's work */
@@ -41,7 +41,10 @@ static void rescue_step(void)
     }
 }
 
-/* OCT- alone held at power-on: 50 ms of scans (TIMER5 is not running yet), then the raw buttons */
+/* OCT- alone held at power-on: 50 ms of scans (TIMER5 is not running yet), then the raw buttons. ESTAMPIE: REC alone
+ * held on to 1 s is the ROM's download mode, before anything is read from the flash or drawn (the screen stays dark),
+ * so a firmware whose later start-up fails can still be replaced by FM1Kit's FM1Rescue or M-Flasher. Let go sooner,
+ * it boots as usual. */
 static int rescue_key(void)
 {
     uint32_t start = fm1_ticks();
@@ -50,6 +53,14 @@ static int rescue_key(void)
         fm1_wdt_feed();
         fm1_input_scan();
     } while ((uint32_t)(fm1_ticks() - start) < 50u * 1000u * FM1_TICKS_PER_US);
+    while (bootguard_download(fm1_in.buttons)) {
+        if ((uint32_t)(fm1_ticks() - start) >= 1000u * 1000u * FM1_TICKS_PER_US) {
+            bootguard_clear(&bootguard);                /* an intentional reset: no failed boot */
+            fm1_enter_uboot();
+        }
+        fm1_wdt_feed();
+        fm1_input_scan();
+    }
     return bootguard_manual(fm1_in.buttons);
 }
 

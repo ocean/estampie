@@ -38,4 +38,7 @@ static uint32_t bootguard_begin(bootguard_t *b)
 /* the raw buttons at power-on (fm1_in.buttons, before the panel table): OCT- (bit 0) alone; with OCT+ (bit 1) it is
  * the panel setup (main.c) */
 static int bootguard_manual(uint32_t buttons) { return (buttons & 3u) == 1u; }
+/* ESTAMPIE: REC (raw bit 13, panel.c's PANEL_DEFAULT) alone, nothing else: the ROM's download mode (rescue.c), the key
+ * and the hold m-bootloader uses, so it means the same whichever bootloader is installed */
+static int bootguard_download(uint32_t buttons) { return buttons == 1u << 13; }
 #endif

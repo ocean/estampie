@@ -2,7 +2,7 @@
 /* The boot guard (firmware/src/bootguard.h, after zvenson/dinghy): a boot that dies in its first 30 s counts; the
  * second in a row starts the USB RESCUE (no audio, the updater only); a reset in the rescue falls back to the ROM's
  * UBOOT; a power-on starts the count again; OCT- alone held at power-on is the rescue too (OCT- + OCT+: the panel
- * setup, as before). The guard lives in .noinit RAM: here a plain struct, its "garbage" a pattern. */
+ * setup, as before); REC alone, the ROM's download mode. The guard lives in .noinit RAM: here a plain struct, its "garbage" a pattern. */
 #include <stdio.h>
 #include <string.h>
 #include "../firmware/src/bootguard.h"
@@ -56,6 +56,10 @@ int main(void)
     check("OCT- alone held (raw bit 0): the rescue", bootguard_manual(1u) && bootguard_manual(1u | 0x10u));
     check("OCT- + OCT+ (the panel setup), OCT+ alone, nothing: not the rescue",
           !bootguard_manual(3u) && !bootguard_manual(2u) && !bootguard_manual(0u));
+    check("REC alone held (raw bit 13): the ROM's download mode", bootguard_download(1u << 13));
+    check("REC with anything else, OCT- alone, nothing: not download mode",
+          !bootguard_download(1u << 13 | 1u) && !bootguard_download(1u << 13 | 1u << 12) && !bootguard_download(1u)
+          && !bootguard_download(0u) && !bootguard_manual(1u << 13));
 
     printf("%s\n", bad ? "BOOTGUARD TEST FAILED" : "bootguard test passed");
     return bad != 0;
