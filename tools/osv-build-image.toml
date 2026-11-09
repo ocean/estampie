@@ -61,6 +61,11 @@ ignoreUntil = 2027-01-15
 reason = "gcc-14 in the distroless build image: no fix in any Debian release yet (published 2026-10-30); offline, unprivileged compile-only container"
 
 [[IgnoredVulns]]
+id = "DEBIAN-CVE-2026-115456"
+ignoreUntil = 2027-01-15
+reason = "gcc-14 (libstdc++ std::from_chars over-read) in the distroless build image: no fix in any Debian release yet (published 2026-10-30); offline, unprivileged compile-only container"
+
+[[IgnoredVulns]]
 id = "DEBIAN-CVE-2026-18374"
 ignoreUntil = 2027-01-15
 reason = "glibc in the distroless build image: no fix in Debian 13 yet; offline, unprivileged compile-only container"
