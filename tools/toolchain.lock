@@ -33,4 +33,4 @@ fm1-hw-emu     git           main                           056621b0c3187e671232
 # commit), and tools/speak_audit.sh runs its audit. espeak/ is built from espeak-ng ba90c8e9f440 (its README.md).
 fm1-reader     git           main                           2f49d91c142b1304fc5654496b35d40607d8511e                          https://github.com/charlesvestal/fm1-reader.git
 # The container the JieLi tools run in on macOS / non-x86 hosts (tools/build.py): sha256 is the image index digest.
-build-image    linux-amd64   cc-debian13:nonroot            08476c244888bfb425bae1ae4dd7c17f093e972aab8426883d97f3c6f280f7c1  gcr.io/distroless/cc-debian13:nonroot
+build-image    linux-amd64   cc-debian13:nonroot            cc66d222f0a7ec996b78a99fe76a969bc80b539a5016ad866c14d1949bc6d0ab  gcr.io/distroless/cc-debian13:nonroot

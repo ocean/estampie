@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # ESTAMPIE: known vulnerabilities accepted in the build image (tools/toolchain.lock build-image), for
-# tools/osv_scan.sh --config. Each is in a distroless base package (glibc, the gcc-14 runtime libraries, zlib) with no
-# fix in Debian 13 yet (only in unstable); distroless rebuilds when Debian ships one. Exposure: the container has no
+# tools/osv_scan.sh --config. Each is in a distroless base package (glibc, the gcc-14 runtime libraries, zlib,
+# openssl) with no fix in Debian 13 yet; distroless rebuilds when Debian ships one. Exposure: the container has no
 # network, no shell, no capabilities, a read-only root, and runs only JieLi's compiler on this repository's sources.
 # Every entry expires: after ignoreUntil the scan fails again, so each is re-checked (update the digest first).
 
@@ -81,11 +81,6 @@ ignoreUntil = 2027-01-15
 reason = "glibc in the distroless build image: no fix in Debian 13 yet; offline, unprivileged compile-only container"
 
 [[IgnoredVulns]]
-id = "DEBIAN-CVE-2026-27171"
-ignoreUntil = 2027-01-15
-reason = "zlib in the distroless build image: no fix in Debian 13 yet; offline, unprivileged compile-only container"
-
-[[IgnoredVulns]]
 id = "DEBIAN-CVE-2026-5435"
 ignoreUntil = 2027-01-15
 reason = "glibc in the distroless build image: no fix in Debian 13 yet; offline, unprivileged compile-only container"
@@ -106,11 +101,6 @@ ignoreUntil = 2027-01-15
 reason = "glibc in the distroless build image: no fix in Debian 13 yet; offline, unprivileged compile-only container"
 
 [[IgnoredVulns]]
-id = "DEBIAN-CVE-2026-76844"
-ignoreUntil = 2027-01-15
-reason = "zlib in the distroless build image (gz_write after a failed write()): no fix in any Debian release yet; offline, unprivileged compile-only container"
-
-[[IgnoredVulns]]
 id = "DEBIAN-CVE-2026-77117"
 ignoreUntil = 2027-01-15
 reason = "glibc in the distroless build image: no fix in Debian 13 yet; offline, unprivileged compile-only container"
@@ -124,11 +114,6 @@ reason = "glibc in the distroless build image: no fix in Debian 13 yet; offline,
 id = "DEBIAN-CVE-2026-84243"
 ignoreUntil = 2027-01-15
 reason = "glibc in the distroless build image: no fix in any Debian release yet (published 2026-10-30); offline, unprivileged compile-only container"
-
-[[IgnoredVulns]]
-id = "DEBIAN-CVE-2026-85091"
-ignoreUntil = 2027-01-15
-reason = "zlib in the distroless build image: no fix in Debian 13 yet; offline, unprivileged compile-only container"
 
 [[IgnoredVulns]]
 id = "DEBIAN-CVE-2026-8674"
@@ -159,3 +144,28 @@ reason = "glibc in the distroless build image: no fix in Debian 13 yet; offline,
 id = "DEBIAN-CVE-2026-97399"
 ignoreUntil = 2027-01-15
 reason = "glibc in the distroless build image: no fix in Debian 13 yet; offline, unprivileged compile-only container"
+
+[[IgnoredVulns]]
+id = "DEBIAN-CVE-2026-107496"
+ignoreUntil = 2027-01-15
+reason = "openssl (CMS encryption to an EC certificate) in the distroless build image: no fix in any Debian release yet (published 2026-11-10); the compiler uses no TLS, QUIC or CMS; offline, unprivileged compile-only container"
+
+[[IgnoredVulns]]
+id = "DEBIAN-CVE-2026-88822"
+ignoreUntil = 2027-01-15
+reason = "openssl (QUIC peer detection) in the distroless build image: no fix in any Debian release yet (published 2026-11-10); the compiler uses no TLS, QUIC or CMS; offline, unprivileged compile-only container"
+
+[[IgnoredVulns]]
+id = "DEBIAN-CVE-2026-88823"
+ignoreUntil = 2027-01-15
+reason = "openssl (AES-GCM-SIV with zero-length AAD) in the distroless build image: no fix in any Debian release yet (published 2026-11-10); the compiler uses no TLS, QUIC or CMS; offline, unprivileged compile-only container"
+
+[[IgnoredVulns]]
+id = "DEBIAN-CVE-2026-95691"
+ignoreUntil = 2027-01-15
+reason = "openssl (a retransmitted QUIC CRYPTO frame) in the distroless build image: no fix in any Debian release yet (published 2026-11-10); the compiler uses no TLS, QUIC or CMS; offline, unprivileged compile-only container"
+
+[[IgnoredVulns]]
+id = "DEBIAN-CVE-2026-95692"
+ignoreUntil = 2027-01-15
+reason = "openssl (a short AES-GCM-SIV IV) in the distroless build image: no fix in any Debian release yet (published 2026-11-10); the compiler uses no TLS, QUIC or CMS; offline, unprivileged compile-only container"
