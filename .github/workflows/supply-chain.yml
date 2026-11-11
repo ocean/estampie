@@ -1,6 +1,7 @@
 # ESTAMPIE: the supply-chain checks (docs/SECURITY.md) on every push and pull request, and weekly, so a vulnerability
 # published after a dependency was locked still turns up:
-#   osv-scanner (pinned by SHA-256 in tools/toolchain.lock) over uv.lock, the Node line and the pinned build image;
+#   osv-scanner (pinned by SHA-256 in tools/toolchain.lock) over uv.lock, the Node line and the pinned build image,
+#   and osv.dev over the screen reader's eSpeak NG (fm1-reader, pinned there too);
 #   zizmor (pinned in uv.lock) over these workflows: pinning, permissions, injection, impostor commits.
 name: supply chain
 
@@ -32,11 +33,11 @@ jobs:
 
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2   # v10.3.3
 
-      - name: osv-scanner (checked against tools/toolchain.lock)
-        run: tools/setup_toolchain.sh --only osv-scanner
+      - name: osv-scanner and fm1-reader (checked against tools/toolchain.lock)
+        run: tools/setup_toolchain.sh --only osv-scanner,fm1-reader
 
-      - name: Known vulnerabilities (Python, Node, build image)
-        run: tools/osv_scan.sh python node build-image
+      - name: Known vulnerabilities (Python, Node, build image, eSpeak NG)
+        run: tools/osv_scan.sh python node build-image espeak
 
       - name: Workflow audit (zizmor)
         env:

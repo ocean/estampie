@@ -107,6 +107,11 @@ newer image whenever there is one. Once that image fixes an accepted finding and
 it (a rebuild must be byte-identical) and delete the fixed entries. A newer image that fixes none is only reported, as
 are accepted ids the pinned image no longer has.
 
+`tools/osv-espeak-accepted.txt` does the same for eSpeak NG, the voice of the emulator page's screen reader (from
+fm1-reader): four OSS-Fuzz crashes on malformed text, also due for review on 15 January 2027. eSpeak runs there as
+WebAssembly in the browser and only ever speaks the emulator's own screen text; nothing of it is in the firmware. Two
+are fixed in later eSpeak commits, so moving fm1-reader's eSpeak forward is the way to drop them.
+
 An alternative with a faster patch cadence is Docker Hardened Images (`dhi.io`, free with a Docker account). They are
 also minimal, signed, and come with an SBOM and VEX statements. Switching only means changing the `build-image` line;
 `JIELI_DOCKER_IMAGE` lets you try one first.

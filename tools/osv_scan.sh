@@ -9,7 +9,7 @@
 #                accepted finding and is two days old, the scan fails, so the pin moves before the expiry
 #   espeak       the screen reader's voice (fm1-reader's web/espeak/, in the emulator page): eSpeak NG at the commit it
 #                was built from, asked of osv.dev by commit (osv-scanner scans no prebuilt WebAssembly); accepted findings,
-#                one id a line with its reason, in tools/osv-espeak-accepted.txt
+#                one a line with an expiry and a reason, in tools/osv-espeak-accepted.txt
 # Zig has no package dependencies to scan (its wasi-libc is built from the source it ships); its pin is a signed
 # release. Parts whose tools aren't fetched are skipped (CI has only uv.lock). Reports (JSON) in build/osv/. Exits 1 on any finding.
 #   tools/osv_scan.sh [part ...]       (default: every part)
@@ -149,11 +149,17 @@ PY
             curl --proto '=https' -fsS -X POST https://api.osv.dev/v1/query -d "{\"commit\":\"$C\"}" > build/osv/espeak.json &&
             python3 -I - build/osv/espeak.json tools/osv-espeak-accepted.txt "$C" <<'PY' || fail=1
 import json, sys
+import datetime
 found = [v["id"] for v in json.load(open(sys.argv[1])).get("vulns", [])]
-try:
-    ok = {l.split()[0] for l in open(sys.argv[2]) if l.strip() and not l.startswith("#")}
+try:                                                  # id, expiry (YYYY-MM-DD), reason: an expired one counts again
+    rows = [l.split(None, 2) for l in open(sys.argv[2]) if l.strip() and not l.startswith("#")]
 except OSError:
-    ok = set()
+    rows = []
+today = datetime.date.today().isoformat()
+ok = {r[0] for r in rows if len(r) == 3 and r[1] >= today}
+expired = sorted(r[0] for r in rows if len(r) == 3 and r[1] < today and r[0] in found)
+if expired:
+    print(f"osv_scan: espeak: accepted until a date now past: {' '.join(expired)} (re-check them in {sys.argv[2]})")
 new = sorted(set(found) - ok)
 if new:
     print(f"osv_scan: espeak: espeak-ng {sys.argv[3][:12]}: {len(new)} FINDINGS not accepted (build/osv/espeak.json): {' '.join(new)}")
