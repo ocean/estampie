@@ -169,3 +169,13 @@ reason = "openssl (a retransmitted QUIC CRYPTO frame) in the distroless build im
 id = "DEBIAN-CVE-2026-95692"
 ignoreUntil = 2027-01-15
 reason = "openssl (a short AES-GCM-SIV IV) in the distroless build image: no fix in any Debian release yet (published 2026-11-10); the compiler uses no TLS, QUIC or CMS; offline, unprivileged compile-only container"
+
+[[IgnoredVulns]]
+id = "DEBIAN-CVE-2026-100290"
+ignoreUntil = 2027-01-15
+reason = "glibc (regcomp / regexec after a failed allocation) in the distroless build image: no fix in any Debian release yet; offline, unprivileged compile-only container"
+
+[[IgnoredVulns]]
+id = "DEBIAN-CVE-2026-115819"
+ignoreUntil = 2027-01-15
+reason = "glibc (wide scanf %s / %[ without l) in the distroless build image: no fix in any Debian release yet; offline, unprivileged compile-only container"
