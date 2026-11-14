@@ -141,3 +141,5 @@ GHOULBOX's own README is kept at [docs/GHOULBOX-README.md](docs/GHOULBOX-README.
 
 M-VAVE and FM-1 are trademarks of their respective owners. ESTAMPIE, GHOULBOX and Felucca are not affiliated with
 or endorsed by them.
+
+You can also try ESTAMPIE in the browser, no flashing needed, in the free community [FM-1 Emulator](https://fm1-emulator.atst.tools/).
