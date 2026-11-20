@@ -567,6 +567,7 @@ EXPORT const char *web_engine_name(uint32_t e) { return e < NENGINES && eng_ok(e
 EXPORT uint32_t web_engine_count(void) { return NENGINES; }
 /* power-on scene s (engines.c GB_SCENES, 0 = TROTTO) with its sounds and phrases, as at power-on */
 EXPORT void web_scene(uint32_t s) { gb_scene_load(s); }
+EXPORT void web_scene_now(uint32_t s) { scene_load_now(s); }   /* (ESTAMPIE: as MENU > SYSTEM > SCENE loads one, live) */
 /* part k of the TROTTO alone: its sound, phrase and level, as gb_scene_load sets them */
 EXPORT void web_scene_part(uint32_t k)
 {
@@ -583,6 +584,39 @@ EXPORT void web_scene_part(uint32_t k)
     t->p[P_LEVEL] = GB_SCENES[0].lvl[k] ? GB_SCENES[0].lvl[k] : TP[P_LEVEL].def;
     ui.force = 1;
 }
+/* ESTAMPIE: a scene song the lab page puts together (lab.html, the Quinte section by section): the phrases by name,
+ * rows set one by one (ES_SIL, 255: a silent part), then played as PLAY plays a scene's (ui.c es_song_play), round
+ * and round until stopped; web_es_section: the row playing, 1 based, 0 none */
+static es_row_t web_es_rows[64];
+static es_song_t web_es_song = {web_es_rows, 0};
+EXPORT uint32_t web_es_phrases(void) { return ES_NPHRASE; }
+EXPORT const char *web_es_phrase_name(uint32_t n) { return n < ES_NPHRASE ? ES_PHRASES[n].name : 0; }
+EXPORT void web_es_row(uint32_t i, uint32_t p0, uint32_t p1, uint32_t p2, uint32_t p3, uint32_t rep, uint32_t pct)
+{
+    const uint32_t ph[NPART] = {p0, p1, p2, p3};
+    uint32_t k;
+    if (i >= sizeof web_es_rows / sizeof web_es_rows[0])
+        return;
+    for (k = 0; k < NPART; k++)
+        web_es_rows[i].phr[k] = (uint8_t)(ph[k] < ES_NPHRASE ? ph[k] : ES_SIL);
+    web_es_rows[i].rep = (uint8_t)(rep >= 1u && rep <= 16u ? rep : 1u);
+    web_es_rows[i].pct = (uint8_t)(pct >= 50u && pct <= 200u ? pct : 100u);
+}
+EXPORT void web_es_play(uint32_t n)
+{
+    if (n == 0u || n > sizeof web_es_rows / sizeof web_es_rows[0])
+        return;
+    if (song.playing || chain_busy() || seq_counting())
+        seq_stop();                                    /* (the tempo back: chain_stop; nothing renders between) */
+    transport_req = 0;
+    web_es_song.n = (uint8_t)n;
+    es_stream_begin(&web_es_song);
+    RING_PUBLISH();
+    chain.armed = 1;
+    transport_req = 1;
+    ui.force = 1;
+}
+EXPORT uint32_t web_es_section(void) { return chain.stream && chain.running ? es_stream.sec[chain.row & 1u] + 1u : 0u; }
 /* the lab's parameters by number (lab.html PIDS: the same order), so the page never holds P_* values of its own */
 static const uint8_t WEB_PIDS[] = {P_LEVEL, P_ATK, P_DEC, P_SUS, P_REL, P_ED_FLT, P_VOICE, P_PAN, P_MUTE, P_DIST,
                                    P_CHOR, P_DLY, P_REV, P_SLEN, P_SDIV, P_TEMP, P_RING, P_E0, P_M1SRC, P_M1DST,

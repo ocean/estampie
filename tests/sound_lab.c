@@ -49,9 +49,9 @@ static const cand_t CANDS[] = {
      ENGI_PHYS, {3, 56, 92, 80, 76, 127, 36, 28}, {0, 100, 127, 85}, 0, 0, PART_LUTE, PAT_SCENE, {0, 10, 25, 60}, 0, 0},
     /* reeds and winds (the tune) */
     {"crumhorn", "Reeds and winds", "CRUMHORN", "A capped reed, cylindrical bore: TRIO squares in unison, a nasal resonance.",
-     LAB_TRIO, {1, 0, 0, 3, 0, 58, 62, 64}, {3, 70, 120, 20}, 0, 1, PART_TUNE, PAT_SCENE, {6, 0, 0, 45}, 0, 0},
+     LAB_TRIO, {1, 0, 0, 3, 0, 58, 62, 64}, {3, 70, 120, 20}, 0, 1, PART_TUNE, PAT_SCENE, {6, 0, 0, 45}, 1, 0},
     {"rausch", "Reeds and winds", "RAUSCHPFEIFE", "The loud capped shawm: TRIO saws an octave and a twelfth up, wide open.",
-     LAB_TRIO, {0, 12, 19, 5, 0, 104, 22, 64}, {2, 70, 120, 18}, 0, 1, PART_TUNE, PAT_SCENE, {10, 0, 0, 40}, 0, 0},
+     LAB_TRIO, {0, 12, 19, 5, 0, 104, 22, 64}, {2, 70, 120, 18}, 0, 1, PART_TUNE, PAT_SCENE, {10, 0, 0, 40}, 1, 0},
     {"shawm2", "Reeds and winds", "BRIGHT SHAWM", "The SHAWM preset brighter and more biting, for outdoors.",
      LAB_TRIO, {1, 12, 19, 4, 1, 104, 78, 20}, {4, 70, 118, 35}, 0, 1, PART_TUNE, PAT_SCENE, {12, 0, 0, 40}, 0, 0},
     {"trumpet", "Reeds and winds", "HERALD TRUMPET", "A natural trumpet: ANALOG saw, the filter opening on each note.",

@@ -1,9 +1,11 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 /* ESTAMPIE: the power-on scenes (engines.c GB_SCENES) and their phrases (ES_PHRASES).
  *   - every scene's sounds exist (engine, preset), its patterns or phrases exist, its levels and reverb are in range;
- *   - every phrase fits the sequencer (LEN 1..NSTEP), a 6/8 phrase in 8T fills whole bars, its notes are notes, a
- *     tie follows a note, a DRUM phrase hits only the kit's lanes;
+ *   - every phrase fits the sequencer (LEN 1..NSTEP), a phrase in 8T fills whole bars (6/8, or 3/4 in triplets), its
+ *     notes are notes, a tie follows a note, a DRUM phrase hits only the kit's lanes;
  *   - the TROTTO melody is the transcription: parsed here from its ABC (the source's own notation), an octave down;
+ *   - the Quinte's (ESTAMPIE) phrases are its transcription, parsed here, an octave up; its song's sections line up
+ *     (every part's phrase a whole number of times in the section's), drums on the drums, tempi in range;
  *   - es_phrase_load writes those steps, its LEN and DIV, and the ties as the sequencer reads them;
  *   - TROTTO's drums are the DANCE kit, its lanes named for the period pieces;
  *   - TROTTO comes first (a fresh device's scene) and DUNGEON, GHOULBOX's, is still there.
@@ -43,6 +45,36 @@ static uint32_t abc_steps(const char *abc, uint8_t *out, uint32_t max)
     return n;
 }
 
+/* the Quinte's notation (.. as in its comment in engines.c): bars of 3/4 in triplets, 9 steps each: NAME a quarter
+ * (3 steps), (X Y) a triplet eighth and quarter (1 + 2), NAMEh a half (6), NAMEh. a dotted half (9), z a quarter's
+ * rest; NAME is a letter and an octave (C4 = 60). Into steps an octave up, as the phrases play it */
+static uint32_t quinte_steps(const char *q, uint8_t *out, uint32_t max)
+{
+    static const int8_t SEMI[7] = {9, 11, 0, 2, 4, 5, 7};
+    uint32_t n = 0, len, k;
+    int open = 0;                                             /* after a '(': the triplet's eighth */
+    while (*q) {
+        int midi;
+        if (*q == 'z') {
+            for (k = 0; k < 3u && n < max; k++) out[n++] = 0;
+            q++;
+            continue;
+        }
+        if (*q < 'A' || *q > 'G') {
+            open = *q == '(' ? 1 : *q == ' ' ? open : 0;     /* bars, spaces, the brackets */
+            q++;
+            continue;
+        }
+        midi = 12 * (q[1] - '0' + 1) + SEMI[*q - 'A'] + 12;
+        len = open ? 1u : q[2] == 'h' ? (q[3] == '.' ? 9u : 6u) : q[2] == ')' ? 2u : 3u;
+        open = 0;
+        q += 2;
+        for (k = 0; k < len && n < max; k++)
+            out[n++] = k ? (uint8_t)ES_T : (uint8_t)midi;
+    }
+    return n;
+}
+
 int main(void)
 {
     /* Trotto, BL Add. MS 29987: the first punctum, chiuso, from its first bar, the pickup last; "B2G" is the source's
@@ -75,7 +107,7 @@ int main(void)
 
     for (k = 0; k < ES_NPHRASE; k++) {
         const es_phrase_t *ph = &ES_PHRASES[k];
-        ok = ph->len >= 1 && ph->len <= NSTEP && ph->div < 10u && (ph->div != 4u || ph->len % 6u == 0);
+        ok = ph->len >= 1 && ph->len <= NSTEP && ph->div < 10u && (ph->div != 4u || ph->len % 6u == 0 || ph->len % 9u == 0);
         ok &= (ph->acc >> ph->len) == 0;                       /* no accent past the end */
         for (i = 0; i < ph->len; i++) {
             uint32_t v = ph->step[i];
@@ -86,9 +118,54 @@ int main(void)
         }
         for (i = ph->len; i < NSTEP; i++)
             ok &= ph->step[i] == 0;
-        snprintf(what, sizeof what, "phrase %s: %u steps (%s), notes in range, ties after notes, whole 6/8 bars in 8T",
+        snprintf(what, sizeof what, "phrase %s: %u steps (%s), notes in range, ties after notes, whole bars in 8T",
                  ph->name, ph->len, N_DIV[ph->div]);
         check(what, ok);
+    }
+
+    {   /* La Quinte Estampie Real, from Aubry's edition (1907) p. 21, puncta I and II checked against Hornby's ABC */
+        static const struct { uint32_t phr; const char *q; } QUINTE[] = {
+            {ES_QI, "C4 C4 B3 | C4 (D4 C4) D4 | E4 D4 C4 | (B3 A3) G3h"},
+            {ES_QIIA, "E4h A3 | E4h D4 | (F4 E4)(D4 E4)(C4 D4) | C4h z"},
+            {ES_QIIB, "G4h F4 | E4h D4 | (C4 B3) C4 D4 | E4h z"},
+            {ES_QIIIA, "D4 B3 C4 | D4h (C4 B3) | (C4 B3) C4 D4 | E4h z"},
+            {ES_QIIIB, "E4h A4 | D4h E4 | D4h. | C4h z"},
+            {ES_QIV, "G3h A3 | C4h D4 | E4h z | (G4 F4) G4 C4 | (G4 F4)(G4 A4)(G4 F4) | E4h z"},
+            {ES_QOUV, "C4 C4 B3 | A3 (B3 A3)(B3 C4) | D4 C4h | C4h."},
+            {ES_QCLOS, "C4 C4 B3 | A3 (B3 A3)(B3 A3) | G3 A3h | A3h."},
+        };
+        ok = 1;
+        for (k = 0; k < sizeof QUINTE / sizeof QUINTE[0]; k++) {
+            const es_phrase_t *ph = &ES_PHRASES[QUINTE[k].phr];
+            n = quinte_steps(QUINTE[k].q, want, NSTEP);
+            ok &= n == ph->len && n % 9u == 0 && ph->div == 4u && !ph->drum;
+            for (i = 0; i < n; i++)
+                ok &= ph->step[i] == want[i];
+            for (i = 0; i < n; i += 9u)
+                ok &= (ph->acc >> i) & 1u;                    /* (each bar's first step accented) */
+        }
+        check("the Quinte's phrases are its transcription (parsed here), an octave up, whole 3/4 bars in triplets", ok);
+    }
+    {   /* the ESTAMPIE scene's song: every section's phrases line up with its clock part's, drums on the drums */
+        const es_song_t *sg = GB_SCENES[6].song;
+        ok = sg && sg->n >= 2u && !strcmp(GB_SCENES[6].name, "ESTAMPIE");
+        for (k = 0; sg && k < sg->n; k++) {
+            const es_row_t *r = &sg->row[k];
+            uint32_t clk = NPART;
+            for (i = 0; i < NPART; i++)
+                if (r->phr[i] != ES_SIL) {
+                    ok &= r->phr[i] < ES_NPHRASE && (!ES_PHRASES[r->phr[i]].drum || GB_SCENES[6].part[i][0] == ENGI_DRUM);
+                    if (clk == NPART) clk = i;
+                }
+            ok &= clk < NPART && r->rep >= 1u && r->rep <= 16u && r->pct >= 50u && r->pct <= 200u;
+            for (i = 0; ok && i < NPART; i++)
+                if (r->phr[i] != ES_SIL)
+                    ok &= ES_PHRASES[r->phr[clk]].len % ES_PHRASES[r->phr[i]].len == 0 &&
+                          ES_PHRASES[r->phr[i]].div == ES_PHRASES[r->phr[clk]].div;
+        }
+        for (i = 0; i < NPART; i++)                          /* (the scene's own parts: the first section's) */
+            ok &= GB_SCENES[6].part[i][2] == ES_PHR(sg->row[0].phr[i]);
+        check("ESTAMPIE's song: each section's parts a whole number of times in its clock part's, drums on DRUM, tempi 50..200 %", ok);
     }
 
     n = abc_steps(TROTTO_ABC, want, NSTEP);

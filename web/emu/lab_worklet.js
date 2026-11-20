@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // ESTAMPIE sound lab: felucca.wasm (the whole firmware, web/emu/felucca_web.c) in an AudioWorklet, driven by the lab
 // page (lab.html) instead of the panel. The page sends batches of operations (an engine, a parameter, a step, the
-// transport, a part of the TROTTO); each batch is applied between two render quanta and answered with the track's
-// controls as the firmware describes them (label, range, value, the value as the screen shows it).
+// transport, a part of the TROTTO, a scene song's rows); each batch is applied between two render quanta and answered
+// with the track's controls as the firmware describes them (label, range, value, the value as the screen shows it).
 
 const PID_NAMES = ["LEVEL", "ATK", "DEC", "SUS", "REL", "ED_FLT", "VOICE", "PAN", "MUTE", "DIST", "CHOR", "DLY", "REV",
                    "SLEN", "SDIV", "TEMP", "RING", "E0", "M1SRC", "M1DST", "M1AMT", "M2SRC", "M2DST", "M2AMT",
@@ -51,9 +51,12 @@ class Lab extends AudioWorkletProcessor {
     else if (name === "step") ex.web_track_step(a[0], a[1], a[2], a[3] || 0);
     else if (name === "part") ex.web_scene_part(a[0]);
     else if (name === "scene") ex.web_scene(a[0]);
+    else if (name === "sceneNow") ex.web_scene_now(a[0]);         // a scene while it plays (project.c scene_load_now)
     else if (name === "transport") ex.web_transport(a[0]);
     else if (name === "vel") ex.web_track_vel(a[0], a[1]);          // every note step of the part at velocity a[1]
     else if (name === "touch") ex.web_track_touch(a[0], a[1], a[2]);   // aftertouch, mod wheel
+    else if (name === "esrow") ex.web_es_row(...a);                  // a scene song's row: index, 4 phrases, repeats, tempo %
+    else if (name === "esplay") ex.web_es_play(a[0]);                // .. and its first a[0] rows played, round and round
   }
 
   async onMessage(m) {
@@ -73,7 +76,9 @@ class Lab extends AudioWorkletProcessor {
           const n = this.str(ex.web_engine_name(e));
           if (n) engines.push({ e, name: n });
         }
-        this.port.postMessage({ type: "ready", engines, states: [0, 1, 2, 3].map((k) => this.state(k)) });
+        const phrases = Array.from({ length: ex.web_es_phrases() }, (_, n) => this.str(ex.web_es_phrase_name(n)));
+        this.sec = 0;
+        this.port.postMessage({ type: "ready", engines, phrases, states: [0, 1, 2, 3].map((k) => this.state(k)) });
       } catch (err) {
         this.port.postMessage({ type: "error", message: String((err && err.message) || err) });
       }
@@ -96,6 +101,11 @@ class Lab extends AudioWorkletProcessor {
     const l = new Float32Array(ex.memory.buffer, ex.web_out_l(), n), r = new Float32Array(ex.memory.buffer, ex.web_out_r(), n);
     out[0].set(l);
     (out[1] || out[0]).set(out[1] ? r : l);
+    const sec = ex.web_es_section();                   // a scene song's row, as it changes (0: none playing)
+    if (sec !== this.sec) {
+      this.sec = sec;
+      this.port.postMessage({ type: "section", sec });
+    }
     return true;
   }
 }

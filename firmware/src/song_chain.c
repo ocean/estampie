@@ -30,8 +30,27 @@ static struct {
     uint8_t lane[NTRK];                      /* the slot each track plays in this section, CHAIN_SILENT none */
     uint8_t clk;                             /* the track whose loop counts the section (chain_clock) */
     uint8_t rec;
+    uint8_t stream;                          /* ESTAMPIE: a scene's song (es_stream), not the user's */
+    uint8_t tick_row;                        /* ESTAMPIE: the row chain_apply applied last (0 or 1 with a stream) */
     uint32_t carry;
 } chain;
+/* ESTAMPIE: a scene's song (engines.c es_song_t), streamed from ROM through two of the slots: the section playing in
+ * one (chain.row 0 or 1), the next one put in the other by the main loop (es_stream_poll) while it plays, so a song of
+ * any length and phrases of any of ES_PHRASES fit, and no project slot is read. The ISR goes on only once that one
+ * is ready (else the section plays again), and sets each section's tempo: a percentage of the BPM at PLAY (base); STOP
+ * puts the base back, so the scene stays as it was (the autosave, ui.c es_song_ok). Turning the tempo while it plays
+ * moves the base, so the rest of the song keeps to it (es_stream_poll) */
+static struct {
+    const es_song_t *song;
+    uint16_t next;                           /* the section the free slot gets next */
+    uint16_t sec[2];                         /* each slot's section (the header shows the playing one's) */
+    volatile uint8_t want;                   /* the ISR moved on: the slot it left is free (main loop) */
+    volatile uint8_t ready;                  /* the free slot holds the next section */
+    uint8_t pct[2];                          /* each slot's section's tempo, % of base */
+    volatile int16_t base;                   /* the BPM at 100 % (at PLAY; moved by a tempo turned) */
+    volatile int16_t set;                    /* the BPM the ISR set last (another one: turned by hand) */
+} es_stream;
+static int chain_song(void) { return chain.running && !chain.stream; }   /* the user's song plays (the SONG page) */
 /* a silent lane: its steps (empty: nothing plays) and its timing (a 4/4 bar of 1/16: the section's length when every
  * track is silent) */
 static const step_t chain_silent[NSTEP] = {{{0}}};
@@ -111,7 +130,17 @@ static void motion_restore(track_t *t);
 static __attribute__((noinline)) void chain_apply(void)
 {
     uint32_t i;
-    const chain_row_t *r = &chain.config.row[chain.row];
+    const chain_row_t *r;
+    if (chain.stream && chain.tick_row != chain.row) {   /* ESTAMPIE: a scene's song (es_stream) moved on (chain_tick */
+        chain.row = es_stream.ready ? chain.row & 1u : chain.tick_row;   /* counts on, as for a song): the other slot */
+        chain.remaining = chain.config.row[chain.row].repeat;           /* once filled, else this section again */
+        if (es_stream.ready) {
+            es_stream.ready = 0;
+            es_stream.want = 1;
+        }
+    }
+    chain.tick_row = chain.row;
+    r = &chain.config.row[chain.row];
     chain.clk = (uint8_t)chain_clock(r);
     for (i = 0; i < NTRK; i++) {
         track_t *t = &trk[i];
@@ -131,6 +160,11 @@ static __attribute__((noinline)) void chain_apply(void)
         t->seq_idx = (uint16_t)(t->p[P_SLEN] - 1);
         t->seq_pos = 0x7FFFFFFFu;
         t->rh_n = t->rskip_n = 0;
+    }
+    if (chain.stream) {                      /* (a constant divisor: a multiply) */
+        int32_t bpm = es_stream.base * (int32_t)es_stream.pct[chain.row & 1u] / 100;
+        song.g[G_BPM] = (int16_t)clamp(bpm, GP[G_BPM].min, GP[G_BPM].max);
+        es_stream.set = song.g[G_BPM];
     }
 }
 static void chain_start(void)
@@ -162,6 +196,9 @@ static void chain_stop(void)
         trk[i].p[P_SQNT] = chain.qnt[i];
     }
     song.rec = chain.rec;
+    if (chain.stream)
+        song.g[G_BPM] = es_stream.base;      /* (the scene's tempo again) */
+    chain.stream = 0;
     chain.running = 0;
 }
 static void chain_tick(uint32_t n)
@@ -185,4 +222,68 @@ static void chain_tick(uint32_t n)
     chain.row++;
     chain.remaining = chain.config.row[chain.row].repeat;
     chain_apply();
+}
+
+/* ESTAMPIE: the scene song's section sec into slot (0 or 1): each part's phrase (with its LEN and DIV; SWING, GATE
+ * and QUANTIZE the track's own, as the sound is), silent where it has none, no automation; the section's repeats and
+ * tempo. Main loop only, and never the slot playing */
+static void es_slot_fill(uint32_t slot, uint32_t sec)
+{
+    const es_row_t *r = &es_stream.song->row[sec % es_stream.song->n];
+    chain_pattern_t *src = &chain.source[slot];
+    chain_row_t *row = &chain.config.row[slot];
+    uint32_t k;
+    src->motion.count = 0;
+    for (k = 0; k < NTRK; k++) {
+        if (k >= NPART || r->phr[k] == ES_SIL) {
+            row->slot[k] = CHAIN_SILENT;
+            continue;
+        }
+        const es_phrase_t *ph = es_phrase_steps(src->step[k], r->phr[k]);
+        src->timing[k][0] = ph->len;
+        src->timing[k][1] = ph->div;
+        src->timing[k][2] = trk[k].p[P_SSWING];
+        src->timing[k][3] = trk[k].p[P_SGATE];
+        src->qnt[k] = trk[k].p[P_SQNT] != 0;
+        row->slot[k] = (uint8_t)slot;
+    }
+    row->repeat = r->rep ? r->rep : 1u;
+    es_stream.pct[slot] = r->pct ? r->pct : 100u;
+    es_stream.sec[slot] = (uint16_t)(sec % es_stream.song->n);
+}
+/* ESTAMPIE: the scene song set up in slots 0 and 1 from its start, at the tempo now (ui.c es_song_play arms it) */
+static void es_stream_begin(const es_song_t *s)
+{
+    es_stream.song = s;
+    es_stream.base = es_stream.set = song.g[G_BPM];
+    chain_defaults(&chain.config);
+    es_slot_fill(0, 0);
+    es_slot_fill(1, 1);
+    es_stream.next = (uint16_t)(2u % s->n);
+    es_stream.want = 0;
+    es_stream.ready = 1;
+    chain.config.count = CHAIN_ROWS;         /* (chain_tick counts on; chain_apply brings it back to 0 or 1) */
+    chain.tick_row = 0;                      /* (chain_start: row 0) */
+    chain.stream = 1;
+}
+/* ESTAMPIE: the main loop's part (ui_input): a tempo turned since the ISR set one moves the base (read between two
+ * reads of the ISR's, so not across a section's start); the next section into the slot the ISR left */
+static void es_stream_poll(void)
+{
+    int16_t set, bpm;
+    if (!chain.stream || !chain.running)
+        return;
+    set = es_stream.set;
+    bpm = song.g[G_BPM];
+    if (bpm != set && set == es_stream.set) {
+        es_stream.base = (int16_t)(bpm * 100 / es_stream.pct[chain.row & 1u]);
+        es_stream.set = bpm;
+    }
+    if (!es_stream.want)
+        return;
+    es_stream.want = 0;
+    es_slot_fill((chain.row & 1u) ^ 1u, es_stream.next);
+    es_stream.next = (uint16_t)((es_stream.next + 1u) % es_stream.song->n);
+    RING_PUBLISH();
+    es_stream.ready = 1;
 }

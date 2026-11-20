@@ -4,10 +4,28 @@
  *   cc -O2 -w -Ibuild/gen -Ifirmware/src -o build/host/estampie_demo tests/estampie_demo.c -lm
  *   build/host/estampie_demo OUTDIR [SCENE] [SECONDS]   -> OUTDIR/scene_NAME.wav (default TROTTO, 24 s and the tail)
  *   SOLO=n (1..4): only part n's steps play               -> OUTDIR/scene_NAME_n.wav
+ * A scene with a song (ESTAMPIE) plays it all, as PLAY does on the FM-1 (song_chain.c es_stream), each section's start
+ * printed; SECONDS defaults to the whole song once through.
  * Not a test: an ear check while the scenes and sounds are made. */
 #define main hostsim_main
 #include "hostsim.c"
 #undef main
+
+/* a scene's song once through, in seconds: each section's clock part (its first not silent) at the section's tempo */
+static double song_seconds(uint32_t s)
+{
+    const es_song_t *sg = GB_SCENES[s].song;
+    double sec = 0;
+    uint32_t r, k;
+    for (r = 0; sg && r < sg->n; r++) {
+        const es_row_t *w = &sg->row[r];
+        for (k = 0; k < NPART && w->phr[k] == ES_SIL; k++)
+            ;
+        if (k < NPART)
+            sec += w->rep * ES_PHRASES[w->phr[k]].len * 60.0 / (GB_SCENES[s].bpm * w->pct / 100 * 3.0);
+    }
+    return sec;
+}
 
 static void scene(const char *dir, uint32_t s, uint32_t seconds, uint32_t solo)
 {
@@ -42,11 +60,13 @@ static void scene(const char *dir, uint32_t s, uint32_t seconds, uint32_t solo)
         if (GB_SCENES[s].lvl[i])
             trk[i].p[P_LEVEL] = GB_SCENES[s].lvl[i];
     }
-    if (solo)                                          /* SOLO=n: the other parts' steps emptied (their sounds stay) */
-        for (i = 0; i < NPART; i++)
-            if (i + 1u != solo)
+    if (solo)                                          /* SOLO=n: the other parts' steps emptied (their sounds stay; */
+        for (i = 0; i < NPART; i++)                    /* a song plays its own: their levels down too) */
+            if (i + 1u != solo) {
                 for (t = 0; t < NSTEP; t++)
                     memset(&trk[i].step[t], 0, sizeof trk[i].step[t]);
+                trk[i].p[P_LEVEL] = 0;
+            }
     if (solo)
         snprintf(path, sizeof path, "%s/scene_%s_%u.wav", dir, GB_SCENES[s].name, solo);
     else
@@ -56,11 +76,19 @@ static void scene(const char *dir, uint32_t s, uint32_t seconds, uint32_t solo)
         return;
     }
     wav_hdr(f, frames);
+    if (GB_SCENES[s].song) {                           /* as ui.c es_song_play */
+        es_stream_begin(GB_SCENES[s].song);
+        chain.armed = 1;
+    }
     transport_req = 1;
     for (t = 0; t < frames; t += CTL) {
+        uint32_t row = chain.row;
         if (t == seconds * FS)
             transport_req = 2;                         /* stop, then the tail */
         mix_block(o, CTL);
+        if (chain.stream && (chain.row != row || !t))
+            printf("  %6.2f s  section %2u  %3d BPM\n", (double)t / FS, es_stream.sec[chain.row & 1u] + 1u, song.g[G_BPM]);
+        es_stream_poll();                              /* (the main loop's part) */
         for (i = 0; i < CTL; i++)
             wav_put(f, o[2 * i], o[2 * i + 1]);
     }
@@ -84,6 +112,7 @@ int main(int argc, char **argv)
         }
         s = k;
     }
-    scene(argv[1], s, argc > 3 ? (uint32_t)atoi(argv[3]) : 24u, getenv("SOLO") ? (uint32_t)atoi(getenv("SOLO")) : 0u);
+    scene(argv[1], s, argc > 3 ? (uint32_t)atoi(argv[3]) : GB_SCENES[s].song ? (uint32_t)(song_seconds(s) + 0.5) : 24u,
+          getenv("SOLO") ? (uint32_t)atoi(getenv("SOLO")) : 0u);
     return 0;
 }

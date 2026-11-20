@@ -239,6 +239,10 @@ static const preset_t PHYS_PRESETS[] = {
     {"DUNGEON HARP", {3, 4, 50, 80, 70, 127, 0, 0}, {0, 100, 127, 90}, 0, 0, FX(0, 20, 20, 95), PAT(3)},
     {"GURDY DRONE", {3, 1, 70, 95, 80, 127, 110, 0}, {30, 100, 127, 90}, 0, 0, FX(5, 10, 0, 90), PAT(5)},
     /* GHOULBOX end */
+    /* ESTAMPIE presets (tools/estampie_presets.py) */
+    {"PSALTERY", {3, 4, 100, 96, 70, 120, 0, 20}, {0, 100, 127, 95}, 0, 0, FX(0, 20, 15, 75), PAT(3)},
+    {"BRAY HARP", {3, 20, 82, 86, 50, 120, 72, 10}, {0, 100, 127, 90}, 0, 0, FX(0, 15, 15, 75), PAT(3)},
+    /* ESTAMPIE end */
 };
 
 static const engine_t ENG_PHYS = {

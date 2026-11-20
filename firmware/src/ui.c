@@ -21,6 +21,7 @@ static int project_save(uint32_t slot);
 static void panel_setup(void);
 static void calibration_choose(void);       /* ESTAMPIE: PANEL or KEY TOUCH (ui_input.c) */
 static void project_load(uint32_t slot);
+static void scene_load_now(uint32_t s);   /* (ESTAMPIE: project.c, MENU > SYSTEM > SCENE's LOAD) */
 static int project_used(uint32_t slot);
 static uint32_t chain_prepare(void);
 static int up_used(uint32_t k);              /* user presets: upreset.c */
@@ -250,7 +251,8 @@ static struct {
 } ui;
 
 enum { CF_NONE, CF_CLEAR_SEQ, CF_CLEAR_TRK, CF_OVR_PROJ, CF_OVR_USER, CF_LOAD_PAT,
-       CF_DEL_ROW, CF_CLEAR_SONG, CF_INIT_SOUND, CF_CLEAR_MOTION, CF_ERASE_USER, CF_ERASE_PROJ, CF_CLEAN_SOUND };
+       CF_DEL_ROW, CF_CLEAR_SONG, CF_INIT_SOUND, CF_CLEAR_MOTION, CF_ERASE_USER, CF_ERASE_PROJ, CF_CLEAN_SOUND,
+       CF_LOAD_SCENE };                     /* (ESTAMPIE: MENU > SYSTEM > SCENE, LOAD) */
                                   /* ui.confirm: TOOLS' clears; SAVE over a used slot; a pattern over the user's steps;
                                    * USER ERASE; PROJECT ERASE (1.5.5, #199); CLEAN INIT (1.5.5, #190) */
 
@@ -505,6 +507,31 @@ static int transport_busy(void)
     busy = song.playing || chain_busy() || transport_req == 1u || seq_counting();   /* (a count-in: as playing) */
     fm1_irq_on();
     return busy;
+}
+/* ESTAMPIE: the scene loaded at power-on (gb_scene_load) and its steps then: while every track still has those (no
+ * edit, pattern or project since), not recording, PLAY plays the scene's song if it has one (es_song_play) */
+static uint8_t es_scene = 0xFFu;
+static uint32_t es_scene_sig[NTRK];
+static uint32_t steps_sig(const track_t *t);
+static int es_song_ok(void)
+{
+    uint32_t i;
+    if (es_scene >= GB_NSCENE || !GB_SCENES[es_scene].song || song.rec)
+        return 0;
+    for (i = 0; i < NTRK; i++)
+        if (steps_sig(&trk[i]) != es_scene_sig[i])
+            return 0;
+    return 1;
+}
+static void es_song_play(void)
+{
+    if (transport_busy())
+        return;
+    es_stream_begin(GB_SCENES[es_scene].song);
+    RING_PUBLISH();
+    chain.armed = 1;
+    transport_req = 1;
+    ui.force = 1;
 }
 static void chain_play_ui(void)
 {
@@ -1555,14 +1582,17 @@ static void track_defaults(track_t *t)
 }
 
 /* GHOULBOX: power-on scene s (engines.c GB_SCENES; one out of range, from a later version, plays the first): the globals'
- * defaults, each part's sound and pattern at 1/8, the scene's tempo, HALL and TAPE (main.c felucca_init) */
-static void gb_scene_load(uint32_t s)
+ * defaults, each part's sound and pattern at 1/8, the scene's tempo, HALL and TAPE (main.c felucca_init). ESTAMPIE:
+ * live, while the FM-1 runs (project.c scene_load_now, the transport stopped): the SLOT LOAD SAVE pickers kept, and
+ * each engine left to switch after its fade (voice.c engine_block), as a project load's */
+static void gb_scene_set(uint32_t s, int live)
 {
     uint32_t i;
     if (s >= GB_NSCENE)
         s = 0;                                /* (ESTAMPIE: TROTTO) */
     for (i = 0; i < G_COUNT; i++)
-        song.g[i] = GP[i].def;
+        if (!live || (i != G_SLOT && i != G_LOAD && i != G_SAVE))
+            song.g[i] = GP[i].def;
     undo_depth++;                             /* (no undo copy of the power-on loads) */
     for (i = 0; i < NTRK; i++) {
         track_t *t = &trk[i];
@@ -1570,8 +1600,10 @@ static void gb_scene_load(uint32_t s)
         track_defaults(t);
         set_engine_of(t, p[0]);
         apply_preset_to(t, p[1]);             /* with its sends */
-        t->engine = t->eng_req;
-        eng_mem_claim(t);                     /* (Felucca 1.5's engine memory; zeros already: no note can come before) */
+        if (!live) {
+            t->engine = t->eng_req;
+            eng_mem_claim(t);                 /* (Felucca 1.5's engine memory; zeros already: no note can come before) */
+        }
         track_defaults_steps(t);              /* (a sound load never touches them) */
         t->p[P_SDIV] = 1;                     /* 1/8, a slow scene */
         if (p[2] >= ES_PHR(0))
@@ -1582,8 +1614,12 @@ static void gb_scene_load(uint32_t s)
         pat_last[i] = p[2] < ES_PHR(0) ? p[2] : 0u;   /* (a phrase is in no PATTERNS list) */
         if (GB_SCENES[s].lvl[i % NPART])
             t->p[P_LEVEL] = GB_SCENES[s].lvl[i % NPART];
+        t->p[P_TEMP] = GB_SCENES[s].temp;     /* ESTAMPIE: the scene's temperament (a preset keeps the track's) */
     }
     undo_depth--;
+    es_scene = (uint8_t)s;                    /* ESTAMPIE: its song plays while these steps stay (es_song_ok) */
+    for (i = 0; i < NTRK; i++)
+        es_scene_sig[i] = steps_sig(&trk[i]);
     song.sel = 0;
     song.g[G_BPM] = GB_SCENES[s].bpm;
     song.g[G_RTYPE] = GB_SCENES[s].rtype;     /* HALL (ESTAMPIE: the scene's; TROTTO a ROOM) */
@@ -1591,6 +1627,7 @@ static void gb_scene_load(uint32_t s)
     ui.home = 1;
     ui.force = 1;
 }
+static void gb_scene_load(uint32_t s) { gb_scene_set(s, 0); }
 
 /* switch engine (its defaults + first preset) and say so */
 static void select_engine(uint32_t e)

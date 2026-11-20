@@ -67,6 +67,16 @@ pre { margin: 0; font: 13px/1.45 ui-monospace, Menlo, monospace; background: var
         max-width: 72ch; }
 a { color: var(--vermilion); }
 .off { outline: 1px dashed var(--rule); outline-offset: 6px; }   /* not started: inert, in full-strength ink */
+.quinte { margin-top: 34px; border-top: 3px double var(--vermilion); padding-top: 16px; }
+.quinte h2 { font: 28px/1.1 var(--display); color: var(--vermilion); margin: 0 0 6px; }
+.quinte .row label { display: inline-flex; align-items: center; gap: 6px; }
+.secs { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin: 12px 0; }
+.sec { background: var(--leaf); box-shadow: 0 0 0 1px var(--rule); padding: 10px 12px; display: grid; gap: 6px; align-content: start; }
+.sec.now { box-shadow: 0 0 0 2px var(--vermilion); }
+.sec h3 { font: 19px/1.15 var(--sc); color: var(--lapis); margin: 0; }
+.sec p { margin: 0; font-size: 15px; color: var(--soft); }
+.sec .row { margin: 0; }
+.now-line { font-style: italic; color: var(--vermilion); min-height: 1.5em; margin: 6px 0; }
 @media (max-width: 760px) { .layout { grid-template-columns: minmax(0, 1fr); } h1 { font-size: 32px; } }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
 </style>
@@ -126,6 +136,29 @@ a { color: var(--vermilion); }
   </section>
 </div>
 
+<section class="quinte off" id="quinte" inert aria-labelledby="q-h">
+  <h2 id="q-h">The Quinte, section by section</h2>
+  <p class="idea">La Quinte Estampie Real, as the ESTAMPIE scene plays it: the rauschpfeife on the tune, the lute, the gurdy's drones and the tabor. Play each section, tick the ones to keep, then hear them as a song. Playing here loads the ESTAMPIE scene's sounds into the four parts; the TROTTO's Play puts the TROTTO back as it starts.</p>
+  <div class="row">
+    <span>Tempo</span>
+    <label><input type="radio" name="q-tempo" value="100" checked> 116 BPM, slow</label>
+    <label><input type="radio" name="q-tempo" value="128"> 148 BPM, the dance floor</label>
+  </div>
+  <div class="row">
+    <label><input type="checkbox" id="q-ends" checked> With its endings (the punctum, the ouvert, the punctum again, the clos)</label>
+    <label><input type="checkbox" id="q-band" checked> The band under it</label>
+  </div>
+  <div class="secs" id="q-secs"></div>
+  <div class="row">
+    <button type="button" id="q-short">The short song (the scene now)</button>
+    <button type="button" id="q-long">The long song (all four puncta)</button>
+    <button type="button" id="q-pick">The ones ticked</button>
+    <button type="button" id="q-stop">Stop</button>
+  </div>
+  <p class="now-line" id="q-now" aria-live="polite"></p>
+  <p class="idea" id="q-sum"></p>
+</section>
+
 <p class="foot">The sound is the firmware itself (its engines, sequencer, reverb and tape) compiled for the browser, so what you hear is what the FM-1 plays. Copy a sound you like as a preset and send it over: that line goes straight into the firmware. Nothing here changes your FM-1.</p>
 </main>
 
@@ -141,6 +174,98 @@ const touch = [0, 1, 2, 3].map(() => ({ ...TOUCH0 }));
 let swellT = null;
 
 function post(ops, want = sel) { node.port.postMessage({ type: "ops", ops, want }); }
+
+// ---- the Quinte, section by section: rows of a scene song (felucca_web.c web_es_row), played round and round ----
+const SIL = 255, BPM0 = 116;                             // (the ESTAMPIE scene's tempo; a row's tempo is a percentage)
+const SECTIONS = [
+  { id: "I", name: "Punctum I", bars: 4, tune: ["QUINTE I"], idea: "The opening: up to E and back down to G." },
+  { id: "II", name: "Punctum II", bars: 8, tune: ["QUINTE II A", "QUINTE II B"], idea: "Long notes, then G high, a falling run." },
+  { id: "III", name: "Punctum III", bars: 8, tune: ["QUINTE III A", "QUINTE III B"], idea: "D and B turning, the leap to high A." },
+  { id: "IV", name: "Punctum IV", bars: 6, tune: ["QUINTE IV"], idea: "From low G up, then G F G A dancing." },
+  { id: "SOLO", name: "The tabor alone", bars: 4, tune: [], idea: "The drums by themselves, between the halves." },
+];
+const keep = new Set(["I", "II", "SOLO"]);              // (as the scene now: the short song)
+let phr = {}, quinteOn = false, qLabels = [], qWhat = "";
+const q = (name) => phr[name];
+function qRow(tune, pct, band, fast, label) {
+  return { r: [q(tune), band ? q("QUINTE LUTE") : SIL, band ? q("QUINTE DRONE") : SIL,
+               band ? q(fast ? "QUINTE TABOR 2" : "QUINTE TABOR") : SIL, 1, pct], label, len: 0, pct, tune };
+}
+function qSection(sec, pct, opts) {                     // its rows, each knowing its section (id)
+  return qRows(sec, pct, opts).map((x) => ({ ...x, id: sec.id }));
+}
+function qRows(sec, pct, opts) {
+  const fast = pct >= 120;
+  if (sec.id === "SOLO") return [{ r: [SIL, SIL, SIL, q("TABOR SOLO"), 1, 114], label: sec.name, pct: 114, tune: "TABOR SOLO" }];
+  const tune = sec.tune.map((t, i) => qRow(t, pct, opts.band, fast, sec.tune.length > 1 ? `${sec.name}, ${"AB"[i]}` : sec.name));
+  if (!opts.ends) return tune;
+  return [...tune, qRow("QUINTE OUVERT", pct, opts.band, fast, `${sec.name}, the ouvert`),
+          ...tune.map((x) => ({ ...x, label: `${x.label} again` })),
+          qRow("QUINTE CLOS", pct, opts.band, fast, `${sec.name}, the clos`)];
+}
+// a song: the puncta slow (a little faster each, as the scene's first half), the tabor alone, the same fast
+function qSong(ids) {
+  const opts = { ends: true, band: true }, puncta = SECTIONS.filter((x) => ids.includes(x.id) && x.id !== "SOLO");
+  const slow = puncta.flatMap((x, i) => qSection(x, [100, 103, 105, 108][i] || 108, opts));
+  const solo = ids.includes("SOLO") ? qSection(SECTIONS[4], 114, opts) : [];
+  return [...slow, ...solo, ...puncta.flatMap((x) => qSection(x, 128, opts)).map((x) => ({ ...x, label: `${x.label}, fast` }))];
+}
+function qSeconds(rows) {                                // each row: its tune's steps (8T: three a beat) at its tempo
+  return rows.reduce((t, x) => t + (lens[x.tune] / 3) * 60 / (BPM0 * x.pct / 100), 0);
+}
+const lens = { "QUINTE I": 36, "QUINTE II A": 36, "QUINTE II B": 36, "QUINTE III A": 36, "QUINTE III B": 36,
+               "QUINTE IV": 54, "QUINTE OUVERT": 36, "QUINTE CLOS": 36, "TABOR SOLO": 36 };   // (engines.c ES_PHRASES)
+function mmss(s) { const m = Math.floor(s / 60), r = Math.round(s % 60); return `${m}:${String(r).padStart(2, "0")}`; }
+function qPlay(rows, what) {
+  if (!rows.length) { $("q-now").textContent = "Tick a punctum first."; return; }
+  const ops = [];
+  if (!quinteOn) ops.push(["sceneNow", 6]);              // (the scene's sounds and tempo, while anything plays)
+  rows.forEach((x, i) => ops.push(["esrow", i, ...x.r]));
+  ops.push(["esplay", rows.length]);
+  qLabels = rows.map((x) => ({ label: x.label, id: x.id }));
+  post(ops);
+  if (!quinteOn) [0, 1, 2, 3].filter((k) => k !== sel).forEach((k) => post([], k));   // (the tabs' sounds again)
+  quinteOn = true;
+  playing = false;
+  $("play").textContent = "Play";
+  $("play").classList.remove("go");
+  qWhat = `${what}, ${mmss(qSeconds(rows))} round and again.`;
+  qShowSection(1);                                       // (the worklet says only a change: row 1 again is none)
+}
+function qOpts() { return { ends: $("q-ends").checked, band: $("q-band").checked }; }
+function qTempo() { return +document.querySelector('input[name="q-tempo"]:checked').value; }
+function drawQuinte() {
+  $("q-secs").replaceChildren(...SECTIONS.map((x) => {
+    const d = document.createElement("div"); d.className = "sec"; d.id = `q-${x.id}`;
+    const h = document.createElement("h3"); h.textContent = x.name;
+    const p = document.createElement("p"); p.textContent = `${x.bars} bars. ${x.idea}`;
+    const r = document.createElement("div"); r.className = "row";
+    const b = document.createElement("button"); b.type = "button"; b.textContent = "Play";
+    b.setAttribute("aria-label", `Play ${x.name}`);
+    b.onclick = () => qPlay(qSection(x, x.id === "SOLO" ? 114 : qTempo(), qOpts()), x.name);
+    const l = document.createElement("label"), c = document.createElement("input");
+    c.type = "checkbox"; c.checked = keep.has(x.id);
+    c.onchange = () => { c.checked ? keep.add(x.id) : keep.delete(x.id); drawSum(); };
+    l.append(c, " Keep");
+    r.append(b, l);
+    d.append(h, p, r);
+    return d;
+  }));
+  drawSum();
+}
+function drawSum() {
+  const ids = SECTIONS.filter((x) => keep.has(x.id)).map((x) => x.id);
+  $("q-sum").textContent = ids.length
+    ? `Ticked: ${SECTIONS.filter((x) => keep.has(x.id)).map((x) => x.name).join(", ")}. As a song, slow then fast: ${mmss(qSeconds(qSong(ids)))}.`
+    : "Nothing ticked.";
+}
+function qShowSection(sec) {                             // the row playing, from the worklet (0: none)
+  document.querySelectorAll(".sec.now").forEach((e) => e.classList.remove("now"));
+  if (!sec || !qLabels[sec - 1]) { if (!sec && quinteOn) $("q-now").textContent = ""; return; }
+  const { label, id } = qLabels[sec - 1];
+  $("q-now").textContent = `${qWhat} Playing: ${label}.`;
+  $(`q-${id}`).classList.add("now");
+}
 
 // ---- the parts' tabs and the candidates ----
 function drawParts() {
@@ -296,6 +421,7 @@ $("on").onclick = async () => {
         const m = e.data;
         if (m.type === "ready") {
           engines = m.engines;
+          m.phrases.forEach((n, i) => { phr[n] = i; });
           m.states.forEach((s) => { states[s.k] = s; });
           $("engine").replaceChildren(...engines.map((x) => new Option(x.name, String(x.e))));
           res();
@@ -303,16 +429,19 @@ $("on").onclick = async () => {
           states[m.k] = m;
           drawPanel(m);
           drawParts();
-        } else if (m.type === "error") rej(new Error(m.message));
+        } else if (m.type === "section") qShowSection(m.sec);
+        else if (m.type === "error") rej(new Error(m.message));
       };
       node.port.postMessage({ type: "load", wasm, master: +$("vol").value }, [wasm]);
     });
     $("layout").classList.remove("off");
     $("layout").inert = false;
+    $("quinte").classList.remove("off");
+    $("quinte").inert = false;
     $("play").disabled = false;
     $("on").hidden = true;
     $("status").textContent = "On. Press Play to hear the TROTTO, then load a candidate or move a slider.";
-    drawParts(); drawCands(); drawPanel(states[sel]); drawTouch();
+    drawParts(); drawCands(); drawPanel(states[sel]); drawTouch(); drawQuinte();
   } catch (err) {
     $("on").disabled = false;
     $("status").textContent = /WebAssembly|wasm|CSP|Content Security/i.test(String(err))
@@ -322,6 +451,15 @@ $("on").onclick = async () => {
 };
 $("play").onclick = () => {
   playing = !playing;
+  if (quinteOn) {                                        // (after the Quinte: the TROTTO as it starts, then its Play)
+    quinteOn = false;
+    chosen.fill(null);
+    touch.forEach((t, k) => { touch[k] = { ...TOUCH0 }; });
+    post([["sceneNow", 0]]);
+    [0, 1, 2, 3].filter((k) => k !== sel).forEach((k) => post([], k));
+    drawCands(); drawTouch();
+    $("q-now").textContent = "";
+  }
   post([["transport", playing ? 1 : 2]]);
   $("play").textContent = playing ? "Stop" : "Play";
   $("play").classList.toggle("go", playing);
@@ -336,6 +474,10 @@ $("reset").onclick = () => {
   drawCands(); drawTouch();
 };
 $("swell").onchange = () => swell($("swell").checked);
+$("q-short").onclick = () => qPlay(qSong(["I", "II", "SOLO"]), "The short song");
+$("q-long").onclick = () => qPlay(qSong(["I", "II", "III", "IV", "SOLO"]), "The long song");
+$("q-pick").onclick = () => qPlay(qSong(SECTIONS.filter((x) => keep.has(x.id)).map((x) => x.id)), "The ones ticked");
+$("q-stop").onclick = () => { post([["transport", 2]]); $("q-now").textContent = ""; };
 $("copy").onclick = async () => {
   const t = $("preset").textContent;
   try { await navigator.clipboard.writeText(t); $("copied").textContent = "Copied."; }

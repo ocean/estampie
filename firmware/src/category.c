@@ -28,12 +28,14 @@ static const char *const PRESET_CAT[16] = {   /* GHOULBOX: its sounds after Felu
     "KKLL" "K" "PKLU",           /* 4 SAMPLE: PIANO, (PIANO: the retired TRANH's alias), FLUTE, (FLUTE: the retired SAX's
                                   * alias), (PIANO: the retired PERC's alias); BOWED PSALT, REN ORGAN, TENOR RECORD, FOLK HARP */
     "PLBF" "PPFP",               /* 5 VOICE: CHOIR AAH, VOX LEAD, WOW BASS, WHISPER; MONKS, CRYPT CHOIR, WRAITH, LOW DRONE */
-    "BLLUP" "PLPL",              /* 6 TRIO: FAT BASS, ARP LEAD, SYNC LEAD, RING BELL, CHIP CHOIR; FANTASY PAD, MOURN HORN,
-                                  * STRING MACH, SHAWM */
-    "KKKKK" "KKKK",              /* 7 WHEEL: the organs; CRYPT ORGAN, CATHEDRAL, HARMONIUM, TOWER FLUTE */
+    "BLLUP" "PLPL" "LL",         /* 6 TRIO: FAT BASS, ARP LEAD, SYNC LEAD, RING BELL, CHIP CHOIR; FANTASY PAD, MOURN HORN,
+                                  * STRING MACH, SHAWM; ESTAMPIE's RAUSCHPFEIFE, CRUMHORN */
+    "KKKKK" "KKKK" "K",          /* 7 WHEEL: the organs; CRYPT ORGAN, CATHEDRAL, HARMONIUM, TOWER FLUTE; ESTAMPIE's
+                                  * PORTATIVE */
     "PFPP",                      /* 8 GRAIN: CLOUD PAD, GLITCH, FROZEN, SHIMMER */
-    "UUUPUDDPU" "UKUP",          /* 9 PHYS: BELL TREE, MARIMBA, PLUCK, BOWED METAL, KALIMBA, HAND DRUM, TOMS, DRONE
-                                  * STRING, HARP; LUTE, HARPSICHORD, DUNGEON HARP, GURDY DRONE */
+    "UUUPUDDPU" "UKUP" "UU",     /* 9 PHYS: BELL TREE, MARIMBA, PLUCK, BOWED METAL, KALIMBA, HAND DRUM, TOMS, DRONE
+                                  * STRING, HARP; LUTE, HARPSICHORD, DUNGEON HARP, GURDY DRONE; ESTAMPIE's PSALTERY,
+                                  * BRAY HARP */
     "D" "DD" "DD" "DDD",         /* 10 DRUM: DRUM KIT; CRYPT KIT, TOMB DRUMS; DANCE KIT, PROCESSION; Felucca 1.5.6's DEEP
                                   * KIT, TIGHT KIT, PERC KIT */
     "FFFF" "FF",                 /* 11 NOISE: WIND, RAIN, ARCADE, METAL; CAVE WIND, TORCH */

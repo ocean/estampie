@@ -324,7 +324,7 @@ export const CANDIDATES = [
    0,
    45
   ],
-  "temp": 0,
+  "temp": 1,
   "ring": 0
  },
  {
@@ -359,7 +359,7 @@ export const CANDIDATES = [
    0,
    40
   ],
-  "temp": 0,
+  "temp": 1,
   "ring": 0
  },
  {

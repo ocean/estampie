@@ -306,12 +306,15 @@ static void head_msg(int32_t x, int32_t maxw)
 /* the slot letter after the track's cushion (1.2): the PROJECT slot of the pattern the selected track plays or edits.
  * A song playing: its section's slot for the track ("-" silent there); else the slot the working pattern came from
  * (ui.c pat_from: the last PROJECT load or save), with a mark ("A*") once it was edited since (its steps, LEN DIV SWING
- * GATE, QUANTIZE or automation: ui.c pat_from_sig); none at power-on, after a PHRASES pattern or the editor's restore.
+ * GATE, QUANTIZE or automation: ui.c pat_from_sig); none at power-on, after a PHRASES pattern or the editor's restore,
+ * or while a scene's song plays (ESTAMPIE: no project's).
  * b: the letter (b[1] '*' or 0); 0 = none */
 static int head_slot(char *b)
 {
     uint32_t k = song.sel % NTRK, s;
     b[1] = b[2] = 0;
+    if (chain.stream)
+        return 0;
     if (chain.running) {
         s = chain.lane[k];
         b[0] = s < 4u ? (char)('A' + s) : '-';
@@ -324,13 +327,13 @@ static int head_slot(char *b)
         b[1] = '*';
     return 1;
 }
-/* the octave, or the song row while a song plays, its right end at HEAD_GRP_R */
+/* the octave, or the song row while a song plays (ESTAMPIE: a scene's song, its section), its right end at HEAD_GRP_R */
 static void head_group(void)
 {
     char b[8];
     int32_t x;
     if (chain.running) {
-        fmt_int(b, (int32_t)chain.row + 1);
+        fmt_int(b, (int32_t)(chain.stream ? es_stream.sec[chain.row & 1u] : chain.row) + 1);
         x = HEAD_GRP_R - (16 + 4 + text_w(&AF_M, b));
         x += cv_icon_mid(x, H_HEAD / 2, 16, ICON_X_SONG, T_MID, T_SURF);   /* SONG: the disc */
     } else {
@@ -1517,6 +1520,12 @@ static void confirm_text(char *a, char *b)
         up_slot_label(a + str_len(a), k);
         str_cpy(a + str_len(a), "?", 2);
         up_name(k, b);
+        break;
+    case CF_LOAD_SCENE:                              /* ESTAMPIE: the music now is replaced, unsaved or not */
+        str_cpy(a, "LOAD ", 24);
+        str_cpy(a + str_len(a), GB_SCENES[k % GB_NSCENE].name, 24 - str_len(a));
+        str_cpy(a + str_len(a), "?", 24 - str_len(a));
+        str_cpy(b, "REPLACES ALL 4 TRACKS", 24);
         break;
     case CF_LOAD_PAT: {
         char tag[4];

@@ -1824,8 +1824,8 @@ static int test_menu_tabs(void)
     ok = 1;
     for (i = 0; i < MI_VALUES; i++) {
         uint32_t n = menu_n(i), v, j, want;
-        if (!menu_valued(i))                           /* (1.5: LEARN CLEAR, an action) */
-            continue;
+        if (!menu_valued(i) || i == MI_SCENE)         /* (1.5: LEARN CLEAR, an action; ESTAMPIE: SCENE's OCT+ loads it, */
+            continue;                                  /* test_scene_live) */
         uint8_t seen[128] = {0};                       /* (1.2: TUNE has 101 values) */
         ui.menu_sel = (uint8_t)i;
         for (j = 0; j <= n; j++)                       /* down to the first value (COLOR: round) */
@@ -10057,14 +10057,14 @@ static int test_hidden_presets(void)
     bad += check("hidden presets: 49 names (+ SLICE's 2 with FELUCCA_SLICE=1), each one a real preset",
                  ok && NELEM(GB_HIDDEN) == 49u + 2u * FELUCCA_SLICE);
     preset_all_pos(&total);
-    ok = total == 67u + (FELUCCA_FM4 ? ENGINES[ENGI_DIGITAL]->npresets : 0u);   /* (+ DIGITAL's, built in; 1.1: + 4 CC0, BAGPIPE) */
+    ok = total == 72u + (FELUCCA_FM4 ? ENGINES[ENGI_DIGITAL]->npresets : 0u);   /* (+ DIGITAL's, built in; 1.1: + 4 CC0, BAGPIPE) */
     for (i = 0; i < total; i++) {
         e = preset_all_at(i, &k);
         ok &= e < NENGINES && !preset_hidden(ENGINES[e], k);
         for (uint32_t j = 0; j < NELEM(KEEP); j++)
             shown += str_eq(ENGINES[e]->presets[k].name, KEEP[j]);
     }
-    bad += check("hidden presets: the PRESETS list holds the 67 kept (ESTAMPIE: + TROTTO GURDY, DANCE KIT, PROCESSION, PIANO, FLUTE; Felucca 1.5.6: DEEP TIGHT PERC KIT), none hidden", ok && shown >= NELEM(KEEP));
+    bad += check("hidden presets: the PRESETS list holds the 72 kept (ESTAMPIE: + TROTTO GURDY, DANCE KIT, PROCESSION, PIANO, FLUTE, RAUSCHPFEIFE, CRUMHORN, PSALTERY, BRAY HARP, PORTATIVE; Felucca 1.5.6: DEEP TIGHT PERC KIT), none hidden", ok && shown >= NELEM(KEEP));
     ok = NENG_SHOWN == 13u + FELUCCA_FM4 && eng_ok(ENGI_SLICE) == FELUCCA_SLICE;
     for (i = 0, k = 0; i < NENG_SHOWN; i++) {
         ok &= eng_vis(i) != ENGI_SLICE;
@@ -10184,6 +10184,157 @@ static int test_sample_values(void)
 
 /* GHOULBOX 1.2: MIDI CCs set a track's controls (the channel's track), applied in the main loop, as the editor's SET */
 /* 1.3: MENU > SYSTEM > SCENE, the power-on scene (engines.c GB_SCENES, ui.c gb_scene_load; main.c felucca_init) */
+/* ESTAMPIE: blocks of the sequencer, with the main loop's part of a scene's song after each, until section sec (0
+ * based) starts or s seconds pass; the sections seen on the way, in order, into seen (up to n). 1 = it started */
+static int song_until(uint32_t sec, uint32_t s, uint8_t *seen, uint32_t n, uint32_t *got)
+{
+    uint32_t b, last = 0xFFFFu;
+    *got = 0;
+    for (b = 0; b < s * (FS / 32u); b++) {
+        uint32_t cur = es_stream.sec[chain.row & 1u];
+        if (chain.running && cur != last) {
+            if (*got < n) seen[(*got)++] = (uint8_t)cur;
+            last = cur;
+            if (cur == sec) return 1;
+        }
+        events_block(32);
+        es_stream_poll();
+    }
+    return 0;
+}
+/* ESTAMPIE: the ESTAMPIE scene's song (engines.c ES_QUINTE, song_chain.c es_stream): PLAY plays it while the scene is
+ * untouched, section by section from ROM with each section's tempo, the editable steps and no project slot touched;
+ * STOP puts the tempo back; a tempo turned while it plays carries on; an edited scene, a recording or a scene without a
+ * song plays as before */
+static int test_scene_song(void)
+{
+    int bad = 0, ok;
+    uint8_t seen[64];
+    uint32_t got, i;
+    uint32_t sig[NTRK];
+    ui_power_on();
+    gb_scene_load(6);
+    for (i = 0; i < NTRK; i++) sig[i] = steps_sig(&trk[i]);
+    ok = es_song_ok() && !strcmp(GB_SCENES[6].name, "ESTAMPIE");
+    press(B_PLAY);
+    events_block(32);
+    ok &= song.playing && chain.running && chain.stream && song.g[G_BPM] == 116 && es_stream.sec[chain.row & 1u] == 0;
+    bad += check("SCENE SONG: PLAY on the untouched ESTAMPIE scene plays its song from the first section at 116 BPM", ok);
+    ok = song_until(4, 40, seen, sizeof seen, &got) && got == 5;
+    for (i = 0; i < got; i++) ok &= seen[i] == i;
+    ok &= song.g[G_BPM] == 119 && seq_steps(&trk[0])[0].note[0] == 76;   /* (II's first note, E5; 116 * 103 %) */
+    for (i = 0; i < NTRK; i++) ok &= steps_sig(&trk[i]) == sig[i];
+    bad += check("SCENE SONG: sections in order, each from ROM, II a little faster; the editable steps untouched", ok);
+    ok = song_until(10, 60, seen, sizeof seen, &got) && song.g[G_BPM] == 132 && chain.lane[0] == CHAIN_SILENT &&
+         chain.lane[1] == CHAIN_SILENT && chain.lane[2] == CHAIN_SILENT && chain.lane[3] != CHAIN_SILENT;
+    ok &= song_until(11, 7, seen, sizeof seen, &got) && song.g[G_BPM] == 148 && chain.lane[0] != CHAIN_SILENT &&
+          seq_steps(&trk[0])[0].note[0] == 72;           /* (I again: C5) */
+    bad += check("SCENE SONG: after I and II the tabor alone (the drums count the section), then I and II again at 148 BPM", ok);
+    ok = song_until(0, 60, seen, sizeof seen, &got) && song.g[G_BPM] == 116;
+    bad += check("SCENE SONG: after the last section, the first again", ok);
+    transport_req = 2;
+    events_block(32);
+    ok = !song.playing && !chain.running && !chain.stream && song.g[G_BPM] == 116;
+    for (i = 0; i < NTRK; i++) ok &= steps_sig(&trk[i]) == sig[i] && trk[i].p[P_SLEN] == ES_PHRASES[GB_SCENES[6].part[i][2] - ES_PHR(0)].len;
+    bad += check("SCENE SONG: STOP puts the scene's tempo and timing back", ok);
+    press(B_PLAY);
+    events_block(32);
+    song.g[G_BPM] = 100;                               /* the tempo turned in the first section */
+    ok = song_until(4, 40, seen, sizeof seen, &got) && song.g[G_BPM] == 103;
+    transport_req = 2;
+    events_block(32);
+    ok &= song.g[G_BPM] == 100;
+    bad += check("SCENE SONG: a tempo turned while it plays moves the whole song's", ok);
+    btn_down(B_PLAY);                                  /* PLAY, but no main loop after it (ui_input's es_stream_poll) */
+    host_ticks += 16000u; fm1_ms += 16u; ui_input();
+    btn_up(B_PLAY);
+    {
+        uint32_t b, starts = 0;
+        for (b = 0; b < 15u * (FS / 32u); b++) {       /* into the third section's time (6.2 s each) */
+            uint32_t t0 = trk[0].seq_idx;
+            events_block(32);
+            starts += song.playing && trk[0].seq_idx < t0;   /* (a section's start after the first) */
+        }
+        ok = song.playing && chain.running && starts == 2u && es_stream.sec[chain.row & 1u] == 1;   /* 2, then 2 again */
+    }
+    ok &= song_until(2, 10, seen, sizeof seen, &got);  /* the main loop back: on to section 3 */
+    transport_req = 2;
+    events_block(32);
+    bad += check("SCENE SONG: the main loop late: the section plays again, then the song goes on", ok);
+    step_t keep = trk[0].step[1];
+    trk[0].step[1].note[0] = 60;                       /* an edit */
+    ok = !es_song_ok();
+    press(B_PLAY);
+    events_block(32);
+    ok &= song.playing && !chain.running;
+    transport_req = 2;
+    events_block(32);
+    trk[0].step[1] = keep;
+    ok &= es_song_ok();
+    song.rec = 1;
+    ok &= !es_song_ok();
+    song.rec = 0;
+    gb_scene_load(0);
+    ok &= !es_song_ok();                               /* (TROTTO: no song) */
+    bad += check("SCENE SONG: an edited scene, a recording, a scene without a song: PLAY plays the pattern", ok);
+    return bad;
+}
+
+/* ESTAMPIE: MENU > SYSTEM > SCENE loads a scene while the FM-1 runs (project.c scene_load_now): the knobs pick it (the
+ * power-on scene, as before), OCT+ asks first (CF_LOAD_SCENE), OCT- keeps the music; loaded, the transport stopped,
+ * the scene's sounds after their fade, its steps and tempo, and its song on PLAY */
+static int test_scene_live(void)
+{
+    int bad = 0, ok;
+    uint32_t i, b, sig[NTRK];
+    int32_t o[2u * CTL];
+    char qa[24], qb[24];
+    ui_power_on();
+    gb_scene_load(6);
+    for (i = 0; i < NTRK; i++) sig[i] = steps_sig(&trk[i]);   /* (ESTAMPIE's steps) */
+    gb_scene_load(0);                                  /* TROTTO, a step edited, playing */
+    ui_scene = 0;
+    trk[0].step[0].note[0] = 60;
+    press(B_PLAY);
+    events_block(32);
+    hold(B_HOME);
+    frame();
+    ui.menu_sel = MI_SCENE;
+    for (i = 0; i < 6u; i++)                          /* (a step a turn) */
+        turn(EN_K1, 1);
+    ok = ui.menu && ui_scene == 6u && ui.confirm == CF_NONE && song.playing;
+    press(B_OCTDN);
+    ok &= ui.menu && ui_scene == 6u && ui.confirm == CF_NONE;
+    bad += check("SCENE LOAD: the knobs pick the scene (the power-on one, as before), OCT- does nothing", ok);
+    press(B_OCTUP);
+    ok = !ui.menu && ui.confirm == CF_LOAD_SCENE && ui.confirm_trk == 6u && song.playing;
+    confirm_text(qa, qb);
+    ok &= str_eq(qa, "LOAD ESTAMPIE?") && str_eq(qb, "REPLACES ALL 4 TRACKS");
+    press(B_OCTDN);
+    ok &= ui.confirm == CF_NONE && song.playing && trk[0].step[0].note[0] == 60;
+    bad += check("SCENE LOAD: OCT+ asks LOAD ESTAMPIE? (REPLACES ALL 4 TRACKS); OCT- keeps the music, still playing", ok);
+    hold(B_HOME);
+    frame();
+    ui.menu_sel = MI_SCENE;
+    press(B_OCTUP);
+    press(B_OCTUP);
+    ok = ui.confirm == CF_NONE && !ui.menu && !song.playing && song.g[G_BPM] == 116 && str_eq(ui.msg, "ESTAMPIE LOADED");
+    for (b = 0; b < 256u; b++)                         /* (each engine's switch after its fade) */
+        mix_block(o, CTL);
+    for (i = 0; i < NTRK; i++)
+        ok &= steps_sig(&trk[i]) == sig[i] && trk[i].eng_req == GB_SCENES[6].part[i % NPART][0] &&
+              trk[i].engine == trk[i].eng_req;
+    ok &= es_song_ok();
+    bad += check("SCENE LOAD: OCT+ again loads it while playing: stopped, its sounds after their fade, steps, tempo", ok);
+    press(B_PLAY);
+    events_block(32);
+    ok = song.playing && chain.stream && es_stream.sec[chain.row & 1u] == 0;
+    transport_req = 2;
+    events_block(32);
+    bad += check("SCENE LOAD: then PLAY plays its song", ok);
+    return bad;
+}
+
 static int test_scenes(void)
 {
     static const char *const WANT[GB_NSCENE][NTRK] = {
@@ -10193,46 +10344,50 @@ static int test_scenes(void)
         {"CATHEDRAL", "MONKS", "TENOR RECORD", "VIELLE"},
         {"HURDY GURDY", "CRYPT PAD", "MONKS", "DRONE WHEEL"},
         {"HURDY GURDY", "CRYPT PAD", "MONKS", "DRONE WHEEL"},
+        {"RAUSCHPFEIFE", "LUTE", "TROTTO GURDY", "DANCE KIT"},
     };
-    /* PATTERNS parts at 1/8; TROTTO's are ESTAMPIE phrases (ES_PHR) at their own division, BLANK has none */
+    /* PATTERNS parts at 1/8; TROTTO's and ESTAMPIE's are ESTAMPIE phrases (ES_PHR) at their own division, BLANK has
+     * none */
     static const char *const PAT[GB_NSCENE][NTRK] = {
         {0, 0, 0, 0}, {"PEDAL", "DIRGE", "PEDAL", "TOMBBEAT"}, {"BALLAD", "ARPEGGIO", "MARCH", "TOMBBEAT"},
-        {"DIRGE", "CHANT", "LAMENT", "ANTIPHON"}, {0, 0, 0, 0}, {"BALLAD", "DIRGE", "CHANT", "PEDAL"},
+        {"DIRGE", "CHANT", "LAMENT", "ANTIPHON"}, {0, 0, 0, 0}, {"BALLAD", "DIRGE", "CHANT", "PEDAL"}, {0, 0, 0, 0},
     };
-    static const int16_t BPM[GB_NSCENE] = {112, 60, 96, 66, 72, 72};
+    static const int16_t BPM[GB_NSCENE] = {112, 60, 96, 66, 72, 72, 116};
     int bad = 0, ok = 1;
     uint32_t s, i, k, row = MI_SCENE;
     for (s = 0; s < GB_NSCENE; s++) {
+        uint32_t dance = s == 0u || s == 6u;                   /* (TROTTO, ESTAMPIE: phrases, a ROOM) */
         ui_power_on();
         gb_scene_load(s);
-        ok &= song.g[G_BPM] == BPM[s] && song.g[G_RTYPE] == (s == 0u ? 0 : 2) && ui.home;   /* (TROTTO: ROOM) */
+        ok &= song.g[G_BPM] == BPM[s] && song.g[G_RTYPE] == (dance ? 0 : 2) && ui.home;
         for (i = 0; i < NTRK; i++) {
             const track_t *t = &trk[i];
             uint32_t notes = 0;
             ok &= t->engine == t->eng_req && !strcmp(ENGINES[t->engine]->presets[t->preset].name, WANT[s][i]) &&
-                  t->p[P_SDIV] == (s == 0u ? 4 : 1);
+                  t->p[P_SDIV] == (dance ? 4 : 1) && t->p[P_TEMP] == (s == 6u ? 1 : 0);   /* (ESTAMPIE: PYTH) */
             for (k = 0; k < NSTEP; k++)
                 notes += t->step[k].n || t->step[k].hit;
             if (PAT[s][i])
                 ok &= pat_last[i] && !strcmp(PATTERNS[pat_last[i] - 1u].name, PAT[s][i]) && pat_sig[i] == steps_sig(t);
             else
-                ok &= s == 0u ? notes > 0u : notes == 0u;     /* (TROTTO: its phrase; BLANK: nothing) */
+                ok &= dance ? notes > 0u : notes == 0u;       /* (the dances: their phrases; BLANK: nothing) */
         }
     }
-    bad += check("1.3 SCENE: TROTTO CRYPT TAVERN CHAPEL BLANK DUNGEON load their sounds, phrases or patterns, tempo, reverb", ok);
+    bad += check("1.3 SCENE: TROTTO CRYPT TAVERN CHAPEL BLANK DUNGEON ESTAMPIE load their sounds, phrases or patterns, tempo, reverb, tuning (ESTAMPIE PYTH)", ok);
     ui_power_on();
     ok = MI_TAB[row] == MTAB_SYSTEM && MI_TAB[row + 1u] == MTAB_SYSTEM && row + 1u == MI_SERIAL &&
          menu_n(row) == GB_NSCENE && str_eq(MI_NAME[row], "SCENE") && menu_get(row) == 0 &&
-         str_eq(menu_vname(row, 0), "TROTTO") && str_eq(menu_vname(row, 4), "BLANK") && str_eq(menu_vname(row, 5), "DUNGEON");
+         str_eq(menu_vname(row, 0), "TROTTO") && str_eq(menu_vname(row, 4), "BLANK") && str_eq(menu_vname(row, 5), "DUNGEON") &&
+         str_eq(menu_vname(row, 6), "ESTAMPIE");
     menu_put(row, 2);
     ok &= menu_get(row) == 2 && ui_scene == 2 && menu_step(row, 1) == 3 && menu_step(row, -1) == 1;
-    menu_put(row, 5);
-    ok &= menu_step(row, 1) == 5;                              /* (stops at the end) */
+    menu_put(row, 6);
+    ok &= menu_step(row, 1) == 6;                              /* (stops at the end) */
     ui_scene = 200;                                            /* a value from a later version: the first, TROTTO */
     ok &= menu_get(row) == 0;
     gb_scene_load(ui_scene);
     ok &= !strcmp(ENGINES[trk[0].engine]->presets[trk[0].preset].name, "TROTTO GURDY") && song.g[G_BPM] == 112;
-    bad += check("1.3 SCENE: MENU > SYSTEM row (6 names, stops at the ends); a later version's value plays TROTTO", ok);
+    bad += check("1.3 SCENE: MENU > SYSTEM row (7 names, stops at the ends); a later version's value plays TROTTO", ok);
     {   /* the row redraws at once when its value changes (ui_menu.c: the menu signature holds ui_scene) */
         static uint16_t before[240 * 240];
         ui_power_on();
@@ -10338,6 +10493,8 @@ int main(void)
     bad += test_sample_values();
     bad += test_midi_cc();
     bad += test_scenes();
+    bad += test_scene_song();
+    bad += test_scene_live();
     bad += test_patterns();
     bad += test_rec();
     bad += test_step_rec();

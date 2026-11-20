@@ -470,9 +470,10 @@ static uint32_t menu_split(uint32_t n)
 }
 static void draw_menu(void)
 {
-    static const khint_t KEYS[3][3] = {{{KC_ALGO, "TAB"}, {KC_PRESETS, "ROW"}, {KC_OCTPM, "VALUE"}},
+    static const khint_t KEYS[4][3] = {{{KC_ALGO, "TAB"}, {KC_PRESETS, "ROW"}, {KC_OCTPM, "VALUE"}},
                                        {{KC_ALGO, "TAB"}, {KC_PRESETS, "ROW"}, {KC_OCTUP, "OPEN"}},
-                                       {{KC_ALGO, "TAB"}, {KC_PRESETS, "ROW"}, {KC_OCTUP, "CLEAR"}}};
+                                       {{KC_ALGO, "TAB"}, {KC_PRESETS, "ROW"}, {KC_OCTUP, "CLEAR"}},
+                                       {{KC_PRESETS, "ROW"}, {KC_K14, "SCENE"}, {KC_OCTUP, "LOAD"}}};   /* (ESTAMPIE) */
     uint32_t pass, k, first, n, split, sig;
     int32_t pos0 = mt.pos;
     if (ui.menu == 1)
@@ -547,7 +548,7 @@ static void draw_menu(void)
             if (mr_y(k) + mr_h() > top_y && mr_y(k) - 1 < top_y + (int32_t)cv_h)
                 menu_row(k, first + k);
         if (pass)
-            cv_key_row(8, 232, MK_Y, KEYS[ui.menu_sel == MI_LCLEAR ? 2 : !menu_valued(ui.menu_sel)], 3, 7u, T_BG);
+            cv_key_row(8, 232, MK_Y, KEYS[ui.menu_sel == MI_SCENE ? 3 : ui.menu_sel == MI_LCLEAR ? 2 : !menu_valued(ui.menu_sel)], 3, 7u, T_BG);
         cv_oy = 0;
         cv_blit(0, (uint32_t)top_y);
     }
@@ -604,7 +605,14 @@ static void menu_input(uint32_t oct)                  /* oct: ui_input.c oct_tap
         menu_tab_go(s);
     for (s = 0, k = 0; k < 4u; k++)                    /* KNOB 1..4, any of them */
         s += panel_enc(EN_K1 + k);
-    if (menu_valued(ui.menu_sel)) {
+    if (ui.menu_sel == MI_SCENE) {                     /* ESTAMPIE: SCENE, the knobs pick (the power-on scene as before), */
+        if (s)                                         /* OCT+ asks to load it now (CF_LOAD_SCENE), OCT- nothing */
+            menu_put(MI_SCENE, menu_step(MI_SCENE, s));
+        if (up) {
+            menu_close();
+            confirm_open(CF_LOAD_SCENE, menu_get(MI_SCENE));
+        }
+    } else if (menu_valued(ui.menu_sel)) {
         /* a step (OCT+ the next value, OCT- the previous); COLOR previews the palette, STYLE is drawn so from the next
          * frame (FX LATCH: the latched effects are off while the menu is up) */
         s += (int32_t)up - (int32_t)dn;

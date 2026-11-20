@@ -10,3 +10,4 @@ __pycache__/
 /.toolchain/
 /.venv/
 /.playwright-mcp/
+.kata.local.toml

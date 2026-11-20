@@ -27,6 +27,9 @@ thanks the work below; each keeps its own licence (see [LICENSE](LICENSE), [LICE
 - USB update: the boot-area check that lets V15 install over any bootloader the FM-1 can start, and m-bootloader's
   installer be taken, from
   [felucca-bsp](https://github.com/hugelton/felucca-bsp) `afd83ed` by [charlesvestal](https://github.com/charlesvestal) (MPL-2.0)
+- The ESTAMPIE scene's dance, *La Quinte Estampie Real* (Paris, BnF fr. 844, c. 1300): transcribed from Pierre Aubry's
+  edition, *Estampies et danses royales* (Paris, 1907; public domain, [Internet Archive](https://archive.org/details/estampiesetdans01aubrgoog)),
+  its puncta I and II checked against [Andy Hornby](http://www.andyhornby.net/)'s ABC
 - Package format and boot files: [JieLi AC79 SDK](https://gitee.com/Jieli-Tech/fw-AC79_AIoT_SDK) ([Apache-2.0](LICENSES/Apache-2.0.txt); three of its files are in every package, none in this tree)
 - Contributions: [keremimo](https://github.com/keremimo) (white-key scales, #2), [ChanceTheMaker](https://github.com/ChanceTheMaker)
   (TRS MIDI, bend, sustain and clock, palettes, favourites, editor display settings: #8, #10, #11, #12),

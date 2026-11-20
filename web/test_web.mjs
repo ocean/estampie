@@ -418,8 +418,8 @@ function mockTables() {
     const m0 = E.makeMockDevice({ auto: false }), ph = m0.tables.ENG[9], dr = m0.tables.ENG[10];
     m0.stop();
     ok(ph.name === "PHYS" && ph.edit[0].names.join() === "MODAL,STRNG,MEMB,SYMP" && ph.edit[0].max === 3 &&
-       ph.presets.length === 13 && !ph.presets.some((p) => p.name === "RAIN" || p.name === "DRUM KIT"),
-       "editor: PHYS models MODAL STRNG MEMB SYMP (no DUST, no DRUM), 13 presets (4 GHOULBOX)");
+       ph.presets.length === 15 && !ph.presets.some((p) => p.name === "RAIN" || p.name === "DRUM KIT"),
+       "editor: PHYS models MODAL STRNG MEMB SYMP (no DUST, no DRUM), 15 presets (4 GHOULBOX, 2 ESTAMPIE)");
     ok(dr.name === "DRUM" && dr.edit.map((d) => d.label).join() === "KIT,TUNE,TONE,DECY,SNAP,ACC,KICK,DRV" &&
        dr.presets.length === 8 && dr.presets[0].pat === 12 && dr.presets[1].pat === 22 && dr.presets[2].pat === 22 &&
        dr.presets[3].pat === 23 && dr.presets[4].pat === 23 && dr.presets.slice(5).every((q) => q.pat === 12),

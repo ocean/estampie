@@ -1183,6 +1183,34 @@ static int project_restore_runtime(const project_t *input)
     memset(snd_said, 0, sizeof snd_said);               /* a missing sample is said again, after LOADED */
     return 0;
 }
+/* ESTAMPIE: scene s (engines.c GB_SCENES) while the FM-1 runs, as a project load: the transport stopped, what sounds
+ * let go, the song order, automation and DRUM mutes cleared, then the scene as at power-on, each engine switching
+ * after its fade (ui.c gb_scene_set). Unsaved music is gone, so MENU > SYSTEM > SCENE asks first (CF_LOAD_SCENE); the
+ * music has no slot or name after it, as a new FM-1's */
+static void scene_load_now(uint32_t s)
+{
+    mom_back(0);                                  /* (MOMENTARY: the values as they were, then the load) */
+    memset(drum_mute, 0, sizeof drum_mute);
+    transport_req = 2;
+    panic_req = (1u << NTRK) - 1u;
+    fm1_irq_off();                                /* the audio ISR must not see half a scene's transport */
+    seq_stop();                                   /* (a scene's song too: chain_stop) */
+    transport_req = 0;
+    chain_defaults(&chain_config);
+    memset(motion_active, 0, sizeof motion_active);
+    motion_base_valid = 0;
+    ui.song_row = 0;
+    fm1_irq_on();
+    gb_scene_set(s, 1);                           /* (set_engine_of: each sound's values with the IRQ off) */
+    proj_name[0] = 0;
+    proj_cur = PROJ_NO_SLOT;
+    pat_from_set(0);
+    undo.trk = 0;                                 /* (ui.c) the undo copy belongs to the music before */
+    sync_reload = 1;
+    memset(snd_said, 0, sizeof snd_said);
+    ui_say(GB_SCENES[s % GB_NSCENE].name, " LOADED");
+}
+
 static void project_load(uint32_t slot)
 {
 #if FELUCCA_FLASH

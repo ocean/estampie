@@ -139,6 +139,7 @@ static uint32_t oct_leds(void)
     if (ui.menu && !ui.confirm)
         return ui.menu >= 2u ? 1u :                    /* (INFO, ABOUT: OCT- back, lit) */
                ui.menu_sel == MI_LCLEAR ? (ml_count() ? OCT_BREATH : 0u) :   /* LEARN CLEAR: while CCs are learned */
+               ui.menu_sel == MI_SCENE ? OCT_BREATH :   /* ESTAMPIE: SCENE, OCT+ loads it now */
                ui.menu_sel >= MI_VALUES ? OCT_BREATH :  /* CALIBRATION / INFO / ABOUT: OCT+ opens */
                (menu_step(ui.menu_sel, -1) != menu_get(ui.menu_sel) ? OCT_BREATH_DN : 0u) |   /* a value: each */
                (menu_step(ui.menu_sel, 1) != menu_get(ui.menu_sel) ? OCT_BREATH : 0u);         /* way it can go */
@@ -1620,6 +1621,7 @@ static void ui_input(void)
     uint32_t lay, combo = 0, lytap, lkeys, glo, kq = 0;
     int32_t s, sel = 0, ks[4] = {0, 0, 0, 0};
     static uint32_t lock_ms;                            /* BPM LOCK: the last locked SELECT turn (fm1_ms | 1; 0 none) */
+    es_stream_poll();                                   /* ESTAMPIE: a scene's song, its next section (song_chain.c) */
     midi_take();                                        /* (MIDI IN notes: lights, SCREEN WAKE, AUTO SELECT's) */
     midi_pc_poll();                                     /* MIDI Program Change (before fm6_poll: a bank voice) */
     fm6_poll();                                         /* FM6: PTCH turned -> its patch */
@@ -1765,6 +1767,8 @@ static void ui_input(void)
                 up_ui(1u, ui.confirm_trk);
             } else if (kind == CF_ERASE_PROJ) {
                 (void)project_erase(ui.confirm_trk & 3u);
+            } else if (kind == CF_LOAD_SCENE) {
+                scene_load_now(ui.confirm_trk);       /* (ESTAMPIE: project.c; it stops the transport) */
             } else if (kind == CF_LOAD_PAT) {
                 pat_load_ui(&trk[ui.confirm_trk % NTRK], pat_pick());
                 str_cpy(ui.msg2, "[SAVE] HOLD TO UNDO", sizeof ui.msg2);
@@ -1825,6 +1829,8 @@ static void ui_input(void)
                 transport_req = 2;
             else if (!ui.home && cur_page()->graph == GR_SONG)
                 chain_play_ui();
+            else if (es_song_ok())                      /* ESTAMPIE: the scene untouched: its whole song */
+                es_song_play();
             else
                 transport_req = 1;
             break;

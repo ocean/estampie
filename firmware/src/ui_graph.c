@@ -1081,7 +1081,7 @@ static int32_t song_playx(const song_lay_t *L)
 {
     uint32_t r = chain.row, len, idx, reps;
     const track_t *t = &trk[chain.clk % NTRK];
-    if (!chain.running || r >= L->n)
+    if (!chain_song() || r >= L->n)
         return -1;
     len = t->p[P_SLEN] > 0 ? (uint32_t)t->p[P_SLEN] : 1u;
     idx = t->seq_pos >= 0x7FFFFFFFu ? 0u : t->seq_idx % len;
@@ -1094,7 +1094,7 @@ static int32_t song_playx(const song_lay_t *L)
  * the frames or ANIM OFF. Returns the view's left edge */
 static int32_t song_follow(const song_lay_t *L)
 {
-    uint32_t c = song_cur(), p = chain.running && chain.row < L->n ? chain.row : 0xFFu;
+    uint32_t c = song_cur(), p = chain_song() && chain.row < L->n ? chain.row : 0xFFu;
     int32_t a = L->x[c], b = c < L->n ? L->x[c + 1u] - SG_GAP : L->x[c] + SG_ADDW, tgt = sgv.off, d, m, end;
     int fresh = !sgv.init || ui.frame != sgv.frame + 1u, snap = fresh || ui.force || (ui_prefs & PREF_ANIM_OFF);
     if (sgv.init && sgv.frame == ui.frame)
@@ -1211,7 +1211,7 @@ static uint32_t graph_signature(void)
     if (pg->graph == GR_SONG) {
         h ^= ui.song_row * 40503u + chain_config.count * 7919u + ui.song_trk * 3571u;
         h = fnv(h, chain_config.row, sizeof chain_config.row);
-        h ^= chain.running ? (chain.row + 1u) * 104729u + chain.remaining * 1299709u : 0u;
+        h ^= chain_song() ? (chain.row + 1u) * 104729u + chain.remaining * 1299709u : 0u;
         for (i = 0; i < 4u; i++) h ^= (uint32_t)graph_project_used(i) << (24u + i);
         h += graph_pname_sig;
         {                                            /* the timeline: its view (following, ui_graph.c song_follow), the playhead */
@@ -2159,7 +2159,7 @@ static void sg_block(const song_lay_t *L, int32_t off, uint32_t k, uint32_t i, u
     int32_t x0 = bx > SG_X0 ? bx : SG_X0, x1 = bx + bw < hi ? bx + bw : hi, skip[4] = {0, 0, 0, 0};
     int saved = graph_project_used(s), cur = c >= i && c < j;
     sg_fill_t F = {0, 0, 0, 0, 0};
-    uint32_t p = chain.running && chain.row >= i && chain.row < j ? chain.row : 0xFFu;
+    uint32_t p = chain_song() && chain.row >= i && chain.row < j ? chain.row : 0xFFu;
     if (x1 <= x0)
         return;
     if (!saved) {                                      /* not saved: an outline, the letter DIM */

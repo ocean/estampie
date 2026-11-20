@@ -251,6 +251,7 @@ typedef struct {
     uint8_t step[NSTEP];
 } es_phrase_t;
 #define ES_BAR6(n) (1ull << (6u * (n)))           /* the first step of 6/8 bar n */
+#define ES_BAR9(n) (1ull << (9u * (n)))           /* the first step of a 3/4 bar in triplets */
 static const es_phrase_t ES_PHRASES[] = {
     /* 0..3 TROTTO: "Trotto", London, British Library Add. MS 29987 f. 63v (Tuscany, c. 1390): its first punctum with
      * the chiuso (closed) ending, A Dorian, 6/8, one 8T step an eighth note: 6 bars, the pickup (A2A) last. The
@@ -266,16 +267,87 @@ static const es_phrase_t ES_PHRASES[] = {
       69, ES_T, ES_T, 74, ES_T, ES_T,   74, ES_T, ES_T, 71, ES_T, ES_T,   69, ES_T, ES_T, ES_T, ES_T, 0}},  /* heterophony */
     {"TROT TABOR", 12, 4, 1, ES_BAR6(0) | ES_BAR6(1),   /* (the DANCE kit) the tabor on the beats, its snare string */
      {1, 0, 2, 1 | 16, 0, 2,   1, 8, 2, 1 | 16, 32, 2}},  /* between, the tambourine; the nakers answer at the end */
+    /* 4..11 "La Quinte Estampie Real", Paris, BnF fr. 844 (the Manuscrit du Roi, c. 1300) f. 104v, from Pierre Aubry's
+     * edition (Estampies et danses royales, 1907, p. 21), its puncta I and II checked against Andy Hornby's: four
+     * puncta, each played twice, with the open ending (ouvert) and then the closed one (clos), both the same in every
+     * punctum. 3/4 in triplets (Aubry's reading of the ligatures), an 8T step a third of a beat: 9 a bar. An octave
+     * above Aubry's alto clef, A aeolian. II and III (8 bars) are halved: a phrase holds 64 steps */
+    {"QUINTE I", 36, 4, 0, ES_BAR9(0) | ES_BAR9(1) | ES_BAR9(2) | ES_BAR9(3),
+     {72, ES_T, ES_T, 72, ES_T, ES_T, 71, ES_T, ES_T,   72, ES_T, ES_T, 74, 72, ES_T, 74, ES_T, ES_T,
+      76, ES_T, ES_T, 74, ES_T, ES_T, 72, ES_T, ES_T,   71, 69, ES_T, 67, ES_T, ES_T, ES_T, ES_T, ES_T}},
+    {"QUINTE II A", 36, 4, 0, ES_BAR9(0) | ES_BAR9(1) | ES_BAR9(2) | ES_BAR9(3),
+     {76, ES_T, ES_T, ES_T, ES_T, ES_T, 69, ES_T, ES_T,   76, ES_T, ES_T, ES_T, ES_T, ES_T, 74, ES_T, ES_T,
+      77, 76, ES_T, 74, 76, ES_T, 72, 74, ES_T,   72, ES_T, ES_T, ES_T, ES_T, ES_T, 0, 0, 0}},
+    {"QUINTE II B", 36, 4, 0, ES_BAR9(0) | ES_BAR9(1) | ES_BAR9(2) | ES_BAR9(3),
+     {79, ES_T, ES_T, ES_T, ES_T, ES_T, 77, ES_T, ES_T,   76, ES_T, ES_T, ES_T, ES_T, ES_T, 74, ES_T, ES_T,
+      72, 71, ES_T, 72, ES_T, ES_T, 74, ES_T, ES_T,   76, ES_T, ES_T, ES_T, ES_T, ES_T, 0, 0, 0}},
+    {"QUINTE III A", 36, 4, 0, ES_BAR9(0) | ES_BAR9(1) | ES_BAR9(2) | ES_BAR9(3),
+     {74, ES_T, ES_T, 71, ES_T, ES_T, 72, ES_T, ES_T,   74, ES_T, ES_T, ES_T, ES_T, ES_T, 72, 71, ES_T,
+      72, 71, ES_T, 72, ES_T, ES_T, 74, ES_T, ES_T,   76, ES_T, ES_T, ES_T, ES_T, ES_T, 0, 0, 0}},
+    {"QUINTE III B", 36, 4, 0, ES_BAR9(0) | ES_BAR9(1) | ES_BAR9(2) | ES_BAR9(3),
+     {76, ES_T, ES_T, ES_T, ES_T, ES_T, 81, ES_T, ES_T,   74, ES_T, ES_T, ES_T, ES_T, ES_T, 76, ES_T, ES_T,
+      74, ES_T, ES_T, ES_T, ES_T, ES_T, ES_T, ES_T, ES_T,   72, ES_T, ES_T, ES_T, ES_T, ES_T, 0, 0, 0}},
+    {"QUINTE IV", 54, 4, 0, ES_BAR9(0) | ES_BAR9(1) | ES_BAR9(2) | ES_BAR9(3) | ES_BAR9(4) | ES_BAR9(5),
+     {67, ES_T, ES_T, ES_T, ES_T, ES_T, 69, ES_T, ES_T,   72, ES_T, ES_T, ES_T, ES_T, ES_T, 74, ES_T, ES_T,
+      76, ES_T, ES_T, ES_T, ES_T, ES_T, 0, 0, 0,   79, 77, ES_T, 79, ES_T, ES_T, 72, ES_T, ES_T,
+      79, 77, ES_T, 79, 81, ES_T, 79, 77, ES_T,   76, ES_T, ES_T, ES_T, ES_T, ES_T, 0, 0, 0}},
+    {"QUINTE OUVERT", 36, 4, 0, ES_BAR9(0) | ES_BAR9(1) | ES_BAR9(2) | ES_BAR9(3),
+     {72, ES_T, ES_T, 72, ES_T, ES_T, 71, ES_T, ES_T,   69, ES_T, ES_T, 71, 69, ES_T, 71, 72, ES_T,
+      74, ES_T, ES_T, 72, ES_T, ES_T, ES_T, ES_T, ES_T,   72, ES_T, ES_T, ES_T, ES_T, ES_T, ES_T, ES_T, ES_T}},
+    {"QUINTE CLOS", 36, 4, 0, ES_BAR9(0) | ES_BAR9(1) | ES_BAR9(2) | ES_BAR9(3),
+     {72, ES_T, ES_T, 72, ES_T, ES_T, 71, ES_T, ES_T,   69, ES_T, ES_T, 71, 69, ES_T, 71, 69, ES_T,
+      67, ES_T, ES_T, 69, ES_T, ES_T, ES_T, ES_T, ES_T,   69, ES_T, ES_T, ES_T, ES_T, ES_T, ES_T, ES_T, ES_T}},
+    /* 12..16 the band under it: the lute's open fifth, long-short on every beat; the gurdy's drones on A and E (its
+     * trompette struck once a beat); the tabor and its snare string long-short (a bar with the jingles in, a bar with
+     * the nakers answering), busier for the fast half; and the tabor's solo between the halves */
+    {"QUINTE LUTE", 9, 4, 0, ES_BAR9(0),
+     {57, ES_T, 64, 57, ES_T, 64, 57, ES_T, 64}},
+    {"QUINTE DRONE", 18, 4, 0, ES_BAR9(0),
+     {57, ES_T, ES_T, ES_T, ES_T, ES_T, ES_T, ES_T, ES_T,   ES_T, ES_T, ES_T, ES_T, ES_T, ES_T, ES_T, ES_T, ES_T}},
+    {"QUINTE TABOR", 18, 4, 1, ES_BAR9(0),
+     {1 | 16, 0, 2, 1, 0, 2, 1, 8, 2,   1, 0, 2, 1, 0, 2, 32, 32, 32}},
+    {"QUINTE TABOR 2", 18, 4, 1, ES_BAR9(0) | ES_BAR9(1),
+     {1 | 16, 8, 2, 1 | 4, 8, 2, 1, 8, 2 | 8,   1 | 8, 8, 2, 1 | 4, 8, 2, 32, 32, 1 | 32}},
+    {"TABOR SOLO", 36, 4, 1, ES_BAR9(0) | ES_BAR9(2) | (1ull << 33),
+     {1, 0, 2, 1, 0, 2, 1, 2, 2,   32, 0, 32, 32, 0, 32, 1, 1, 1,
+      1 | 64, 64, 2, 1 | 64, 64, 2, 1, 2, 2,   1 | 32, 32, 32, 32, 32, 32, 1 | 16, 0, 0}},
 };
 #define ES_NPHRASE (sizeof ES_PHRASES / sizeof ES_PHRASES[0])
+enum { ES_QI = 4, ES_QIIA, ES_QIIB, ES_QIIIA, ES_QIIIB, ES_QIV, ES_QOUV, ES_QCLOS, ES_QLUTE, ES_QDRONE, ES_QTAB,
+       ES_QTAB2, ES_QSOLO };
+_Static_assert(ES_NPHRASE == ES_QSOLO + 1u, "ES_PHRASES: the Quinte's phrases where the enum says");
 
-/* ESTAMPIE: phrase n into track t's steps, with its length and division (ui.c gb_scene_load; tests/estampie_demo.c) */
-static void es_phrase_load(track_t *t, uint32_t n)
+/* ESTAMPIE: a scene's song (song_chain.c es_stream): sections in order, each the phrase every part plays there
+ * (ES_SIL: none), how many times, and its tempo in percent of the scene's (the BPM at PLAY); the last section goes
+ * back to the first. Longer than a song (16 rows of four slots) and from ROM, so no project slot is touched */
+#define ES_SIL 0xFFu
+typedef struct { uint8_t phr[NPART], rep, pct; } es_row_t;
+typedef struct { const es_row_t *row; uint8_t n; } es_song_t;
+/* the Quinte: each punctum and the ouvert, the punctum again and the clos. Its first two puncta, about two minutes
+ * in all: a little faster each (as Estampie's "Estampie IX" does), the tabor alone, then the same two at a dance
+ * floor's speed (as Graham Derrick and Estampie's estampie does: 116 BPM, then 148), so the change is heard. III and IV
+ * stay in ES_PHRASES, transcribed, for a longer song */
+#define QR(m, d, rep, pct) {{(m), ES_QLUTE, ES_QDRONE, (d)}, (rep), (pct)}
+#define QPUNCTA(d, p1, p2) \
+    QR(ES_QI, d, 1, p1), QR(ES_QOUV, d, 1, p1), QR(ES_QI, d, 1, p1), QR(ES_QCLOS, d, 1, p1), \
+    QR(ES_QIIA, d, 1, p2), QR(ES_QIIB, d, 1, p2), QR(ES_QOUV, d, 1, p2), \
+    QR(ES_QIIA, d, 1, p2), QR(ES_QIIB, d, 1, p2), QR(ES_QCLOS, d, 1, p2)
+static const es_row_t ES_QUINTE_ROWS[] = {
+    QPUNCTA(ES_QTAB, 100, 103),
+    {{ES_SIL, ES_SIL, ES_SIL, ES_QSOLO}, 1, 114},
+    QPUNCTA(ES_QTAB2, 128, 128),
+};
+#undef QPUNCTA
+#undef QR
+static const es_song_t ES_QUINTE = {ES_QUINTE_ROWS, sizeof ES_QUINTE_ROWS / sizeof ES_QUINTE_ROWS[0]};
+
+/* ESTAMPIE: phrase n into a track's steps, with its length and division (ui.c gb_scene_load; tests/estampie_demo.c) */
+static const es_phrase_t *es_phrase_steps(step_t *step, uint32_t n)   /* (song_chain.c es_stream: a chain slot's) */
 {
     const es_phrase_t *ph = &ES_PHRASES[n % ES_NPHRASE];
     uint32_t i, prev = 0;
     for (i = 0; i < NSTEP; i++) {
-        step_t *s = &t->step[i];
+        step_t *s = &step[i];
         uint32_t v = i < ph->len ? ph->step[i] : 0u, acc = (uint32_t)((ph->acc >> i) & 1u);
         memset(s, 0, sizeof *s);
         if (ph->drum) {                                    /* lane hits, as the DRUM grid holds them */
@@ -296,6 +368,11 @@ static void es_phrase_load(track_t *t, uint32_t n)
             prev = s->note[0];
         }
     }
+    return ph;
+}
+static void es_phrase_load(track_t *t, uint32_t n)
+{
+    const es_phrase_t *ph = es_phrase_steps(t->step, n);
     t->p[P_SLEN] = ph->len;
     t->p[P_SDIV] = ph->div;
 }
@@ -304,11 +381,17 @@ static void es_phrase_load(track_t *t, uint32_t n)
  * (ui.c gb_scene_load). 1.3: MENU > SYSTEM > SCENE picks one (ui_scene; append-only: a saved value keeps its scene, an
  * unknown one plays the first). PATTERNS parts play in 1/8 steps; ES_PHR parts at their own length and division.
  * ESTAMPIE: a dance first: TROTTO takes id 0, a fresh device's (and a GHOULBOX DUNGEON's: its sounds are still here,
- * moved to the end); CRYPT, TAVERN, CHAPEL and BLANK keep their ids. rtype: G_RTYPE (ROOM SPRING HALL); lvl: each
- * part's LVL (P_LEVEL), 0 = the sound's own */
-#define GB_NSCENE 6u
+ * moved to the end); CRYPT, TAVERN, CHAPEL and BLANK keep their ids; ESTAMPIE (0.3.8) plays a whole song. rtype:
+ * G_RTYPE (ROOM SPRING HALL); lvl: each part's LVL (P_LEVEL), 0 = the sound's own; temp: every part's TEMP (P_TEMP,
+ * temper.c: 0 EQUAL, 1 PYTH), which a preset doesn't carry (ui.c param_kept) */
+#define GB_NSCENE 7u
 #define GB_DUNGEON 5u
-static const struct { const char *name; uint8_t bpm, tape, rtype, part[NPART][3], lvl[NPART]; } GB_SCENES[GB_NSCENE] = {
+static const struct {
+    const char *name;
+    uint8_t bpm, tape, rtype, part[NPART][3], lvl[NPART];
+    const es_song_t *song;                       /* ESTAMPIE: PLAY plays it while the scene is untouched (ui.c es_song_ok) */
+    uint8_t temp;                                /* ESTAMPIE */
+} GB_SCENES[GB_NSCENE] = {
     {"TROTTO", 112, 12, 0, {{ENGI_GURDY, 6, ES_PHR(0)}, {ENGI_PHYS, 9, ES_PHR(1)}, {ENGI_SAMPLE, 7, ES_PHR(2)},
                            {ENGI_DRUM, 3, ES_PHR(3)}},   /* ESTAMPIE: TROTTO GURDY, LUTE, TENOR RECORD, DANCE KIT; */
      {0, 118, 86, 94}},                                  /* the lute up, the recorder and the drums under the melody */
@@ -322,6 +405,12 @@ static const struct { const char *name; uint8_t bpm, tape, rtype, part[NPART][3]
                                     * notes: a clean start */
     {"DUNGEON", 72, 40, 2, {{ENGI_GURDY, 0, 15}, {0, 12, 14}, {5, 4, 16}, {ENGI_GURDY, 1, 17}}},  /* HURDY GURDY BALLAD,
                                     * CRYPT PAD DIRGE, MONKS CHANT, DRONE WHEEL PEDAL: GHOULBOX's scene up to 1.2 */
+    {"ESTAMPIE", 116, 12, 0, {{6, 9, ES_PHR(ES_QI)}, {ENGI_PHYS, 9, ES_PHR(ES_QLUTE)}, {ENGI_GURDY, 6, ES_PHR(ES_QDRONE)},
+                             {ENGI_DRUM, 3, ES_PHR(ES_QTAB)}},   /* ESTAMPIE: RAUSCHPFEIFE (TRIO), LUTE, TROTTO */
+     {108, 122, 89, 96}, &ES_QUINTE, 1},                 /* GURDY's drones, DANCE KIT: La Quinte Estampie Real's first */
+                                                         /* two puncta; the rauschpfeife on top (rounder than the SHAWM), */
+                                                         /* the lute up, the drones and drums under; in PYTH (pure */
+                                                         /* fifths from C), as the sound lab plays them */
 };
 #define GB_SCENE (GB_SCENES[GB_DUNGEON].part)   /* (GHOULBOX's scene up to 1.2: tests/descdump.c, tests/ghoulbox_shots.c) */
 static uint32_t trk_def_engine(uint32_t i) { return TRK_DEF[i % NPART][0]; }
