@@ -3,6 +3,12 @@
 Plans change; nothing here is a promise. GHOULBOX's own roadmap is kept at
 [docs/GHOULBOX-ROADMAP.md](docs/GHOULBOX-ROADMAP.md).
 
+## Done: 0.4.0, the estampie
+
+- The ESTAMPIE scene: *La Quinte Estampie Real* played as a song, streamed from the firmware section by section,
+  each with its own tempo, in Pythagorean tuning. Scenes load while the FM-1 runs (MENU > SYSTEM > SCENE, OCT+).
+- New instruments: RAUSCHPFEIFE, CRUMHORN, PSALTERY, BRAY HARP and PORTATIVE, chosen in the Sound Lab.
+
 ## Done: 0.2.0, the touch (the first release)
 
 - KEY TOUCH: velocity and aftertouch from the 20 lower keys, with no hardware change (Charles Vestal's Velo and
@@ -21,7 +27,6 @@ Plans change; nothing here is a promise. GHOULBOX's own roadmap is kept at
 
 - **Marginalia**: replace GHOULBOX's wall torches beside the graphs with something from a manuscript's margins.
 - **Installer, editor and tools pages** in the same style.
-- **A brighter power-on scene**: a dance at a dance's tempo, instead of the dungeon.
 - **The user guide's PDF**, made again from the restyled guide (`docs/guide/make_guide.py pdf`) and attached to a
   release; and the panel diagram (`docs/controls.jpg`, still Felucca's dark one) in the VELLUM style.
 
@@ -31,9 +36,10 @@ In this order, each with golden renders and a page to hear it:
 
 1. **Period percussion**: tabor, nakers, frame drum, riq and tambourine, clappers, bells, chain rattle, battle toms.
    Punchy, for dancing.
-2. **Plucked strings**: lute, citole, gittern, psaltery; a harp with bray pins.
-3. **Reeds and winds**: a brighter shawm, crumhorn, rauschpfeife, bagpipe with drones, recorder, herald trumpet.
-4. **Portative organ** and a reworked **chant**.
+2. **Plucked strings**: citole and gittern (lute, psaltery and the bray harp are in).
+3. **Reeds and winds**: a racket, bagpipe with drones, recorder, herald trumpet (shawm, rauschpfeife and crumhorn are
+   in).
+4. A reworked **chant** (the portative organ is in).
 5. **Kora and uilleann pipes**, beyond the mediæval set but close to it in spirit:
    - Kora: PHYS's SYMP model is most of the way there already (a plucked string driving sympathetic strings, after
      Rings, with BUZZ for the rattle). It needs a harp-like attack, the gourd's body resonance and a pentatonic or
@@ -42,7 +48,8 @@ In this order, each with golden renders and a page to hear it:
      chanter's sweet, conical-bore tone could come from PHYS, FM6 or VOICE; Melodee's CZ phase-distortion engine
      is worth a look for it. A CC0 recording for SAMPLE is the fallback.
    - Also check what SLOOP's and Melodee's sound models do that ours don't, and port what fits (with credit).
-6. **Dances**: patterns on the estampie, saltarello, ductia and trotto, and the rhythmic modes.
+6. **Dances**: more whole pieces as scene songs (the trotto and an estampie are in), patterns on the saltarello and
+   ductia, and the rhythmic modes.
 7. **Modes**: all the church modes beside major and minor, with GHOULBOX's tunings.
 
 ## Later

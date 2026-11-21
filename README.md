@@ -23,11 +23,12 @@ Felucca fork. Felucca's second-core renderer (MENU > SYSTEM > 2ND CORE, a beta, 
 gospodindilly-ops and builds on X0X, Melodee and zednaked's [Jangada](https://github.com/zednaked/jangada). The full
 history of both projects is kept in this repository.
 
-**Status: 0.3.8, early but ready for use.** So far: the VELLUM look (parchment, iron-gall ink, vermilion rubrics, lapis), the
+**Status: 0.4.0, early but ready for use.** So far: the VELLUM look (parchment, iron-gall ink, vermilion rubrics, lapis), the
 screen's type (Alegreya Sans, with Cinzel's Roman capitals for the large text), the illuminated boot screen and the
 browser emulator page; KEY TOUCH, velocity and aftertouch from the FM-1's own keys (after Charles Vestal's Velo and
 MONK-1), with a calibration anyone can run; the screen reader; and the web installer, editor and site. The sounds are still mostly
-GHOULBOX's, with ESTAMPIE's TROTTO scene, DANCE drum kit and mediæval presets. See [the screens](docs/screens/) and [ROADMAP.md](ROADMAP.md).
+GHOULBOX's, with ESTAMPIE's TROTTO and ESTAMPIE scenes, the DANCE drum kit and mediæval presets, among them a
+rauschpfeife, a crumhorn, a psaltery, a bray harp and a portative organ. See [the screens](docs/screens/) and [ROADMAP.md](ROADMAP.md).
 
 The full site is <https://fm-1.drewr.dev/estampie/>: play it in the browser, install it, edit sounds and
 read the guide. This is beside my other FM-1 projects, [FM1Kit](https://fm-1.drewr.dev/fm1kit/) and [FM-SWITCH](https://fm-1.drewr.dev/fm-switch/).
@@ -45,6 +46,13 @@ the FM-1's own keys are pressed, for velocity and aftertouch with no hardware ch
 [FM-1 Screen Reader](https://charlesvestal.github.io/fm1-reader/) page with the FM-1 plugged in. Pages, knobs as they
 turn, the menu, messages and questions are read, with ESTAMPIE's own words (`firmware/words.tsv`, published at
 `/estampie/words/`); the browser emulator reads its screen too ([fm1-reader](https://github.com/charlesvestal/fm1-reader)).
+
+**Scenes** (MENU › SYSTEM › SCENE) set up all four tracks at once: sounds, parts, levels, tuning, tempo, reverb and
+tape. OCT+ there loads one while the FM-1 runs; it asks first, since it replaces all four tracks. The power-on scene is the
+TROTTO, a 14th-century Italian dance. The ESTAMPIE scene plays a whole piece, *La Quinte Estampie Real* (Paris,
+c. 1300), on a rauschpfeife, a lute, a hurdy-gurdy's drones and the tabor, in Pythagorean tuning: two sections, each
+twice, a tabor solo, then both again faster, streamed from the firmware section by section with a tempo for each.
+GHOULBOX's dungeon scenes are all still there.
 
 From Felucca 1.5–1.6.1 (merged into ESTAMPIE 0.1):
 
@@ -86,13 +94,13 @@ knows it from 0.3.8. Earlier versions don't, and on these units:
 
 - nothing you save survives switching off;
 - the recovery screen says UNKNOWN FLASH;
-- ESTAMPIE can't be updated over USB, so it can't install 0.3.8 or anything else itself.
+- ESTAMPIE can't be updated over USB, so it can't install a newer ESTAMPIE or anything else itself.
 
-If your FM-1 is new and still on V15, install 0.3.8 as usual. If it already has an earlier ESTAMPIE and acts as
+If your FM-1 is new and still on V15, install ESTAMPIE as usual. If it already has an earlier ESTAMPIE and acts as
 above, there's no tested way off it yet: please [open an issue](https://github.com/ocean/estampie/issues) and we'll
-work it out with you. FM1Kit and other installers that ask for the full identity can tell you which chip yours
-has (0xB36014 is the newer one). 0.3.8 has only been tested on an FM-1 with the older chip so far, so a report from
-a newer one, good or bad, is very welcome.
+work it out with you. FM1Kit and other installers that ask for the full identity can tell you which chip yours has
+(0xB36014 is the newer one). 0.3.8 and later have only been tested on an FM-1 with the older chip so far, so a
+report from a newer one, good or bad, is very welcome.
 
 ## Building
 

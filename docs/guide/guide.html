@@ -814,7 +814,7 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
   <tr><td>CONTROL</td><td><b>HOLD</b> (how long a quick layer takes to open) · <b>KNOB ACCEL</b> (fast turns move further) · <b>FX LATCH</b> · <b>BPM LOCK</b> (SELECT stops changing the tempo) · <b>SCALE LEDS</b> (the keys light the scale) · <b>CHORD ENTRY</b> (HOLD writes the keys held together into a step; ADD adds each key to it) · <b>NOTE NAMES</b> (the note or chord you play, named large on HOME and at the top of the screen on the other pages) · <b>SELECT</b> (what the SELECT knob does: BPM, the tempo; PAGE, the pages of the button you are on; MODW, a mod wheel; VEL, how hard the keys play)</td></tr>
   <tr><td>AUDIO</td><td><b>SPEAKER EQ</b> (FLAT, LOWCUT, BASS+; keep FLAT when recording) · <b>USB LEVEL</b> (MASTER or FIXED) · <b>CLICK</b> (a metronome: OFF, REC while recording, or ON) · <b>CLICK LEVEL</b> · <b>COUNT-IN</b> (OFF, 1 BAR, 2 BARS before recording) · <b>TUNE</b> (±50 cents, saved with the project) · <b>STEP PREVIEW</b> (on STEP, the cursor's step sounds as you move to it) · <b>KEY TOUCH</b> (OFF; VEL, how hard you press the keys sets each note's velocity; VEL+AT LO, VEL+AT, VEL+AT HI, and leaning on a held key is aftertouch, from least to most sensitive: see below)</td></tr>
   <tr><td>MIDI</td><td><b>MIDI IN</b> (which channels play which track: chapter 20; saved with the project) · <b>T1–T4 CHANNEL</b> (with MIDI IN on TRACK) · <b>AUTO SELECT</b> (the track MIDI plays becomes the selected one) · <b>SCREEN WAKE</b> (+MIDI: a note from MIDI wakes the screen; PANEL: only the panel) · <b>LEARN CLEAR</b> (forgets every learned CC)</td></tr>
-  <tr><td>SYSTEM</td><td><b>SCENE</b> (what plays at power-on: TROTTO, CRYPT, TAVERN, CHAPEL, BLANK or DUNGEON; chapter 3) · <b>USB SERIAL</b> (OFF from 1.2 on; turn it ON only for Felucca's developer console, and keep it OFF on macOS 13–15 so the USB audio input appears) · <b>RESTORE LAST</b> (ON, the default: your last session comes back at power-on; OFF: the scene) · <b>HELP</b> (a hint on each page as it opens) · <b>2ND CORE</b> (a beta: ON lets the chip's second processor share the sound work, from the next power-on; it switches itself OFF if it misbehaves) · <b>CALIBRATION</b> (PANEL: teach it the buttons and knobs; KEY TOUCH: teach it your touch, below) · <b>INFO</b> (the firmware, the USB connection and the CPU load) · ABOUT (the version)</td></tr>
+  <tr><td>SYSTEM</td><td><b>SCENE</b> (what plays at power-on: TROTTO, CRYPT, TAVERN, CHAPEL, BLANK, DUNGEON or ESTAMPIE; OCT+ loads it now; chapter 3) · <b>USB SERIAL</b> (OFF from 1.2 on; turn it ON only for Felucca's developer console, and keep it OFF on macOS 13–15 so the USB audio input appears) · <b>RESTORE LAST</b> (ON, the default: your last session comes back at power-on; OFF: the scene) · <b>HELP</b> (a hint on each page as it opens) · <b>2ND CORE</b> (a beta: ON lets the chip's second processor share the sound work, from the next power-on; it switches itself OFF if it misbehaves) · <b>CALIBRATION</b> (PANEL: teach it the buttons and knobs; KEY TOUCH: teach it your touch, below) · <b>INFO</b> (the firmware, the USB connection and the CPU load) · ABOUT (the version)</td></tr>
 </table>
 <h3>KEY TOUCH: velocity and pressure from the FM-1's own keys</h3>
 <p>Under each key is a rubber dome with a carbon pill, and the pill conducts better the harder it is pressed. Two of the wires the FM-1 reads its keys through can also measure a voltage, so ESTAMPIE can tell how hard each of the <b>20 keys from F3 to C5</b> lands, with no change to the hardware. The trick is Charles Vestal's, from his Velo and MONK-1 firmwares. The top seven keys (C♯5 to G5) have no such wire: they play at MENU › CONTROL › SELECT's VEL setting, as every key does with KEY TOUCH OFF.</p>
@@ -884,7 +884,7 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 <section>
 <h2 id="ch21"><span class="no">21</span>What mediæval dance music is</h2>
 <p class="lede">Tunes for dancing in the halls, squares and taverns of the thirteenth and fourteenth centuries, played by a few musicians from memory.</p>
-<p>Very little mediæval instrumental music was written down: players learned it by ear and made up their own parts. What survives is a few dozen dances in two manuscripts. One, made in France in the thirteenth century, holds eight <b>estampies royales</b>. The other, made in Tuscany around 1390 and now in the British Library, holds the Italian <b>istampitte</b>, <b>saltarelli</b>, a <b>trotto</b> and others. ESTAMPIE's power-on scene is that trotto. Each dance is a single melody line; everything else (the drones, the second parts, the drums) was the players' own, as it is yours here.</p>
+<p>Very little mediæval instrumental music was written down: players learned it by ear and made up their own parts. What survives is a few dozen dances in two manuscripts. One, made in France in the thirteenth century, holds eight <b>estampies royales</b>; the ESTAMPIE scene plays the fifth, <i>La Quinte Estampie Real</i>. The other, made in Tuscany around 1390 and now in the British Library, holds the Italian <b>istampitte</b>, <b>saltarelli</b>, a <b>trotto</b> and others. ESTAMPIE's power-on scene is that trotto. Each dance is a single melody line; everything else (the drones, the second parts, the drums) was the players' own, as it is yours here.</p>
 <h3>The dances</h3>
 <table>
   <tr><th>Dance</th><th>What it is</th></tr>
@@ -1037,6 +1037,7 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
   <tr><td>JUST (just intonation)</td><td>Pure chords: in a minor key, i, iv and ♭VI ring still</td></tr>
 </table>
 <p>Set ROOT to your key first: the tuning is built from it. Chords on far-away notes (the sharp fourth, the flat second) can sound sour; that is the price of the pure ones. GURDY's drones follow TEMP too, so a hurdy-gurdy in PYTH buzzes a pure fifth.</p>
+<p>A scene sets TEMP on all four tracks: the ESTAMPIE scene loads in PYTH from C, every other scene in EQUAL. Loading a sound with PRESETS leaves the track's TEMP as it is, so a RAUSCHPFEIFE picked on a PYTH track stays in PYTH.</p>
 <h3>Melody tips</h3>
 <ul>
   <li>Start and end on the root. Lean on the notes of the current chord on its strong beats.</li>
@@ -1051,16 +1052,18 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 <p class="lede">Starting points. Load the sound with PRESETS, then adjust. The dances first, then GHOULBOX's dungeon recipes.</p>
 <h3>The trotto band</h3>
 <p>The power-on scene itself: TROTTO GURDY with the tune, LUTE on root and fifth, TENOR RECORD holding the tune's main notes, DANCE KIT on the tabor, ROOM reverb, 112 BPM in 8T. Make it your own by changing one part's sound with PRESETS: VIELLE or BAGPIPE for the tune, FOLK HARP for the lute.</p>
+<h3>The estampie band</h3>
+<p>The ESTAMPIE scene: RAUSCHPFEIFE on the tune, LUTE on an open fifth, long-short on every beat, TROTTO GURDY's drones and DANCE KIT's tabor, all in TEMP <b>PYTH</b>, 116 BPM and faster as it goes. For a louder band outdoors, swap the RAUSCHPFEIFE for SHAWM; for a softer one, CRUMHORN, or BRAY HARP in place of the lute.</p>
 <h3>Hurdy-gurdy and tabor</h3>
 <p>DANCE GURDY or TROTTO GURDY on the tune with COUP <b>1/8</b> (the trompette in strokes) and RING ON (the drones through the rests), DANCE KIT on the TABOR pattern, SCL DOR, 100–120 BPM, a little swing. Two players, a whole village dancing.</p>
 <h3>Pipes for a procession</h3>
-<p>BAGPIPE on the tune (its drones ring through the rests), SHAWM doubling it an octave up with HOME › KEYS on LAYER, PROCESSION on the drum, SCL MIX, 80–90 BPM. Outdoors: ROOM reverb, low sends.</p>
+<p>BAGPIPE on the tune (its drones ring through the rests), SHAWM doubling it an octave up with HOME › KEYS on LAYER (RAUSCHPFEIFE if the shawm bites too hard), PROCESSION on the drum, SCL MIX, 80–90 BPM. Outdoors: ROOM reverb, low sends.</p>
 <h3>Lute and psaltery</h3>
-<p>LUTE on an arpeggio (ARP UPDN at 1/8, or the ARPEGGIO pattern) under BOWED PSALT for the tune, TEMP <b>PYTH</b> on both (chapter 23) so the fifths ring pure, a moderate HALL. An indoor dance, for a feast.</p>
+<p>LUTE on an arpeggio (ARP UPDN at 1/8, or the ARPEGGIO pattern) under PSALTERY (plucked) or BOWED PSALT for the tune, TEMP <b>PYTH</b> on both (chapter 23) so the fifths ring pure, a moderate HALL. An indoor dance, for a feast.</p>
 <h3>Pipe and tabor</h3>
 <p>One player's band: TENOR RECORD or RECORDER on the tune with VCE LEG and a little glide, DANCE KIT on TABOR under it. Nothing else. A saltarello at 120 in 8T, or a carole at 90.</p>
 <h3>The chapel</h3>
-<p>MONKS and CRYPT CHOIR an octave apart on the CHANT pattern, REN ORGAN holding the root, TEMP <b>MEAN</b> or PYTH, HALL with a big SIZE. What the dancers heard on Sunday.</p>
+<p>MONKS and CRYPT CHOIR an octave apart on the CHANT pattern, REN ORGAN or PORTATIVE holding the root, TEMP <b>MEAN</b> or PYTH, HALL with a big SIZE. What the dancers heard on Sunday.</p>
 <h3 style="margin-top:20pt">From GHOULBOX: dungeon recipes</h3>
 <h3>Old Tower-style pad</h3>
 <p>CRYPT PAD or DARK STRINGS on a track, the DIRGE pattern from SAVE › PHRASES, REVERB SIZE high, TAPE around 60. Slow everything down: tempo 60–70, DIV 1/4 or 1/2.</p>
@@ -1215,13 +1218,14 @@ dl.gl dd { margin: 0 0 2pt; break-inside: avoid; }
 
 <section>
 <h2 id="ch28"><span class="no">28</span>Credits and licence</h2>
-<p>ESTAMPIE © 2026 Drew Robinson: the mediæval dance sounds and scene, the look and the build. Free software under the <b>GPL-3.0-only</b> licence; the source is at <span class="path">github.com/ocean/estampie</span>.</p>
+<p>ESTAMPIE © 2026 Drew Robinson: the mediæval dance sounds and scenes, the look and the build. Free software under the <b>GPL-3.0-only</b> licence; the source is at <span class="path">github.com/ocean/estampie</span>.</p>
 <p>Built on <b>GHOULBOX</b> by Jason Persinger (GPL-3.0-only, <span class="path">github.com/jasonpersinger/ghoulbox-fm1-dungeon-synth</span>): the hurdy-gurdy, the old tunings, the drone latch, RING, the reverb and tape, the dungeon sounds and scenes, and <b>this guide</b>, which is his GHOULBOX User Guide reworked for ESTAMPIE. GHOULBOX takes support on Ko-fi (<span class="path">ko-fi.com/ghoulbox</span>).</p>
 <p>Both are built entirely on <b>Felucca</b> by Leo Kuroshita / Hügelton Instruments (GPL-3.0-only), with Felucca's engines from Felucca-Engines (MIT). Please support the original: GitHub Sponsors (hugelton) or itch.io (hugelton.itch.io/felucca).</p>
 <ul>
   <li>Samples: Versilian Studios, VSCO-2 Community Edition and VCSL (CC0 1.0)</li>
   <li>Fonts on the screen: Alegreya Sans by Juan Pablo del Peral (Huerta Tipográfica), Cinzel by Natanael Gama, Inter Tight by the Inter Project Authors; in the name: UnifrakturMaguntia by J. "Mach" Wust; in this guide and on the site: IM Fell English (the Fell Types, revived by Igino Marini) and Alegreya by Juan Pablo del Peral (all SIL OFL 1.1)</li>
   <li>The TROTTO is from London, British Library, Add. MS 29987 (Tuscany, about 1390), arranged for the scene</li>
+  <li><i>La Quinte Estampie Real</i> is from Paris, BnF fr. 844 (France, about 1300), transcribed from Pierre Aubry's edition, <i>Estampies et danses royales</i> (Paris, 1907), and checked against Andy Hornby's transcription</li>
   <li>Felucca's engines draw on Dexed (FM6), DaisySP and Mutable Instruments' code (PHYS), klattsch (VOICE) and CrispyZebra (PHASE); see Felucca's README for the full credits</li>
   <li>Hardware facts in chapter 1 are from M-VAVE's FM-1 manual, in our own words.</li>
 </ul>
