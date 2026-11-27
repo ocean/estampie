@@ -25,6 +25,11 @@ uv             linux-x64     0.13.1                         eadd9d27c134ab5ac1ff
 # osv-scanner: the vulnerability scanner itself (tools/osv_scan.sh); hashes from the release's osv-scanner_SHA256SUMS.
 osv-scanner    darwin-arm64  2.7.0                          d4926ef8da134332543be276dff157e4c170f99ad91fc48e89448a8816bdf70b  https://github.com/google/osv-scanner/releases/download/v2.7.0/osv-scanner_darwin_arm64
 osv-scanner    linux-x64     2.7.0                          160c6253e2922e9e0a6a9771c5c4c40a4b3c6090b34a3cdd5e80c96cc2e4218b  https://github.com/google/osv-scanner/releases/download/v2.7.0/osv-scanner_linux_amd64
+# apko: builds the build image from Wolfi's packages (tools/build-image/, tools/build_image.sh) and checks for newer
+# ones (tools/osv_scan.sh). Each archive's sigstore signature was verified before pinning: cosign verify-blob, signed by
+# chainguard-dev/apko's .github/workflows/release.yaml@refs/heads/main.
+apko           darwin-arm64  1.4.18                         3baed1445bad7af447bc30f9dc4f99007c5437d3adea32563252c4268cb0cbba  https://github.com/chainguard-dev/apko/releases/download/v1.4.18/apko_1.4.18_darwin_arm64.tar.gz
+apko           linux-x64     1.4.18                         80d3b39ada69f51c82fcd1e04719eda9d12d4333fd46d31d7d7c9c2d0cdcd0b9  https://github.com/chainguard-dev/apko/releases/download/v1.4.18/apko_1.4.18_linux_amd64.tar.gz
 # The pi32v2 hardware emulator (tools/hw_check.sh), built with cargo --locked; optional (setup_toolchain.sh --hw).
 fm1-hw-emu     git           main                           056621b0c3187e6712326ef854d0a78ed9605600                          https://github.com/shcherbakov7/m-wave-fm1-browser-emulator.git
 # fm1-reader (Charles Vestal, MIT; its voice, eSpeak NG compiled to WebAssembly, GPL-3.0-or-later): the screen
@@ -33,4 +38,5 @@ fm1-hw-emu     git           main                           056621b0c3187e671232
 # commit), and tools/speak_audit.sh runs its audit. espeak/ is built from espeak-ng ba90c8e9f440 (its README.md).
 fm1-reader     git           main                           2f49d91c142b1304fc5654496b35d40607d8511e                          https://github.com/charlesvestal/fm1-reader.git
 # The container the JieLi tools run in on macOS / non-x86 hosts (tools/build.py): sha256 is the image index digest.
-build-image    linux-amd64   cc-debian13:nonroot            cc66d222f0a7ec996b78a99fe76a969bc80b539a5016ad866c14d1949bc6d0ab  gcr.io/distroless/cc-debian13:nonroot
+# Built with apko from Wolfi's packages (tools/build-image/: apko.yaml, and apko.lock.json pinning each package).
+build-image    linux-amd64   wolfi                          77123065291a4ad8ae00bc8af22ce6ea98b9c94d9a5220dcc1a59ff4c89ea0bb  ghcr.io/ocean/fm-1-firmware-build-image:wolfi

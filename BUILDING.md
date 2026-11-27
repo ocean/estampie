@@ -30,8 +30,9 @@ tools/setup_toolchain.sh          # add --hw for the pi32v2 hardware emulator (t
 It needs [uv](https://docs.astral.sh/uv/), git, curl and Docker Desktop, and fetches:
 
 - the JieLi Linux toolchain (clang 4.0.1 for pi32v2). It is Linux x86-64 only: on macOS the build runs each tool in
-  the pinned `gcr.io/distroless/cc-debian13:nonroot` container (Rosetta on Apple silicon), with no network, no
-  capabilities and the sources read-only. Keep the source tree in a folder Docker can share, e.g. under `/Users`.
+  the pinned `ghcr.io/ocean/fm-1-firmware-build-image` container (Rosetta on Apple silicon), with no network, no
+  capabilities and the sources read-only. The image is Wolfi's glibc, libstdc++ and libgcc_s and nothing else, built
+  with apko from `tools/build-image/`; `tools/build_image.sh` rebuilds it and checks it is the pinned one. Keep the source tree in a folder Docker can share, e.g. under `/Users`.
 - three files of the JieLi AC79 SDK (Apache-2.0: `cpu/wl82/tools/uboot.boot`, `cfg_tool.bin`, `cfg/eq_cfg_hw.bin`),
   at a pinned commit;
 - Python 3.14 and its packages from `uv.lock` (hash-pinned; the UI font and icons are rasterised at build time);

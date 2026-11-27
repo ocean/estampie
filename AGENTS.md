@@ -67,7 +67,8 @@ tools/release.sh X.Y.Z            # a whole release, here: build/dist/ (see Rele
 ```
 
 - **Everything lives in the repo.** The JieLi toolchain is a closed Linux x86-64 binary. On macOS it runs in a
-  pinned, distroless Docker container with no network, so Docker must be running. On Linux x86-64 it runs natively.
+  pinned Docker container (`tools/build-image/`: Wolfi's glibc and C++ runtime, built with apko) with no network, so
+  Docker must be running. On Linux x86-64 it runs natively.
 - **Budgets** (each build prints them, and fails past them):
   - **Flash:** the app slot is 581,564 B, and a build that leaves less than 16 KiB spare fails. At 0.3.1 the image is 547,568 B, about 34 KB spare. Pixel fonts cost about half what anti-aliased ones do.
   - **RAM:** `.data` + `.bss` 61,332 of 73,728 B. The `.pool` section, 334,488 of 368,640 B, is where large, zero-initialised, main-loop-only state goes.

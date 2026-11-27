@@ -33,8 +33,8 @@ jobs:
 
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2   # v10.3.3
 
-      - name: osv-scanner and fm1-reader (checked against tools/toolchain.lock)
-        run: tools/setup_toolchain.sh --only osv-scanner,fm1-reader
+      - name: osv-scanner, apko and fm1-reader (checked against tools/toolchain.lock)
+        run: tools/setup_toolchain.sh --only osv-scanner,apko,fm1-reader
 
       - name: Known vulnerabilities (Python, Node, build image, eSpeak NG)
         run: tools/osv_scan.sh python node build-image espeak

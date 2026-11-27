@@ -39,8 +39,8 @@ APP_SLOT = fm1pkg_make.APP_SLOT
 SLOT_SPARE = int(os.environ.get("FELUCCA_SPARE_MIN", 16384))   # the least app-slot room a build may leave
 LOADER_LOAD = 0x01C0A800
 LOADER_NAME = b"usb_hid_ota.bin"    # the file name the SPL looks for
-# ESTAMPIE: the JieLi tools need only glibc, libstdc++ and libgcc (ldd), so they run in distroless's cc image: no shell,
-# no package manager, far fewer known vulnerabilities than a full Debian (docs/SECURITY.md). Pinned by digest (a tag
+# ESTAMPIE: the JieLi tools need only glibc, libstdc++ and libgcc (ldd), so they run in an image of just those, from
+# Wolfi (tools/build-image/): no shell, no package manager, and fixes within days (docs/SECURITY.md). Pinned by digest (a tag
 # can be moved) in tools/toolchain.lock, beside every other pin; JIELI_DOCKER_IMAGE overrides it.
 def locked_image():
     for line in (SRC / "tools" / "toolchain.lock").read_text().splitlines():

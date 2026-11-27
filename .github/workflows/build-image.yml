@@ -1,0 +1,123 @@
+# ESTAMPIE: the build image's rebuild, every five days. tools/build_image.sh --update re-resolves the image's Wolfi
+# packages (tools/build-image/apko.lock.json); when any is newer it publishes the image to
+# ghcr.io/ocean/fm-1-firmware-build-image and pins its digest in tools/toolchain.lock, then:
+#   builds the firmware natively and in the new image, and checks the two are byte for byte the same;
+#   scans the new image (tools/osv_scan.sh build-image);
+#   pushes the new pins to the build-image-update branch, and opens an issue (or updates the open one) with both
+#   results and a link to open the pull request.
+# Drew opens the pull request, so host tests and supply chain run on it as on any other: one opened with this
+# workflow's token would start no workflow, and Actions here may not open pull requests.
+name: build image
+
+on:
+  schedule:
+    - cron: "41 4 */5 * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  rebuild:
+    name: Rebuild from Wolfi's newest packages
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      packages: write
+      issues: write
+    steps:
+      # Every action pinned to a commit (a tag can be moved), its version in the comment.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1   # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Toolchain (checked against tools/toolchain.lock)
+        run: UV_SYNC_ARGS="--no-default-groups --group qr" tools/setup_toolchain.sh --only uv,jieli,ac79-sdk,python,apko,osv-scanner
+
+      - name: Newer packages?
+        id: update
+        run: |
+          tools/build_image.sh --update | tee build/build-image.txt
+          if git diff --quiet tools/build-image/apko.lock.json; then
+            echo "changed=0" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=1" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish the image and pin it
+        if: steps.update.outputs.changed == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          echo "$GH_TOKEN" | docker login ghcr.io -u "$ACTOR" --password-stdin
+          tools/build_image.sh --publish | tee -a build/build-image.txt
+
+      - name: The firmware, natively and in the new image
+        id: compare
+        if: steps.update.outputs.changed == '1'
+        run: |
+          export JIELI_TOOLCHAIN="$PWD/.toolchain/jieli/toolchain" AC79_SDK="$PWD/.toolchain/ac79-sdk"
+          JIELI_DOCKER=0 ./build.sh > build/native.log
+          mkdir -p build/native && cp build/estampie.fwsc build/estampie.bin build/loader/ota.bin build/native/
+          JIELI_DOCKER=1 ./build.sh > build/image.log
+          {
+            for f in estampie.fwsc estampie.bin ota.bin; do
+              new=build/$f; [ $f = ota.bin ] && new=build/loader/ota.bin
+              if cmp -s "build/native/$f" "$new"; then echo "same: $f $(sha256sum "$new" | cut -d' ' -f1)"
+              else echo "DIFFERENT: $f"; fi
+            done
+          } | tee build/compare.txt
+          ! grep -q DIFFERENT build/compare.txt
+
+      - name: Scan the new image
+        id: scan
+        if: steps.update.outputs.changed == '1'
+        run: tools/osv_scan.sh build-image | tee build/scan.txt
+
+      - name: The branch, and an issue to open its pull request
+        if: always() && steps.update.outputs.changed == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          COMPARE: ${{ steps.compare.outcome }}
+          SCAN: ${{ steps.scan.outcome }}
+        run: |
+          BRANCH=build-image-update
+          TITLE="The build image has newer Wolfi packages"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$BRANCH"
+          git add tools/build-image/apko.lock.json tools/toolchain.lock
+          git commit -q -F - <<EOF
+          The build image rebuilt from Wolfi's newest packages
+
+          $(cat build/build-image.txt)
+          EOF
+          AUTH=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+          git -c http.extraheader="AUTHORIZATION: basic $AUTH" push -f origin "$BRANCH"
+          {
+            echo "The scheduled rebuild published a new build image and pinned it on the \`$BRANCH\` branch."
+            echo "[Open the pull request](https://github.com/$REPO/compare/main...$BRANCH?expand=1): host tests and"
+            echo "supply chain run on it, then merge it and close this issue."
+            echo
+            echo '```'; cat build/build-image.txt; echo '```'
+            echo
+            echo "**The firmware, natively and in the new image** ($COMPARE):"
+            echo '```'; cat build/compare.txt 2>/dev/null || echo "(not run)"; echo '```'
+            echo
+            echo "**The new image's scan** ($SCAN):"
+            echo '```'; cat build/scan.txt 2>/dev/null || echo "(not run)"; echo '```'
+          } > build/issue.md
+          OPEN=$(gh issue list -R "$REPO" --state open --search "in:title \"$TITLE\"" --json number,title \
+            -q ".[] | select(.title == \"$TITLE\") | .number" | head -1)
+          if [ -n "$OPEN" ]; then
+            gh issue edit "$OPEN" -R "$REPO" --body-file build/issue.md
+            gh issue comment "$OPEN" -R "$REPO" --body "Rebuilt again: the branch and the results above are updated."
+          else
+            gh issue create -R "$REPO" --title "$TITLE" --body-file build/issue.md
+          fi

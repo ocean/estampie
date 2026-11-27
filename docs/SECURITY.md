@@ -24,7 +24,7 @@ specific to this firmware.
    no package dependencies, which compiles the C library it needs from the source it ships. The output is tested
    bit for bit against the native build. Node remains only to run the web tests, without npm.
 5. **Contain what you can't inspect.** JieLi's compiler is a closed-source Linux binary. On macOS it runs in a
-   distroless container (no shell, no package manager), as you rather than root, with no network, no capabilities, no
+   minimal container (Wolfi's glibc and C++ runtime: no shell, no package manager), as you rather than root, with no network, no capabilities, no
    privilege escalation, a read-only root, a process limit and the sources mounted read-only. Only `build/` is
    writable.
 6. **Scan continuously, the same way everywhere.** `tools/osv_scan.sh` checks everything against the OSV database.
@@ -37,10 +37,11 @@ specific to this firmware.
 
 | Component | Pinned in | Verified by | Contained by | Scanned by |
 | --- | --- | --- | --- | --- |
-| JieLi toolchain (clang 4.0.1, pi32v2) | `tools/toolchain.lock` | SHA-256 (first use) | distroless container, offline, read-only | closed source: not scannable |
+| JieLi toolchain (clang 4.0.1, pi32v2) | `tools/toolchain.lock` | SHA-256 (first use) | build container, offline, read-only | closed source: not scannable |
 | AC79 SDK (3 files used) | `tools/toolchain.lock` | git commit | data only (not run) | – |
 | Felucca-Engines (5 engines, MIT) | `firmware/engines/VENDORED.md` | git commit; copied into the repository (not a submodule), so every built line is reviewed in git | compiled into the firmware | source only: no package dependencies |
-| Build container `cc-debian13:nonroot` | `tools/toolchain.lock` | image digest | see above | `osv_scan.sh build-image` |
+| Build container `fm-1-firmware-build-image` (Wolfi packages, apko) | `tools/toolchain.lock`; each package in `tools/build-image/apko.lock.json` | image digest; package checksums, Wolfi's signing key; `tools/build_image.sh` rebuilds it byte for byte | see above | `osv_scan.sh build-image` |
+| apko | `tools/toolchain.lock` | SHA-256, taken after checking its sigstore signature (`cosign verify-blob`) | – | – |
 | Python 3.14 and packages | `uv.lock` | SHA-256 per file (uv) | `.venv` in the repo | `osv_scan.sh python` |
 | Node (binary only, for the tests) | `tools/toolchain.lock` | SHA-256 from GPG-signed `SHASUMS256.txt` | npm, npx and corepack deleted | `osv_scan.sh node` (Node security releases) |
 | Zig 0.17.0 (`zig cc` to WebAssembly) | `tools/toolchain.lock` | SHA-256, taken after checking its minisign signature | – | no package dependencies |
@@ -88,33 +89,38 @@ Do it in a commit of its own, so the change is easy to review.
   `tools/minisign_verify.py RWSGOq2NVecA2UPNdBUZykf1CCb147pkmdtYxgb3Ti+JO/wCYvhbAb/U FILE`, comparing that key with
   the one on ziglang.org/download. Then record the hashes, run `tools/setup_toolchain.sh` and `tests/run_tests.sh`. The
   browser emulator test must still match the native build bit for bit.
-- **Build container:** `docker buildx imagetools inspect gcr.io/distroless/cc-debian13:nonroot`, then copy the digest
-  into `tools/toolchain.lock`. `tools/osv_scan.sh build-image` reports when the tag has moved. Rebuild and compare the
-  hashes of `build/estampie.bin` and `build/loader/ota.bin`: a new base image should not change the firmware. Then look
-  through `tools/osv-build-image.toml` and delete entries whose fix is now in the image.
+- **Build container:** `.github/workflows/build-image.yml` does this every five days. By hand:
+  `tools/build_image.sh --update --publish` (after `docker login ghcr.io`) takes Wolfi's newest packages, publishes the
+  image and pins its digest in `tools/toolchain.lock`. Rebuild and compare the hashes of `build/estampie.bin` and
+  `build/loader/ota.bin`: a new image should not change the firmware. Then look through `tools/osv-build-image.toml`
+  and delete entries whose fix is now in the image.
 - **JieLi toolchain or SDK:** download, record the hash or commit, rebuild, and run the host tests and
   `tools/hw_check.sh` before trying the result on hardware.
 
 ## Accepted findings
 
 `tools/osv-build-image.toml` lists the known vulnerabilities accepted in the build container, all due for review on
-15 January 2027. They are in glibc, the gcc-14 runtime libraries and zlib, and have no fix in Debian 13 yet (some
-none in any Debian release). The container can't be reached from outside: it has no network, runs one compiler on this
-repository's sources and is thrown away after each file. Distroless rebuilds the image when Debian ships the fixes.
+15 January 2027. They are in glibc, with no fix in Wolfi yet. The container can't be reached from outside: it has no
+network, runs one compiler on this repository's sources and is thrown away after each file.
+
+The image used to be distroless's `cc-debian13`. Debian leaves many fixes for months, and its image carried 47 accepted
+findings in glibc, openssl and the gcc runtime. Wolfi, Chainguard's distribution, ships fixes within days, and the image
+holds only the three libraries the tools load, so openssl and zlib are gone too. It is ours, built with apko from a
+lock of package checksums and published to GHCR, so nobody else's free tier or retention policy decides whether it
+still pulls.
 
 The expiry is only the backstop. `tools/osv_scan.sh build-image`, run on every push and weekly, also scans the tag's
-newer image whenever there is one. Once that image fixes an accepted finding and is two days old, the scan fails: take
-it (a rebuild must be byte-identical) and delete the fixed entries. A newer image that fixes none is only reported, as
-are accepted ids the pinned image no longer has.
+image Wolfi's newest packages would make, whenever they differ from the lock. Once that image fixes an accepted
+finding and is six days old, the scan fails, since the five-day rebuild should have taken it: take it (a rebuild must
+be byte-identical) and delete the fixed entries. Newer packages that fix none are only reported, as are accepted ids
+the pinned image no longer has.
 
 `tools/osv-espeak-accepted.txt` does the same for eSpeak NG, the voice of the emulator page's screen reader (from
 fm1-reader): four OSS-Fuzz crashes on malformed text, also due for review on 15 January 2027. eSpeak runs there as
 WebAssembly in the browser and only ever speaks the emulator's own screen text; nothing of it is in the firmware. Two
 are fixed in later eSpeak commits, so moving fm1-reader's eSpeak forward is the way to drop them.
 
-An alternative with a faster patch cadence is Docker Hardened Images (`dhi.io`, free with a Docker account). They are
-also minimal, signed, and come with an SBOM and VEX statements. Switching only means changing the `build-image` line;
-`JIELI_DOCKER_IMAGE` lets you try one first.
+`JIELI_DOCKER_IMAGE` runs the build in another image, to try one before changing the `build-image` line.
 
 ## On GitHub
 

@@ -7,18 +7,18 @@
 #   .toolchain/ac79-sdk    the JieLi AC79 SDK (three of its files go into every package)
 #   .toolchain/node        Node, the binary only (no npm, npx or corepack), for the web tests
 #   .toolchain/zig         Zig, whose zig cc builds the browser emulator (web/emu/); its cache in .toolchain/zig-cache
-#   .toolchain/bin         osv-scanner (tools/osv_scan.sh)
+#   .toolchain/bin         osv-scanner (tools/osv_scan.sh), apko (tools/build_image.sh)
 #   .toolchain/uv          uv, where none is installed (a fresh CI runner): it makes .venv
 #   .venv                  Python 3.14 with the packages in uv.lock (uv sync --frozen)
 #   .toolchain/fm1-reader  fm1-reader at its pinned commit, when there is no checkout next to this repo (the emulator
 #                          page's screen reader: web/emu/build.sh; tools/speak_audit.sh)
 #   .toolchain/emulators   with --hw: the pi32v2 hardware emulator for tools/hw_check.sh (needs cargo)
 # A step is skipped when its folder already holds the pinned version; change a pin and run it again to update.
-# --only takes a comma-separated list of steps (uv, jieli, ac79-sdk, node, python, zig, osv-scanner, fm1-reader, hw): CI fetches
+# --only takes a comma-separated list of steps (uv, jieli, ac79-sdk, node, python, zig, osv-scanner, apko, fm1-reader, hw): CI fetches
 # just what a job needs through the same checks.
 #   tools/setup_toolchain.sh [--hw] [--only STEP,...]
 set -eu
-STEPS=jieli,ac79-sdk,node,python,zig,osv-scanner,fm1-reader
+STEPS=jieli,ac79-sdk,node,python,zig,osv-scanner,apko,fm1-reader
 USAGE="usage: tools/setup_toolchain.sh [--hw] [--only STEP,...]"
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -179,6 +179,19 @@ if want osv-scanner; then
         chmod 755 $TC/bin/osv-scanner
         echo "$2" > $TC/bin/osv-scanner.pin
     fi
+fi
+
+# apko: one archive holding a folder with the binary; only the binary is kept.
+if want apko; then
+    set -- $(pin apko)
+    if [ "$(cat $TC/bin/apko.pin 2>/dev/null)" != "$2" ]; then
+        mkdir -p $TC/bin
+        file=$(fetch "$3" "$2") || exit 1
+        tar -xzf "$file" -C $TC/bin --strip-components 1 "$(tar -tzf "$file" | grep '/apko$')"
+        chmod 755 $TC/bin/apko
+        echo "$2" > $TC/bin/apko.pin
+    fi
+    $TC/bin/apko version 2>/dev/null | grep -q "v$1\$" || die "$TC/bin/apko: apko doesn't run, or isn't $1"
 fi
 
 # fm1-reader at its pinned commit (MIT; its voice GPL-3.0-or-later), when no checkout sits next to this repo.

@@ -1,0 +1,33 @@
+# ESTAMPIE: the container the JieLi tools run in on macOS, built with apko from Wolfi's packages: glibc, libstdc++ and
+# libgcc_s (the tools' NEEDED libraries), no shell, no package manager. Wolfi ships fixes within days, where Debian
+# leaves many open for months. apko.lock.json pins every package by checksum. Published as
+# ghcr.io/ocean/fm-1-firmware-build-image for any FM-1 firmware built with the JieLi tools.
+contents:
+  keyring:
+    - tools/build-image/wolfi-signing.rsa.pub
+  repositories:
+    - https://packages.wolfi.dev/os
+  packages:
+    - wolfi-baselayout
+    - glibc
+    - ld-linux
+    - libgcc
+    - libstdc++
+
+accounts:
+  groups:
+    - groupname: nonroot
+      gid: 65532
+  users:
+    - username: nonroot
+      uid: 65532
+      gid: 65532
+  run-as: 65532
+
+archs:
+  - x86_64
+
+annotations:
+  org.opencontainers.image.title: fm-1-firmware-build-image
+  org.opencontainers.image.description: "glibc, libstdc++ and libgcc_s from Wolfi, to run JieLi's x86-64 Linux toolchain for FM-1 firmware: no shell, no package manager"
+  org.opencontainers.image.source: https://github.com/ocean/estampie
